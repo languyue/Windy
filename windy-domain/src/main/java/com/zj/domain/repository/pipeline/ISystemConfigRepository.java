@@ -5,6 +5,7 @@ import com.zj.domain.entity.bo.pipeline.SystemConfigBO;
 import com.zj.domain.entity.vo.DefaultPipelineVo;
 import com.zj.domain.entity.vo.ImageRepositoryVo;
 import com.zj.domain.entity.vo.GenerateMavenConfigDto;
+import com.zj.domain.entity.vo.NotifyConfigDto;
 
 import java.util.List;
 
@@ -92,4 +93,11 @@ public interface ISystemConfigRepository {
    * @return maven配置信息
    */
   GenerateMavenConfigDto getMavenConfig();
+
+
+    /**
+     * 获取消息通知配置
+     * @return 消息通知配置信息
+     */
+  NotifyConfigDto getNotifyConfig();
 }

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <!-- 订单创建通知模板 -->
+    <template id="com.zj.master.dispatch.pipeline.listener.PublishEndListener.handleEnd" name="流水线部署通知">
+        <!-- 消息内容模板 -->
+        <success type="markdown">
+<![CDATA[
+📌 **流水线执行结果通知**
+
+▸ **流水线名称**: ${pipelineName}
+▸ **流水线ID**: ${pipelineId}
+▸ **执行类型**: <#if executeType?number == 0>手动执行<#else>定时触发</#if>
+▸ **关联服务**: ${ServiceName} (${serviceId})
+▸ **执行状态**: <#if pipelineStatus == 0><font color="green">成功</font><#else><font color="red">失败</font></#if>
+▸ **流水线类型**: <#if pipelineType == 0>基础流水线<#else>高级流水线</#if>
+
+<#if pipelineConfig.schedule??>
+⏰ **定时配置**: ${pipelineConfig.schedule}
+</#if>
+
+📋 **阶段执行详情**:
+<#list stageList as stage>
+  ┌─ **${stage.stageName}** (<#if stage.type == 0>基础阶段<#else>扩展阶段</#if>)
+  <#list stage.nodes as node>
+  │  ├─ ${node.nodeName}
+  │  │  ▸ 类型: <#if node.type == 0>基础节点<#else>扩展节点</#if>
+  <#if node.configDetail.actionId??>
+  │  │  ▸ 操作ID: ${node.configDetail.actionId}
+  </#if>
+  </#list>
+</#list>
+
+<#if pipelineStatus == 0>
+✅ **执行成功** ${pipelineName} 已全部完成
+<#else>
+❌ **执行失败** 请检查阶段执行详情
+</#if>
+]]>
+        </success>
+
+
+        <!-- 消息发送渠道配置 -->
+        <channels>
+            <!-- 钉钉配置 -->
+            <channel type="we_chat">
+                <webhook>https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=ea97d9c1-305d-4507-87b7-0fffdabdce</webhook>
+                <timeout>5000</timeout>
+                <retry>3</retry>
+            </channel>
+        </channels>
+    </template>
+</templates>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <!-- 订单创建通知模板 -->
+    <template id="com.zj.notify.entity.enums.MessageModuleType.DEPLOY" name="订单创建通知">
+        <!-- 消息内容模板 -->
+
+        <success type="markdown">
+            <![CDATA[             ✅ **部署成功通知**
+ ▸ **项目名称**: ${projectName}
+ ▸ **环境**: ${env}
+ ▸ **耗时**: ${duration}秒
+ ▸ **状态**: <font color="green">成功</font>
+ ▸ **访问地址**: [${domain}](${domainUrl})
+ ▸ **健康检查**: [${healthCheckUrl}](${healthCheckUrl})
+ ▸ **部署日志**:
+ ```bash
+ ${last10LinesOfLog}
+]]>
+        </success>
+
+        <error type="text">
+            <![CDATA[
+                订单创建失败通知：
+                订单号：${orderNo}
+                用户：${username}
+                错误原因：${errorMsg}
+                ]]>
+        </error>
+
+        <!-- 消息发送渠道配置 -->
+        <channels>
+            <!-- 钉钉配置 -->
+            <channel type="we_chat">
+                <webhook>https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=e4bf8147-e405-410b-aad8-d277bd48f7</webhook>
+                <timeout>5000</timeout>
+                <retry>3</retry>
+            </channel>
+        </channels>
+    </template>
+
+    <!-- 支持的消息类型示例 -->
+    <message-types>
+        <type name="text" desc="文本消息">
+            <template><![CDATA[${content}]]></template>
+        </type>
+        <type name="markdown" desc="Markdown消息">
+            <template><![CDATA[${markdownContent}]]></template>
+        </type>
+        <type name="image" desc="图片消息">
+            <field name="base64" required="true"/>
+            <field name="md5" required="true"/>
+        </type>
+        <type name="news" desc="图文消息">
+            <field name="articles" type="list">
+                <item>
+                    <field name="title" required="true"/>
+                    <field name="url" required="true"/>
+                    <field name="description"/>
+                    <field name="picurl"/>
+                </item>
+            </field>
+        </type>
+    </message-types>
+</templates>

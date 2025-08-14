@@ -10,6 +10,7 @@ import com.zj.domain.entity.po.pipeline.SystemConfig;
 import com.zj.domain.entity.vo.DefaultPipelineVo;
 import com.zj.domain.entity.vo.ImageRepositoryVo;
 import com.zj.domain.entity.vo.GenerateMavenConfigDto;
+import com.zj.domain.entity.vo.NotifyConfigDto;
 import com.zj.domain.mapper.pipeline.SystemConfigMapper;
 import com.zj.domain.repository.pipeline.ISystemConfigRepository;
 
@@ -32,6 +33,7 @@ public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, Syst
     public static final String IMAGE_REPOSITORY = "image_repository";
     public static final String MAVEN_REPOSITORY = "maven_repository";
     public static final String DEFAULT_PIPELINE = "default_pipeline";
+    public static final String DEFAULT_NOTIFY = "default_notify";
     public static final Integer GLOBAL = 1;
 
     @Override
@@ -106,6 +108,12 @@ public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, Syst
     public GenerateMavenConfigDto getMavenConfig() {
         GenerateMavenConfigDto mavenConfig = getGlobalConfig(MAVEN_REPOSITORY, GenerateMavenConfigDto.class);
         return Optional.ofNullable(mavenConfig).orElse(new GenerateMavenConfigDto());
+    }
+
+    @Override
+    public NotifyConfigDto getNotifyConfig() {
+        NotifyConfigDto notifyConfig = getGlobalConfig(DEFAULT_NOTIFY, NotifyConfigDto.class);
+        return Optional.ofNullable(notifyConfig).orElse(new NotifyConfigDto());
     }
 
     private <T> T getGlobalConfig(String type, Class<T> cls) {
