@@ -13,6 +13,7 @@ DB_USERNAME=$2
 DB_PASSWORD=$3
 MAVEN_PATH=${4:-'/opt/windy-client/maven'}
 EUREKA_ZONE=${5:-'http://localhost:9888/eureka'}  # 默认 Eureka 地址
+TOKEN_SECRET=${6:-$TOKEN_SECRET}  # 可选,第6个参数或同名环境变量,未提供则自动生成密钥
 SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
 
 # 封装复制 maven 目录的逻辑
@@ -69,7 +70,7 @@ stop_existing_process_by_port() {
 # 启动 windy-starter
 stop_existing_process_by_port 9768
 echo "[1/3] 启动windy-console ..."
-sh ./console/start-console.sh $DB_HOST $DB_USERNAME $DB_PASSWORD $EUREKA_ZONE
+sh ./console/start-console.sh $DB_HOST $DB_USERNAME $DB_PASSWORD $EUREKA_ZONE $TOKEN_SECRET
 
 # 启动 windy-master
 stop_existing_process_by_port 9888

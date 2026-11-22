@@ -12,6 +12,23 @@ DB_HOST_PORT=$1
 DB_USERNAME=$2
 DB_PASSWORD=$3
 
+# 登录令牌密钥: 优先使用已导出的环境变量 TOKEN_SECRET, 否则在本机生成一份并持久化,
+# 保证容器重建后密钥不变(否则每次重新部署所有登录态失效)
+TOKEN_SECRET_FILE="$HOME/.windy/token_secret"
+if [ -z "$TOKEN_SECRET" ]; then
+  if [ ! -s "$TOKEN_SECRET_FILE" ]; then
+    mkdir -p "$(dirname "$TOKEN_SECRET_FILE")"
+    if command -v openssl &> /dev/null; then
+      openssl rand -hex 32 > "$TOKEN_SECRET_FILE"
+    else
+      head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$TOKEN_SECRET_FILE"
+    fi
+    chmod 600 "$TOKEN_SECRET_FILE"
+    echo "未配置 TOKEN_SECRET, 已自动生成并保存到 $TOKEN_SECRET_FILE"
+  fi
+  TOKEN_SECRET=$(cat "$TOKEN_SECRET_FILE")
+fi
+
 
 # 定义 Eureka 地址（固定为 windy-master 容器）
 EUREKA_ZONE="http://windy-master:9888/eureka"
@@ -78,7 +95,7 @@ redeploy_container "windy-master" "guyuelan/windy-master:latest" "9888:9888" \
 
 # 部署 windy-console 容器
 redeploy_container "windy-console" "guyuelan/windy-console:latest" "9768:9768" \
-  "--env=DB_HOST=$DB_HOST_PORT --env=DB_USERNAME=$DB_USERNAME --env=DB_PASSWORD=$DB_PASSWORD --env=EUREKA_ZONE=$EUREKA_ZONE"
+  "--env=DB_HOST=$DB_HOST_PORT --env=DB_USERNAME=$DB_USERNAME --env=DB_PASSWORD=$DB_PASSWORD --env=EUREKA_ZONE=$EUREKA_ZONE --env=TOKEN_SECRET=$TOKEN_SECRET"
 
 # 部署 windy-client 容器
 redeploy_container "windy-client" "guyuelan/windy-client:latest" "8070:8070" \

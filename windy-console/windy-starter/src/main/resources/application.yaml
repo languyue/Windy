@@ -73,4 +73,4 @@ windy:
     version: @project.version@
   token:
     expire: 86400
-    secret: tuyqteutwuytsd72368qewtquy
+    # 密钥不再明文保存，通过环境变量 TOKEN_SECRET 注入；未配置时启动自动生成到 ~/.windy/token.secret

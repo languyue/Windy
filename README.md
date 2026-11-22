@@ -52,6 +52,22 @@ cd windy-1.0.0
 ./start.sh 数据库IP:数据库端口 数据库用户 数据库用户密码
 ```
 
+> 登录令牌密钥
+
+Windy 使用 JWT 维护登录态，密钥按下面优先级读取：
+
+1. 环境变量 `TOKEN_SECRET`（或启动参数 `-DTOKEN_SECRET`）
+2. 本地密钥文件 `~/.windy/token.secret`，不存在时首次启动会自动生成并保存（权限 600）
+
+多实例部署时密钥必须一致，请显式指定：
+
+```shell
+export TOKEN_SECRET=$(openssl rand -hex 32)
+```
+
+Docker 部署无需额外操作，`docker_start.sh` 会自动在本机 `~/.windy/token_secret` 生成一份并注入容器；
+jar 部署也可以在 `start.sh` 后追加第 6 个参数传入密钥。
+
 ### 3 用浏览器打开console
 ```
 http://主机IP:9768
