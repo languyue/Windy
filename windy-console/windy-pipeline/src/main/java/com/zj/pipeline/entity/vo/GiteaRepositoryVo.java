@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 仓库信息
  *
- * @author falcon
+ * @author guyuelan
  * @since 2023/7/18
  */
 @Data

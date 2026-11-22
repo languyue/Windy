@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.zj.domain.entity.po.demand.Comment;
 
 /**
- * @author falcon
+ * @author guyuelan
  * @since 2023/4/17
  */
 public interface CommentMapper extends BaseMapper<Comment> {

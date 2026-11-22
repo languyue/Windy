@@ -3,7 +3,7 @@ package com.zj.domain.entity.vo;
 import lombok.Data;
 
 /**
- * @author falcon
+ * @author guyuelan
  * @since 2023/8/1
  */
 @Data

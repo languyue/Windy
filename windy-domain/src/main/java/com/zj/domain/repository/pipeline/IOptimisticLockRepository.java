@@ -1,7 +1,7 @@
 package com.zj.domain.repository.pipeline;
 
 /**
- * @author falcon
+ * @author guyuelan
  * @since 2023/7/19
  */
 public interface IOptimisticLockRepository {

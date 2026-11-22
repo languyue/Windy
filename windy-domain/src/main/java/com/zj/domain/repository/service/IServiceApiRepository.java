@@ -4,7 +4,7 @@ import com.zj.domain.entity.bo.service.ServiceApiBO;
 import java.util.List;
 
 /**
- * @author falcon
+ * @author guyuelan
  * @since 2023/8/8
  */
 public interface IServiceApiRepository {
