@@ -9,7 +9,7 @@ import com.zj.common.entity.feature.VariableDefine;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
 import com.zj.domain.entity.po.feature.ExecutePoint;
-import com.zj.domain.mapper.feeature.ExecutePointMapper;
+import com.zj.domain.mapper.feature.ExecutePointMapper;
 import com.zj.domain.repository.feature.IExecutePointRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;

@@ -8,7 +8,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.TestCaseBO;
 import com.zj.domain.entity.enums.CaseType;
 import com.zj.domain.entity.po.feature.TestCase;
-import com.zj.domain.mapper.feeature.TestCaseMapper;
+import com.zj.domain.mapper.feature.TestCaseMapper;
 import com.zj.domain.repository.feature.ITestCaseRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;

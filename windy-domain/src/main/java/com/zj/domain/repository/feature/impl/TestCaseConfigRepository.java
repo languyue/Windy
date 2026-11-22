@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
 import com.zj.domain.entity.po.feature.TestCaseConfig;
-import com.zj.domain.mapper.feeature.TestCaseConfigMapper;
+import com.zj.domain.mapper.feature.TestCaseConfigMapper;
 import com.zj.domain.repository.feature.ITestCaseConfigRepository;
 import java.util.List;
 

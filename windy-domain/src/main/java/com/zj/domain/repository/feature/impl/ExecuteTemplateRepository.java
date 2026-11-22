@@ -10,7 +10,7 @@ import com.zj.common.enums.TemplateType;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
 import com.zj.domain.entity.po.feature.ExecuteTemplate;
-import com.zj.domain.mapper.feeature.ExecuteTemplateMapper;
+import com.zj.domain.mapper.feature.ExecuteTemplateMapper;
 import com.zj.domain.repository.feature.IExecuteTemplateRepository;
 import com.zj.plugin.loader.ParameterDefine;
 import org.apache.commons.collections4.CollectionUtils;

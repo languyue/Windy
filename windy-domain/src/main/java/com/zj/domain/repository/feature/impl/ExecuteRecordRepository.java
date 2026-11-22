@@ -7,7 +7,7 @@ import com.zj.common.entity.feature.FeatureResponse;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecuteRecordBO;
 import com.zj.domain.entity.po.feature.ExecuteRecord;
-import com.zj.domain.mapper.feeature.ExecuteRecordMapper;
+import com.zj.domain.mapper.feature.ExecuteRecordMapper;
 import com.zj.domain.repository.feature.IExecuteRecordRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;

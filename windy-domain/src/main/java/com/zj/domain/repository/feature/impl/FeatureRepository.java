@@ -8,7 +8,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.enums.FeatureType;
 import com.zj.domain.entity.po.feature.FeatureInfo;
-import com.zj.domain.mapper.feeature.FeatureMapper;
+import com.zj.domain.mapper.feature.FeatureMapper;
 import com.zj.domain.repository.feature.IFeatureRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;

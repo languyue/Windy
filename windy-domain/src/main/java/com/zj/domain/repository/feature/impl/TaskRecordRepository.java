@@ -10,7 +10,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.enums.TaskRecordType;
 import com.zj.domain.entity.po.feature.TaskRecord;
-import com.zj.domain.mapper.feeature.TaskRecordMapper;
+import com.zj.domain.mapper.feature.TaskRecordMapper;
 import com.zj.domain.repository.feature.ITaskRecordRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;

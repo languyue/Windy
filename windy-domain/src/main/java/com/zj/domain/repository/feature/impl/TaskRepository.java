@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
 import com.zj.domain.entity.po.feature.TaskInfo;
-import com.zj.domain.mapper.feeature.TaskInfoMapper;
+import com.zj.domain.mapper.feature.TaskInfoMapper;
 import com.zj.domain.repository.feature.ITaskRepository;
 import java.util.List;
 import java.util.stream.Collectors;

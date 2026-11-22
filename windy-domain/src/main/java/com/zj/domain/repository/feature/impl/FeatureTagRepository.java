@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureTagBO;
 import com.zj.domain.entity.po.feature.FeatureTag;
-import com.zj.domain.mapper.feeature.FeatureTagMapper;
+import com.zj.domain.mapper.feature.FeatureTagMapper;
 import com.zj.domain.repository.feature.IFeatureTagRepository;
 
 import java.util.Collections;

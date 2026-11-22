@@ -6,7 +6,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.PluginInfoBO;
 import com.zj.domain.entity.enums.SourceStatus;
 import com.zj.domain.entity.po.feature.PluginInfo;
-import com.zj.domain.mapper.feeature.PluginInfoMapper;
+import com.zj.domain.mapper.feature.PluginInfoMapper;
 import com.zj.domain.repository.feature.IPluginRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;

@@ -6,7 +6,7 @@ import com.zj.common.enums.ProcessStatus;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.po.feature.FeatureHistory;
-import com.zj.domain.mapper.feeature.FeatureHistoryMapper;
+import com.zj.domain.mapper.feature.FeatureHistoryMapper;
 import com.zj.domain.repository.feature.IExecuteRecordRepository;
 import com.zj.domain.repository.feature.IFeatureHistoryRepository;
 import java.util.Collections;
