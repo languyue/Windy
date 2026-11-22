@@ -30,8 +30,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -114,24 +114,30 @@ public class PipelineDispatch implements IDispatchExecutor {
         .map(node -> buildTaskNode(node, historyId, pipeline.getServiceId()))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    pipelineTask.addAll(taskNodeList);
-    Map<String, String> executeTypeMap = taskNodeList.stream()
-        .collect(Collectors.toMap(TaskNode::getNodeId, TaskNode::getExecuteType));
 
-    createSubTaskLog(pipelineNodes, pipelineTask.getLogId(), executeTypeMap);
+    if (CollectionUtils.isEmpty(taskNodeList)) {
+      //所有节点的action都找不到，没有任何可执行内容，必须收尾而不是留一条永远RUNNING的历史
+      log.warn("pipeline has no executable node, pipelineId={} historyId={}",
+          pipeline.getPipelineId(), historyId);
+      closeFinishedPipeline(logId, historyId, Collections.emptyList());
+      return historyId;
+    }
+
+    pipelineTask.addAll(taskNodeList);
+    //子任务日志只记真正参与执行的节点，action已丢失的节点不能建成永久RUNNING
+    createSubTaskLog(taskNodeList, pipelineTask.getLogId());
     pipelineExecuteProxy.runTask(pipelineTask);
     return historyId;
   }
 
-  private void createSubTaskLog(List<PipelineNodeBO> pipelineNodes, String logId,
-                                Map<String, String> executeTypeMap) {
-    List<SubDispatchLogBO> logList = pipelineNodes.stream().map(pipelineNode -> {
+  private void createSubTaskLog(List<TaskNode> taskNodeList, String logId) {
+    List<SubDispatchLogBO> logList = taskNodeList.stream().map(taskNode -> {
       SubDispatchLogBO subTaskLog = new SubDispatchLogBO();
       subTaskLog.setSubTaskId(uniqueIdService.getUniqueId());
-      subTaskLog.setSubTaskName(pipelineNode.getNodeName());
+      subTaskLog.setSubTaskName(taskNode.getName());
       subTaskLog.setLogId(logId);
-      subTaskLog.setExecuteId(pipelineNode.getNodeId());
-      subTaskLog.setExecuteType(executeTypeMap.get(pipelineNode.getNodeId()));
+      subTaskLog.setExecuteId(taskNode.getNodeId());
+      subTaskLog.setExecuteType(taskNode.getExecuteType());
       subTaskLog.setStatus(ProcessStatus.RUNNING.getType());
       long dateNow = System.currentTimeMillis();
       subTaskLog.setCreateTime(dateNow);
@@ -150,7 +156,8 @@ public class PipelineDispatch implements IDispatchExecutor {
     pipelineHistory.setCreateTime(System.currentTimeMillis());
     pipelineHistory.setUpdateTime(System.currentTimeMillis());
     BindBranchBO bindBranch = bindBranchRepository.getPipelineBindBranch(pipelineId);
-    pipelineHistory.setBranch(bindBranch.getGitBranch());
+    //只有发布类流水线强制绑定分支，未绑定属正常状态，分支留空即可，不能让整条流水线跑不起来
+    pipelineHistory.setBranch(Objects.isNull(bindBranch) ? null : bindBranch.getGitBranch());
     pipelineHistoryRepository.createPipelineHistory(pipelineHistory);
   }
 
@@ -202,42 +209,64 @@ public class PipelineDispatch implements IDispatchExecutor {
       return false;
     }
 
-    BindBranchBO pipelineBindBranch = bindBranchRepository.getPipelineBindBranch(pipelineId);
-    if (Objects.isNull(pipelineBindBranch)) {
-      log.info("can not find pipeline bind branch pipelineId={}", pipelineId);
-      return false;
-    }
     PipelineTask pipelineTask = new PipelineTask();
     pipelineTask.setPipelineId(pipeline.getPipelineId());
     pipelineTask.setLogId(dispatchLog.getLogId());
     if (StringUtils.isBlank(dispatchLog.getSourceRecordId())) {
-      String historyId = uniqueIdService.getUniqueId();
-      saveHistory(pipelineId, historyId);
-      dispatchLog.setSourceRecordId(historyId);
+      String newHistoryId = uniqueIdService.getUniqueId();
+      saveHistory(pipelineId, newHistoryId);
+      dispatchLog.setSourceRecordId(newHistoryId);
     }
+    String historyId = dispatchLog.getSourceRecordId();
+    pipelineTask.setHistoryId(historyId);
 
-    //过滤掉已经执行完成的任务
+    //过滤掉已经执行完成的任务；找不到任何子任务日志说明还没跑过节点，需要全量重跑
     List<SubDispatchLogBO> subLogs = subDispatchLogRepository.getSubLogByLogId(
         dispatchLog.getLogId());
-    List<String> subTasks = subLogs.stream()
+    List<String> unCompleteNodeIds = subLogs.stream()
         .filter(subTask -> !ProcessStatus.isCompleteStatus(subTask.getStatus()))
         .map(SubDispatchLogBO::getExecuteId).collect(Collectors.toList());
-    List<TaskNode> taskNodeList = pipelineNodes.stream()
-        .filter(node -> subTasks.contains(node.getNodeId()))
-        .map(node -> buildTaskNode(node, dispatchLog.getSourceRecordId(), pipeline.getServiceId()))
+    List<PipelineNodeBO> runNodes = CollectionUtils.isEmpty(subLogs) ? pipelineNodes
+        : pipelineNodes.stream().filter(node -> unCompleteNodeIds.contains(node.getNodeId()))
+            .collect(Collectors.toList());
+    //repository没有默认排序，重建时的节点顺序必须与首次调度一致
+    List<TaskNode> taskNodeList = runNodes.stream()
+        .sorted(Comparator.comparing(PipelineNodeBO::getSortOrder))
+        .map(node -> buildTaskNode(node, historyId, pipeline.getServiceId()))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    pipelineTask.setHistoryId(dispatchLog.getSourceRecordId());
-    pipelineTask.addAll(taskNodeList);
 
+    if (CollectionUtils.isEmpty(taskNodeList)) {
+      //没有任何可重跑的节点，不能交给执行器空跑：空任务同样会占住pipelineTaskMap，
+      //之后isExitTask恒为true，这条日志连下次重建的机会都会失去
+      log.info("resume pipeline has no node to run, logId={} historyId={} subLogSize={}",
+          dispatchLog.getLogId(), historyId, subLogs.size());
+      closeFinishedPipeline(dispatchLog.getLogId(), historyId, subLogs);
+      return true;
+    }
+
+    pipelineTask.addAll(taskNodeList);
     if (CollectionUtils.isEmpty(subLogs)) {
-      //如果找不到子任务执行记录，那么就需要重新创建
-      Map<String, String> executeTypeMap = taskNodeList.stream()
-          .collect(Collectors.toMap(TaskNode::getNodeId, TaskNode::getExecuteType));
-      createSubTaskLog(pipelineNodes, dispatchLog.getLogId(), executeTypeMap);
+      //如果找不到子任务执行记录，那么就需要重新创建，且只对真正执行的节点建
+      createSubTaskLog(taskNodeList, dispatchLog.getLogId());
     }
     pipelineExecuteProxy.runTask(pipelineTask);
     return true;
+  }
+
+  /**
+   * 没有节点可重跑时直接把历史与日志推到终态
+   * 常见于节点已全部执行完、但状态收尾之前进程挂掉；这种状态下空跑会让流水线永久停在RUNNING
+   * 结束监听器不重放，避免崩溃恢复时重复发通知
+   * */
+  private void closeFinishedPipeline(String logId, String historyId, List<SubDispatchLogBO> subLogs) {
+    boolean allSuccess = CollectionUtils.isNotEmpty(subLogs) && subLogs.stream()
+        .allMatch(subLog -> Objects.equals(subLog.getStatus(), ProcessStatus.SUCCESS.getType()));
+    ProcessStatus finalStatus = allSuccess ? ProcessStatus.SUCCESS : ProcessStatus.FAIL;
+    log.warn("close pipeline history without executing, historyId={} status={} subLogSize={}",
+        historyId, finalStatus, subLogs.size());
+    pipelineHistoryRepository.updateStatus(historyId, finalStatus);
+    dispatchLogRepository.updateLogStatus(logId, finalStatus.getType());
   }
 
   @Override

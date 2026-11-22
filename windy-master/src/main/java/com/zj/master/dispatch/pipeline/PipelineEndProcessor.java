@@ -67,7 +67,8 @@ public class PipelineEndProcessor {
     if (isAllComplete) {
       log.info("pipeline run complete success historyId={}", change.getHistoryId());
       pipelineHistoryRepository.updateStatus(change.getHistoryId(), ProcessStatus.SUCCESS);
-      dispatchLogRepository.updateLogStatus(change.getHistoryId(), ProcessStatus.SUCCESS.getType());
+      //这里必须用logId，historyId与logId是两个独立的id，用错会让任务日志永远停在RUNNING
+      dispatchLogRepository.updateLogStatus(change.getLogId(), ProcessStatus.SUCCESS.getType());
       notifyPipelineEnd(change);
     }
   }
