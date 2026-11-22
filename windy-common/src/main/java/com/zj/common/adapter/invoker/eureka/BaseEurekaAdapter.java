@@ -22,21 +22,16 @@ import java.util.concurrent.TimeUnit;
 public class BaseEurekaAdapter {
 
     private final RestTemplate restTemplate;
-    private final HttpHeaders headers;
     private final okhttp3.MediaType mediaType = okhttp3.MediaType.get("application/json; charset=utf-8");
     protected final OkHttpClient okHttpClient = new OkHttpClient.Builder().connectTimeout(60,
             TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
 
     public BaseEurekaAdapter(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
     }
 
     public ResponseEntity<String> requestPost(String url , Object data) {
-        wrapTraceHeader();
-        HttpEntity<Object> http = new HttpEntity<>(data, headers);
+        HttpEntity<Object> http = new HttpEntity<>(data, requestHeaders());
         try {
             return restTemplate.postForEntity(url, http, String.class);
         } catch (Exception e) {
@@ -46,8 +41,7 @@ public class BaseEurekaAdapter {
     }
 
     public ResponseEntity<String> requestGet(String url) {
-        wrapTraceHeader();
-        HttpEntity request = new HttpEntity(headers);
+        HttpEntity request = new HttpEntity(requestHeaders());
         try {
             return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         }catch (Exception e){
@@ -56,12 +50,16 @@ public class BaseEurekaAdapter {
         return null;
     }
 
-    protected void wrapTraceHeader() {
-        String traceId = TraceUtils.getTraceId();
-        boolean existTrace = headers.toSingleValueMap().containsKey(TidInterceptor.HTTP_HEADER_TRACE_ID);
-        if (!existTrace) {
-            headers.add(TidInterceptor.HTTP_HEADER_TRACE_ID, traceId);
-        }
+    /**
+     * 每次请求构造独立的headers，保证traceId是当前调用线程的
+     * 如果使用singleton成员变量，traceId会被固定成首次请求的值
+     * */
+    private HttpHeaders requestHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set(TidInterceptor.HTTP_HEADER_TRACE_ID, TraceUtils.getTraceId());
+        return headers;
     }
 
     protected Response postWithIp(String url, Object data) {
