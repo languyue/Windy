@@ -16,6 +16,7 @@
   <version>${revision}</version>
 
   <modules>
+    <module>windy-contract</module>
     <module>windy-common</module>
     <module>windy-client</module>
     <module>windy-master</module>
@@ -56,6 +57,11 @@
   <dependencyManagement>
     <dependencies>
       <!--内部模块依赖开始-->
+      <dependency>
+        <groupId>com.zj</groupId>
+        <artifactId>windy-contract</artifactId>
+        <version>${revision}</version>
+      </dependency>
       <dependency>
         <groupId>com.zj</groupId>
         <artifactId>windy-domain</artifactId>

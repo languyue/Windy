@@ -1,0 +1,34 @@
+package com.zj.contract.pipeline;
+
+import com.zj.contract.enums.ToolType;
+import com.zj.contract.enums.DeployType;
+import lombok.Data;
+
+@Data
+public class ServiceContext {
+
+    /**
+     * 服务部署方式: {@link DeployType}
+     */
+    private Integer deployType;
+
+    /**
+     * 代码开发语言:{@link ToolType}
+     */
+    private String code;
+
+    /**
+     * 开发语言的构建版本
+     */
+    private String buildVersion;
+
+    /**
+     * 主干分支名称
+     */
+    private String mainBranch;
+
+    /**
+     * 服务端口
+     */
+    private Integer servicePort;
+}
