@@ -16,6 +16,10 @@ public class DiscoverService {
 
   public static final String WINDY_MASTER = "WindyMaster";
   public static final String WINDY_Client = "WindyClient";
+  /**
+   * console 进程注册名，取 spring.application.name
+   */
+  public static final String WINDY_CONSOLE = "Windy";
 
   private final DiscoveryClient discoveryClient;
 
@@ -37,6 +41,14 @@ public class DiscoverService {
 
   public List<ServiceInstance> getWindyClientInstances(){
     return getServiceInstances(WINDY_Client);
+  }
+
+  /**
+   * console 只有一个部署单元，取第一个可用实例即可
+   */
+  public ServiceInstance getWindyConsoleInstance() {
+    List<ServiceInstance> instances = getServiceInstances(WINDY_CONSOLE);
+    return instances.stream().findFirst().orElse(null);
   }
 
   public List<ServiceInstance> getServiceInstances(String serviceId) {

@@ -1,4 +1,8 @@
 package com.zj.common.exception;
+import com.zj.contract.exception.ErrorCode;
+
+
+import org.springframework.http.HttpStatus;
 
 /**
  * @author guyuelan
@@ -7,6 +11,6 @@ package com.zj.common.exception;
 public class ApiException extends CommonException {
 
     public ApiException(ErrorCode errorCode) {
-        super(errorCode.getCode(), errorCode.getMessage(), errorCode.getHttpStatus());
+        super(errorCode.getCode(), errorCode.getMessage(), HttpStatus.valueOf(errorCode.getHttpStatus()));
     }
 }

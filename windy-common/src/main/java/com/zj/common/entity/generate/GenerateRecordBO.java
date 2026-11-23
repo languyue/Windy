@@ -1,5 +1,6 @@
 package com.zj.common.entity.generate;
 
+import com.zj.contract.generate.GenerateDetail;
 import lombok.Data;
 
 import java.util.List;

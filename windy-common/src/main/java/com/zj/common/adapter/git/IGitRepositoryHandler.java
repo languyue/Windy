@@ -1,4 +1,6 @@
 package com.zj.common.adapter.git;
+import com.zj.contract.git.GitAccessInfo;
+
 
 import java.util.Collections;
 import java.util.List;

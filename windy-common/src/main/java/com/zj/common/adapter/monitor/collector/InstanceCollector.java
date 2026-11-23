@@ -1,7 +1,9 @@
 package com.zj.common.adapter.monitor.collector;
 
+
 import com.sun.management.OperatingSystemMXBean;
-import com.zj.common.adapter.monitor.collector.PhysicsCollect.GarbageHistory;
+import com.zj.contract.monitor.PhysicsCollect;
+import com.zj.contract.monitor.PhysicsCollect.GarbageHistory;
 import com.zj.common.utils.IpUtils;
 import lombok.extern.slf4j.Slf4j;
 

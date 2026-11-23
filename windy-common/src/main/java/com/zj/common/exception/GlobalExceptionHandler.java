@@ -1,6 +1,7 @@
 package com.zj.common.exception;
 
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

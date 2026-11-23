@@ -1,21 +1,21 @@
 package com.zj.common.adapter.invoker.eureka;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.common.adapter.discover.DiscoverService;
 import com.zj.common.adapter.discover.ServiceInstance;
 import com.zj.common.adapter.invoker.IClientInvoker;
-import com.zj.common.entity.dto.ClientCollectDto;
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.entity.dto.StopDispatch;
-import com.zj.common.entity.service.ToolLoadResult;
-import com.zj.common.entity.service.ToolVersionDto;
-import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.feature.exec.FeatureExecuteParam;
+import com.zj.contract.feature.exec.GenerateParam;
+import com.zj.contract.pipeline.node.TaskNode;
+import com.zj.contract.rpc.ClientCollectDto;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.service.ToolLoadResult;
+import com.zj.contract.service.ToolVersionDto;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,6 +31,10 @@ public class EurekaClientInvokerAdapter extends BaseEurekaAdapter implements ICl
     private static final String DISPATCH_FEATURE_TASK = "http://WindyClient/v1/client/dispatch/feature";
     private static final String MASTER_NOTIFY_CLIENT_STOP = "http://%s/v1/client/task/stop";
     public static final String CLIENT_MONITOR_URL = "http://%s/v1/devops/client/instance";
+    private static final ParameterizedTypeReference<ResponseMeta<ToolLoadResult>> META_TOOL_LOAD_RESULT =
+            new ParameterizedTypeReference<ResponseMeta<ToolLoadResult>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<ClientCollectDto>> META_CLIENT_COLLECT =
+            new ParameterizedTypeReference<ResponseMeta<ClientCollectDto>>() {};
 
     private final DiscoverService discoverService;
 
@@ -40,17 +44,14 @@ public class EurekaClientInvokerAdapter extends BaseEurekaAdapter implements ICl
     }
 
     @Override
-    public boolean runGenerateTask(Object generateInfo) {
-        ResponseEntity<String> response = requestPost(DISPATCH_GENERATE_TASK, generateInfo);
-        if (Objects.isNull(response)) {
-            return false;
-        }
-        log.info("run generate response result ={}", response.getBody());
-        return response.getStatusCode().is2xxSuccessful();
+    public boolean runGenerateTask(GenerateParam generateParam) {
+        boolean result = postForSuccess(DISPATCH_GENERATE_TASK, generateParam);
+        log.info("run generate response result ={}", result);
+        return result;
     }
 
     @Override
-    public boolean runPipelineTask(Object pipelineTask, boolean isRequestSingle, String singleIp) {
+    public boolean runPipelineTask(TaskNode pipelineTask, boolean isRequestSingle, String singleIp) {
         if (isRequestSingle) {
             Optional<ServiceInstance> optional =
                     discoverService.getServiceInstances(DiscoverService.WINDY_Client).stream()
@@ -66,22 +67,16 @@ public class EurekaClientInvokerAdapter extends BaseEurekaAdapter implements ICl
             }
             return Optional.ofNullable(response).map(Response::isSuccessful).orElse(false);
         }
-        ResponseEntity<String> response = requestPost(DISPATCH_PIPELINE_TASK, pipelineTask);
-        if (Objects.isNull(response)) {
-            return false;
-        }
-        log.info("run pipeline response result ={}", response.getBody());
-        return response.getStatusCode().is2xxSuccessful();
+        boolean result = postForSuccess(DISPATCH_PIPELINE_TASK, pipelineTask);
+        log.info("run pipeline response result ={}", result);
+        return result;
     }
 
     @Override
-    public boolean runFeatureTask(Object featureTask) {
-        ResponseEntity<String> response = requestPost(DISPATCH_FEATURE_TASK, featureTask);
-        if (Objects.isNull(response)) {
-            return false;
-        }
-        log.info("run feature response status result ={}", response.getBody());
-        return response.getStatusCode().is2xxSuccessful();
+    public boolean runFeatureTask(FeatureExecuteParam featureTask) {
+        boolean result = postForSuccess(DISPATCH_FEATURE_TASK, featureTask);
+        log.info("run feature response status result ={}", result);
+        return result;
     }
 
     @Override
@@ -106,23 +101,21 @@ public class EurekaClientInvokerAdapter extends BaseEurekaAdapter implements ICl
         return serviceInstances.stream().map(service -> {
             ToolLoadResult toolLoadResult = new ToolLoadResult();
             toolLoadResult.setNodeIP(service.getIp());
+            String url = String.format(LOAD_LANGUAGE_VERSION, service.getHost());
+            Response response = postWithIp(url, toolVersion);
+            if (Objects.isNull(response)) {
+                toolLoadResult.setSuccess(false);
+                return toolLoadResult;
+            }
             try {
-                String url = String.format(LOAD_LANGUAGE_VERSION, service.getHost());
-                Response response = postWithIp(url, toolVersion);
-                if (Objects.isNull(response)) {
-                    toolLoadResult.setSuccess(false);
-                    return toolLoadResult;
-                }
-                String resultString = response.body().string();
-                log.info("get support versions = {}", resultString);
-                ResponseMeta responseMeta = JSON.parseObject(resultString, ResponseMeta.class);
-                Boolean loadResult = Optional.ofNullable(responseMeta).map(res -> JSON.parseObject(JSON.toJSONString(res.getData()),
-                        ToolLoadResult.class)).map(ToolLoadResult::getSuccess).orElse(false);
-                toolLoadResult.setSuccess(loadResult);
-                response.close();
-            }catch (Exception e){
+                ResponseMeta<ToolLoadResult> responseMeta = readEntity(response, META_TOOL_LOAD_RESULT);
+                toolLoadResult.setSuccess(Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
+                        .map(ToolLoadResult::getSuccess).orElse(false));
+            } catch (Exception e) {
                 log.info("request client load tool error", e);
                 toolLoadResult.setSuccess(false);
+            } finally {
+                response.close();
             }
             return toolLoadResult;
         }).collect(Collectors.toList());
@@ -139,15 +132,14 @@ public class EurekaClientInvokerAdapter extends BaseEurekaAdapter implements ICl
                 return null;
             }
             try {
-                String resultString = response.body().string();
-                log.info("request client monitor result={}", resultString);
-                ResponseMeta result = JSON.parseObject(resultString, ResponseMeta.class);
+                ResponseMeta<ClientCollectDto> result = readEntity(response, META_CLIENT_COLLECT);
+                return Optional.ofNullable(result).map(ResponseMeta::getData).orElse(null);
+            } catch (Exception e) {
+                log.info("handle client monitor result error", e);
+                return null;
+            } finally {
                 response.close();
-                return JSON.parseObject(JSON.toJSONString(result.getData()), ClientCollectDto.class);
-            } catch (IOException e) {
-                log.info("handle client monitor result error");
             }
-            return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 }

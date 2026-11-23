@@ -1,9 +1,12 @@
 package com.zj.common.adapter.invoker;
 
-import com.zj.common.entity.dto.ClientCollectDto;
-import com.zj.common.entity.dto.StopDispatch;
-import com.zj.common.entity.service.ToolLoadResult;
-import com.zj.common.entity.service.ToolVersionDto;
+import com.zj.contract.feature.exec.FeatureExecuteParam;
+import com.zj.contract.feature.exec.GenerateParam;
+import com.zj.contract.pipeline.node.TaskNode;
+import com.zj.contract.rpc.ClientCollectDto;
+import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.service.ToolLoadResult;
+import com.zj.contract.service.ToolVersionDto;
 
 import java.util.List;
 
@@ -14,7 +17,7 @@ public interface IClientInvoker {
      * @param generateInfo 生产信息
      * @return 是否触发成功
      */
-    boolean runGenerateTask(Object generateInfo);
+    boolean runGenerateTask(GenerateParam generateParam);
 
     /**
      * 执行流水线任务
@@ -23,14 +26,14 @@ public interface IClientInvoker {
      * @param singleIp client节点IP
      * @return 触发流水线是否成功
      */
-    boolean runPipelineTask(Object pipelineTask, boolean isRequestSingle, String singleIp);
+    boolean runPipelineTask(TaskNode pipelineTask, boolean isRequestSingle, String singleIp);
 
     /**
      * 执行用例任务
      * @param featureTask 用例任务信息
      * @return 用例是否触发成功
      */
-    boolean runFeatureTask(Object featureTask);
+    boolean runFeatureTask(FeatureExecuteParam featureParam);
 
     /**
      * 停止任务状态轮训

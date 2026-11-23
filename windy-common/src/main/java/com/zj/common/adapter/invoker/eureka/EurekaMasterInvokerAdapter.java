@@ -1,33 +1,45 @@
 package com.zj.common.adapter.invoker.eureka;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.adapter.invoker.IMasterInvoker;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.dto.MasterCollectDto;
-import com.zj.common.entity.dto.PluginInfo;
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.entity.dto.ResponseStatusModel;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.common.adapter.invoker.IMasterCallback;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.rpc.MasterCollectDto;
+import com.zj.common.entity.dto.NodeRecordStatus;
+import com.zj.contract.rpc.PluginInfo;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.rpc.ResponseStatusModel;
+import com.zj.contract.event.ResultEvent;
 import com.zj.common.adapter.discover.DiscoverService;
 import com.zj.common.adapter.discover.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMasterInvoker {
+public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMasterApi,
+        IMasterCallback {
     private static final String DISPATCH_TASK = "http://WindyMaster/v1/devops/dispatch/task";
     private static final String NOTIFY_TASK_RESULT = "http://WindyMaster/v1/devops/dispatch/notify";
-    private static final String QUERY_APPROVAL_STATUS = "http://WindyMaster/v1/devops/master/record/%s";
+    private static final String QUERY_NODE_RECORD = "http://WindyMaster/v1/devops/master/record/%s";
+    private static final ParameterizedTypeReference<ResponseMeta<NodeRecordStatus>> META_NODE_RECORD_STATUS =
+            new ParameterizedTypeReference<ResponseMeta<NodeRecordStatus>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<Object>> META_TASK_RESULT =
+            new ParameterizedTypeReference<ResponseMeta<Object>>() {};
+    private static final ParameterizedTypeReference<ResponseStatusModel> TASK_STATUS =
+            new ParameterizedTypeReference<ResponseStatusModel>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<List<PluginInfo>>> META_PLUGIN_LIST =
+            new ParameterizedTypeReference<ResponseMeta<List<PluginInfo>>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<MasterCollectDto>> META_MASTER_COLLECT =
+            new ParameterizedTypeReference<ResponseMeta<MasterCollectDto>>() {};
     public static final String STOP_DISPATCH_TASK = "http://WindyMaster/v1/devops/dispatch/stop";
     public static final String MASTER_MONITOR_URL = "http://%s/v1/devops/master/instance";
     public static final String GET_PLUGIN_LIST = "http://WindyMaster/v1/devops/master/plugins";
@@ -41,40 +53,29 @@ public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMa
 
     @Override
     public String runFeatureTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseEntity<String> response = requestPost(DISPATCH_TASK, dispatchTaskModel);
-        if (Objects.isNull(response)) {
-            return null;
-        }
-        ResponseMeta responseMeta = JSON.parseObject(response.getBody(), ResponseMeta.class);
-        return Optional.ofNullable(responseMeta).map(res -> String.valueOf(res.getData())).orElse(null);
+        ResponseMeta<Object> responseMeta = post(DISPATCH_TASK, dispatchTaskModel, META_TASK_RESULT);
+        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
+                .map(String::valueOf).orElse(null);
     }
 
     @Override
     public Boolean runGenerateTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseEntity<String> response = requestPost(DISPATCH_TASK, dispatchTaskModel);
-        if (Objects.isNull(response)) {
-            return false;
-        }
-        ResponseMeta responseMeta = JSON.parseObject(response.getBody(), ResponseMeta.class);
-        return Optional.ofNullable(responseMeta).map(res -> Boolean.parseBoolean(String.valueOf(res.getData()))).orElse(null);
+        ResponseMeta<Object> responseMeta = post(DISPATCH_TASK, dispatchTaskModel, META_TASK_RESULT);
+        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
+                .map(data -> Boolean.parseBoolean(String.valueOf(data))).orElse(false);
     }
 
     @Override
     public String startPipelineTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseEntity<String> response = requestPost(DISPATCH_TASK, dispatchTaskModel);
-        if (Objects.isNull(response)) {
-            return null;
-        }
-        ResponseMeta responseMeta = JSON.parseObject(response.getBody(), ResponseMeta.class);
-        return Optional.ofNullable(responseMeta).map(res -> String.valueOf(res.getData())).orElse(null);
+        ResponseMeta<Object> responseMeta = post(DISPATCH_TASK, dispatchTaskModel, META_TASK_RESULT);
+        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
+                .map(String::valueOf).orElse(null);
     }
 
     @Override
     public ResponseStatusModel getFeatureTaskStatus(String taskRecordId) {
         String url = String.format(GET_FEATURE_TASK_STATUS, taskRecordId);
-        ResponseEntity<String> response = requestGet(url);
-        return Optional.ofNullable(response).map(res -> JSON.parseObject(res.getBody(), ResponseStatusModel.class))
-                .orElse(null);
+        return get(url, TASK_STATUS);
     }
 
     @Override
@@ -98,38 +99,29 @@ public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMa
         }
 
         //master节点不可达时，尝试使用其他的master节点
-        ResponseEntity<String> responseEntity = requestPost(NOTIFY_TASK_RESULT, resultEvent);
-        log.info("notify event code={} result={}", responseEntity.getStatusCode(), responseEntity.getBody());
-        return responseEntity.getStatusCode().is2xxSuccessful();
+        boolean fallbackSuccess = postForSuccess(NOTIFY_TASK_RESULT, resultEvent);
+        log.info("notify event fallback result={}", fallbackSuccess);
+        return fallbackSuccess;
     }
 
     @Override
-    public ResponseStatusModel getApprovalRecord(String recordId) {
-        String url = String.format(QUERY_APPROVAL_STATUS, recordId);
-        ResponseEntity<String> response = requestGet(url);
-        return Optional.ofNullable(response).map(res -> JSON.parseObject(res.getBody(), ResponseStatusModel.class))
-                .orElse(null);
+    public NodeRecordStatus getNodeRecordStatus(String recordId) {
+        String url = String.format(QUERY_NODE_RECORD, recordId);
+        ResponseMeta<NodeRecordStatus> responseMeta = exchange(url, HttpMethod.GET, null, META_NODE_RECORD_STATUS);
+        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData).orElse(null);
     }
 
     @Override
     public List<PluginInfo> getAvailablePlugins() {
-        ResponseEntity<String> response = requestGet(GET_PLUGIN_LIST);
-        if (Objects.isNull(response)) {
-            return Collections.emptyList();
-        }
-        ResponseMeta responseMeta = JSON.parseObject(response.getBody(), ResponseMeta.class);
-        return Optional.ofNullable(responseMeta).map(res -> JSON.parseArray(JSON.toJSONString(responseMeta.getData()),
-                PluginInfo.class)).orElseGet(ArrayList::new);
+        ResponseMeta<List<PluginInfo>> responseMeta = get(GET_PLUGIN_LIST, META_PLUGIN_LIST);
+        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData).orElseGet(ArrayList::new);
     }
 
     @Override
-    public boolean stopDispatchTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseEntity<String> response = requestPost(STOP_DISPATCH_TASK, dispatchTaskModel);
-        if (Objects.isNull(response)) {
-            return false;
-        }
-        log.info("get test result code= {} result={}", response.getStatusCode(), response.getBody());
-        return response.getStatusCode().is2xxSuccessful();
+    public boolean stopDispatch(StopDispatch stopDispatch) {
+        boolean stopSuccess = postForSuccess(STOP_DISPATCH_TASK, stopDispatch);
+        log.info("stop dispatch task result={}", stopSuccess);
+        return stopSuccess;
     }
 
     @Override
@@ -142,15 +134,14 @@ public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMa
                 return null;
             }
             try {
-                String resultString = response.body().string();
-                log.info("request master monitor result={}", resultString);
-                response.close();
-                ResponseMeta result = JSON.parseObject(resultString, ResponseMeta.class);
-                return JSON.parseObject(JSON.toJSONString(result.getData()), MasterCollectDto.class);
-            } catch (IOException e) {
+                ResponseMeta<MasterCollectDto> result = readEntity(response, META_MASTER_COLLECT);
+                return Optional.ofNullable(result).map(ResponseMeta::getData).orElse(null);
+            } catch (Exception e) {
                 log.info("handle master monitor error", e);
+                return null;
+            } finally {
+                response.close();
             }
-            return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 }

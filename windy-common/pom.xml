@@ -13,6 +13,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.zj</groupId>
+      <artifactId>windy-contract</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.github.languyue</groupId>
       <artifactId>windy-plugin</artifactId>
     </dependency>
@@ -23,10 +27,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba</groupId>
-      <artifactId>fastjson</artifactId>
     </dependency>
     <dependency>
       <groupId>ma.glasnost.orika</groupId>
