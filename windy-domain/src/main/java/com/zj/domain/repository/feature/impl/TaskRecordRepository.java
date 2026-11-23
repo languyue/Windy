@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -132,6 +133,9 @@ public class TaskRecordRepository extends ServiceImpl<TaskRecordMapper, TaskReco
   }
 
   private static TaskRecordBO convertTaskRecordBO(TaskRecord taskRecord) {
+    if (Objects.isNull(taskRecord)) {
+      return null;
+    }
     TaskRecordBO taskRecordBO = OrikaUtil.convert(taskRecord, TaskRecordBO.class);
     taskRecordBO.setExecuteConfig(ContractJson.read(taskRecord.getTaskConfig(), BatchFeatureVo.class));
     return taskRecordBO;

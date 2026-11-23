@@ -13,6 +13,7 @@ import com.zj.domain.repository.pipeline.INodeRecordCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -110,11 +111,14 @@ public class NodeRecordRepository extends ServiceImpl<NodeRecordMapper, NodeReco
   }
 
   private static NodeRecordBO convertNodeRecordBO(NodeRecord nodeRecord) {
+    if (Objects.isNull(nodeRecord)) {
+      return null;
+    }
     NodeRecordBO nodeRecordBO = OrikaUtil.convert(nodeRecord, NodeRecordBO.class);
     Optional.ofNullable(nodeRecord.getRecordResult()).ifPresent(result ->
             nodeRecordBO.setResult(ContractJson.readList(result, String.class)));
-    Optional.ofNullable(nodeRecord.getRecordResult()).ifPresent(result ->
-            nodeRecordBO.setPipelineContext(ContractJson.read(nodeRecord.getContext(),
+    Optional.ofNullable(nodeRecord.getContext()).ifPresent(context ->
+            nodeRecordBO.setPipelineContext(ContractJson.read(context,
                     new TypeReference<Map<String, Object>>() {
                     })));
     return nodeRecordBO;

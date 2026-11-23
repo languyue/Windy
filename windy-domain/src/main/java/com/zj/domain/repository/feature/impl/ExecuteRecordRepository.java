@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +68,9 @@ public class ExecuteRecordRepository extends
   }
 
   private static ExecuteRecordBO convertExecuteRecordBO(ExecuteRecord executeRecord) {
+    if (Objects.isNull(executeRecord)) {
+      return null;
+    }
     ExecuteRecordBO executeRecordBO = OrikaUtil.convert(executeRecord, ExecuteRecordBO.class);
     executeRecordBO.setRecordResult(ContractJson.readList(executeRecord.getExecuteResult(), FeatureResponse.class));
     return executeRecordBO;
