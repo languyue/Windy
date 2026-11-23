@@ -109,7 +109,13 @@ public class FeatureExecuteProxy implements IStopEventListener {
             TaskRecordBO taskRecord = taskRecordRepository.getTaskRecord(taskRecordId);
             if (!taskRecordId.startsWith(FeatureDispatch.TEMP_KEY) && (Objects.isNull(taskRecord)
                     || ProcessStatus.isCompleteStatus(taskRecord.getStatus()))) {
-                log.info("task record is done not execute status={}", taskRecord.getStatus());
+                if (Objects.isNull(taskRecord)) {
+                    log.info("task record not found, not execute recordId={}", taskRecordId);
+                } else {
+                    log.info("task record is done not execute status={}", taskRecord.getStatus());
+                }
+                // 记录已完结或不存在时不会有后续回调清理，这里直接释放，避免 isExitTask 恒为 true
+                featureTaskMap.remove(taskRecordId);
                 return null;
             }
 
@@ -255,14 +261,12 @@ public class FeatureExecuteProxy implements IStopEventListener {
 
         String taskRecordId = event.getTargetId();
         FeatureTask featureTask = featureTaskMap.remove(taskRecordId);
-        if (Objects.nonNull(featureTask)) {
-            featureTaskMap.remove(taskRecordId);
-        }
 
         boolean updateStatus = taskRecordRepository.updateRecordStatus(taskRecordId, ProcessStatus.STOP.getType());
         boolean stopResult = featureHistoryRepository.stopTaskFeatures(taskRecordId, ProcessStatus.STOP);
-        log.info("stop pipeline task taskId={} taskRecordId={} updateStatus={} stopResult={}", featureTask.getTaskId(),
-                featureTask.getTaskRecordId(), updateStatus, stopResult);
+        log.info("stop pipeline task taskId={} taskRecordId={} updateStatus={} stopResult={}",
+                Optional.ofNullable(featureTask).map(FeatureTask::getTaskId).orElse(null), taskRecordId, updateStatus,
+                stopResult);
     }
 
     public Integer getTaskSize() {
