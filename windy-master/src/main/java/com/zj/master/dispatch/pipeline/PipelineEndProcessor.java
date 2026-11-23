@@ -1,12 +1,12 @@
 package com.zj.master.dispatch.pipeline;
 
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.domain.entity.bo.pipeline.PipelineNodeBO;
-import com.zj.domain.repository.log.IDispatchLogRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
-import com.zj.domain.repository.pipeline.IPipelineNodeRepository;
+import com.zj.domain.repository.log.IDispatchLogCommandRepository;
+import com.zj.domain.repository.pipeline.INodeRecordQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryCommandRepository;
+import com.zj.domain.repository.pipeline.IPipelineNodeQueryRepository;
 import com.zj.master.dispatch.pipeline.listener.IPipelineEndListener;
 import com.zj.master.entity.vo.NodeStatusChange;
 import lombok.extern.slf4j.Slf4j;
@@ -25,15 +25,15 @@ import java.util.stream.Collectors;
 @Component
 public class PipelineEndProcessor {
 
-  private final IPipelineNodeRepository pipelineNodeRepository;
-  private final INodeRecordRepository nodeRecordRepository;
-  private final IDispatchLogRepository dispatchLogRepository;
-  private final IPipelineHistoryRepository pipelineHistoryRepository;
+  private final IPipelineNodeQueryRepository pipelineNodeRepository;
+  private final INodeRecordQueryRepository nodeRecordRepository;
+  private final IDispatchLogCommandRepository dispatchLogRepository;
+  private final IPipelineHistoryCommandRepository pipelineHistoryRepository;
   private final List<IPipelineEndListener> pipelineEndListeners;
 
-  public PipelineEndProcessor(IPipelineNodeRepository pipelineNodeRepository,
-      INodeRecordRepository nodeRecordRepository, IDispatchLogRepository dispatchLogRepository,
-      IPipelineHistoryRepository pipelineHistoryRepository,
+  public PipelineEndProcessor(IPipelineNodeQueryRepository pipelineNodeRepository,
+      INodeRecordQueryRepository nodeRecordRepository, IDispatchLogCommandRepository dispatchLogRepository,
+      IPipelineHistoryCommandRepository pipelineHistoryRepository,
       List<IPipelineEndListener> pipelineEndListeners) {
     this.pipelineNodeRepository = pipelineNodeRepository;
     this.nodeRecordRepository = nodeRecordRepository;

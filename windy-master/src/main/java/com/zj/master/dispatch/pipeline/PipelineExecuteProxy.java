@@ -1,24 +1,24 @@
 package com.zj.master.dispatch.pipeline;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.zj.common.enums.DispatchType;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.dto.StopDispatch;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.dispatch.StopDispatch;
 import com.zj.common.adapter.invoker.IClientInvoker;
 import com.zj.common.utils.IpUtils;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
+import com.zj.domain.repository.pipeline.INodeRecordCommandRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryCommandRepository;
 import com.zj.master.dispatch.listener.IStopEventListener;
 import com.zj.master.dispatch.listener.InternalEvent;
 import com.zj.master.dispatch.pipeline.intercept.INodeExecuteInterceptor;
 import com.zj.master.entity.vo.NodeStatusChange;
-import com.zj.master.entity.vo.RequestContext;
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.contract.pipeline.node.RequestContext;
+import com.zj.contract.pipeline.node.TaskNode;
+import com.zj.contract.json.ContractJson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -44,8 +44,8 @@ public class PipelineExecuteProxy implements IStopEventListener {
 
     public static final String TASK_DONE_TIPS = "no task need run";
     private final Executor executorService;
-    private final INodeRecordRepository nodeRecordRepository;
-    private final IPipelineHistoryRepository pipelineHistoryRepository;
+    private final INodeRecordCommandRepository nodeRecordRepository;
+    private final IPipelineHistoryCommandRepository pipelineHistoryRepository;
     private final PipelineEndProcessor pipelineEndProcessor;
     private final List<INodeExecuteInterceptor> interceptors;
     private final IClientInvoker clientInvoker;
@@ -53,8 +53,8 @@ public class PipelineExecuteProxy implements IStopEventListener {
     private final Map<String, PipelineTask> pipelineTaskMap = new ConcurrentHashMap<>();
 
     public PipelineExecuteProxy(@Qualifier("pipelineExecutorPool") Executor executorService,
-                                INodeRecordRepository nodeRecordRepository,
-                                IPipelineHistoryRepository pipelineHistoryRepository,
+                                INodeRecordCommandRepository nodeRecordRepository,
+                                IPipelineHistoryCommandRepository pipelineHistoryRepository,
                                 PipelineEndProcessor pipelineEndProcessor, List<INodeExecuteInterceptor> interceptors
             , IClientInvoker clientInvoker) {
         this.executorService = executorService;
@@ -67,7 +67,7 @@ public class PipelineExecuteProxy implements IStopEventListener {
     }
 
     public void runTask(PipelineTask pipelineTask) {
-        log.info("start run task ={}", JSON.toJSONString(pipelineTask));
+        log.info("start run task ={}", ContractJson.write(pipelineTask));
         pipelineTaskMap.put(pipelineTask.getHistoryId(), pipelineTask);
         runTaskNodeFromPipeline(pipelineTask);
     }
@@ -85,9 +85,8 @@ public class PipelineExecuteProxy implements IStopEventListener {
 
             interceptBefore(taskNode);
 
-            RequestContext requestContext = taskNode.getRequestContext();
-            boolean dispatchResult = clientInvoker.runPipelineTask(taskNode, requestContext.isRequestSingle(),
-                    requestContext.getSingleClientIp());
+            boolean dispatchResult = clientInvoker.runPipelineTask(taskNode, taskNode.isRequestSingle(),
+                    taskNode.getSingleClientIp());
             if (!dispatchResult) {
                 log.info("dispatch pipeline task to client fail logId={}", logId);
                 //todo 这个地方需要将错误描述添加进来，否则控制台不知道什原因

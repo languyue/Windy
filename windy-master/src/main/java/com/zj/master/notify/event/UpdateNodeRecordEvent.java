@@ -1,15 +1,15 @@
 package com.zj.master.notify.event;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.common.enums.ExecuteType;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
+import com.zj.domain.repository.pipeline.INodeRecordCommandRepository;
 import com.zj.master.dispatch.pipeline.PipelineExecuteProxy;
 import com.zj.master.notify.INotifyEvent;
+import com.zj.master.notify.NotifyPayloadMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +24,12 @@ import java.util.Optional;
 @Service
 public class UpdateNodeRecordEvent implements INotifyEvent {
 
-  private final INodeRecordRepository nodeRecordRepository;
+  private final INodeRecordCommandRepository nodeRecordRepository;
   private final PipelineExecuteProxy pipelineExecuteProxy;
-  private final ISubDispatchLogRepository subTaskLogRepository;
+  private final ISubDispatchLogCommandRepository subTaskLogRepository;
 
-  public UpdateNodeRecordEvent(INodeRecordRepository nodeRecordRepository,
-      PipelineExecuteProxy pipelineExecuteProxy, ISubDispatchLogRepository subTaskLogRepository) {
+  public UpdateNodeRecordEvent(INodeRecordCommandRepository nodeRecordRepository,
+      PipelineExecuteProxy pipelineExecuteProxy, ISubDispatchLogCommandRepository subTaskLogRepository) {
     this.nodeRecordRepository = nodeRecordRepository;
     this.pipelineExecuteProxy = pipelineExecuteProxy;
     this.subTaskLogRepository = subTaskLogRepository;
@@ -42,7 +42,6 @@ public class UpdateNodeRecordEvent implements INotifyEvent {
 
   @Override
   public boolean handle(ResultEvent resultEvent) {
-    String string = JSON.toJSONString(resultEvent.getParams());
     log.info("receive node record update event id = {} event={} status={}", resultEvent.getExecuteId(),
         resultEvent.getExecuteType(), resultEvent.getStatus());
     NodeRecordBO oldNodeRecord = nodeRecordRepository.getRecordById(resultEvent.getExecuteId());
@@ -54,7 +53,7 @@ public class UpdateNodeRecordEvent implements INotifyEvent {
       return true;
     }
 
-    NodeRecordBO nodeRecord = JSON.parseObject(string, NodeRecordBO.class);
+    NodeRecordBO nodeRecord = NotifyPayloadMapper.toNodeRecordBO(resultEvent);
     nodeRecord.setRecordId(resultEvent.getExecuteId());
     nodeRecord.setStatus(resultEvent.getStatus().getType());
     Optional.ofNullable(resultEvent.getContext()).ifPresent(

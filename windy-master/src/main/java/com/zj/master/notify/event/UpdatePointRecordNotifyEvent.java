@@ -1,15 +1,15 @@
 package com.zj.master.notify.event;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.entity.dto.ResultEvent;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.enums.TemplateType;
 import com.zj.domain.entity.bo.feature.ExecuteRecordBO;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
-import com.zj.domain.repository.feature.IExecuteRecordRepository;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
+import com.zj.domain.repository.feature.IExecuteRecordCommandRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryCommandRepository;
 import com.zj.master.notify.INotifyEvent;
+import com.zj.master.notify.NotifyPayloadMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -23,11 +23,11 @@ import java.util.Objects;
 @Component
 public class UpdatePointRecordNotifyEvent implements INotifyEvent {
 
-    private final IExecuteRecordRepository executeRecordRepository;
-    private final IFeatureHistoryRepository historyRepository;
+    private final IExecuteRecordCommandRepository executeRecordRepository;
+    private final IFeatureHistoryCommandRepository historyRepository;
 
-    public UpdatePointRecordNotifyEvent(IExecuteRecordRepository executeRecordRepository,
-                                        IFeatureHistoryRepository historyRepository) {
+    public UpdatePointRecordNotifyEvent(IExecuteRecordCommandRepository executeRecordRepository,
+                                        IFeatureHistoryCommandRepository historyRepository) {
         this.executeRecordRepository = executeRecordRepository;
         this.historyRepository = historyRepository;
     }
@@ -40,8 +40,8 @@ public class UpdatePointRecordNotifyEvent implements INotifyEvent {
     @Override
     public boolean handle(ResultEvent resultEvent) {
         log.info("receive execute record update event id = {} event={}", resultEvent.getExecuteId(),
-                JSON.toJSONString(resultEvent.getParams()));
-        ExecuteRecordBO executeRecordBO = JSON.parseObject(JSON.toJSONString(resultEvent.getParams()), ExecuteRecordBO.class);
+                resultEvent.getParams());
+        ExecuteRecordBO executeRecordBO = NotifyPayloadMapper.toExecuteRecordBO(resultEvent);
         updateFeatureHistory(executeRecordBO);
         return executeRecordRepository.updateStatusAndResult(executeRecordBO);
     }

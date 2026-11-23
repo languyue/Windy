@@ -5,10 +5,10 @@ import com.zj.common.adapter.monitor.InstanceMonitor;
 import com.zj.common.utils.IpUtils;
 import com.zj.common.utils.TraceUtils;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
-import com.zj.domain.repository.log.IDispatchLogRepository;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
-import com.zj.domain.repository.pipeline.IOptimisticLockRepository;
+import com.zj.domain.repository.log.IDispatchLogCommandRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
 import com.zj.master.dispatch.Dispatcher;
+import com.zj.master.infrastructure.lock.IScheduleLock;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.cloud.client.ServiceInstance;
@@ -32,22 +32,22 @@ public class DispatchLogSchedule {
   public static final String RESUME_DISPATCH_LOG_SCHEDULE = "resume_dispatch_log_schedule";
   public static final int MAX_REDO_TIMEOUT = 1000 * 60 * 60;
 
-  private final IDispatchLogRepository taskLogRepository;
-  private final ISubDispatchLogRepository subDispatchLogRepository;
+  private final IDispatchLogCommandRepository taskLogRepository;
+  private final ISubDispatchLogCommandRepository subDispatchLogRepository;
   private final DiscoveryClient discoveryClient;
   private final InstanceMonitor instanceMonitor;
   private final Dispatcher dispatcher;
-  private final IOptimisticLockRepository optimisticLockRepository;
+  private final IScheduleLock scheduleLock;
 
-  public DispatchLogSchedule(IDispatchLogRepository taskLogRepository,
-                             ISubDispatchLogRepository subDispatchLogRepository, DiscoveryClient discoveryClient,
-                             InstanceMonitor instanceMonitor, Dispatcher dispatcher, IOptimisticLockRepository optimisticLockRepository) {
+  public DispatchLogSchedule(IDispatchLogCommandRepository taskLogRepository,
+                             ISubDispatchLogCommandRepository subDispatchLogRepository, DiscoveryClient discoveryClient,
+                             InstanceMonitor instanceMonitor, Dispatcher dispatcher, IScheduleLock scheduleLock) {
     this.taskLogRepository = taskLogRepository;
     this.subDispatchLogRepository = subDispatchLogRepository;
     this.discoveryClient = discoveryClient;
     this.instanceMonitor = instanceMonitor;
     this.dispatcher = dispatcher;
-    this.optimisticLockRepository = optimisticLockRepository;
+    this.scheduleLock = scheduleLock;
   }
 
   @Scheduled(cron = "0 0 0/1 * * ? ")
@@ -59,7 +59,7 @@ public class DispatchLogSchedule {
         return;
       }
 
-      boolean tryLock = optimisticLockRepository.tryLock(RESUME_DISPATCH_LOG_SCHEDULE);
+      boolean tryLock = scheduleLock.tryLock(RESUME_DISPATCH_LOG_SCHEDULE);
       if (!tryLock){
         return;
       }

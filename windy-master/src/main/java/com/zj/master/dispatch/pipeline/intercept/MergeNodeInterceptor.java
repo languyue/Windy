@@ -5,13 +5,13 @@ import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.pipeline.PipelineNodeBO;
 import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
-import com.zj.domain.repository.pipeline.IPipelineNodeRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
-import com.zj.domain.repository.pipeline.IPublishBindRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.master.entity.vo.MergeMasterContext;
-import com.zj.common.entity.pipeline.PipelineConfig;
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.domain.repository.pipeline.IPipelineNodeQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineQueryRepository;
+import com.zj.domain.repository.pipeline.IPublishBindQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
+import com.zj.contract.pipeline.node.MergeMasterContext;
+import com.zj.contract.pipeline.PipelineConfig;
+import com.zj.contract.pipeline.node.TaskNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -30,14 +30,14 @@ import java.util.stream.Collectors;
 @Component
 public class MergeNodeInterceptor implements INodeExecuteInterceptor{
   public static final String TAG_NAME = "tagName";
-  private final IPipelineNodeRepository pipelineNodeRepository;
-  private final IPublishBindRepository publishBindRepository;
-  private final IPipelineRepository pipelineRepository;
-  private final IMicroServiceRepository microServiceRepository;
+  private final IPipelineNodeQueryRepository pipelineNodeRepository;
+  private final IPublishBindQueryRepository publishBindRepository;
+  private final IPipelineQueryRepository pipelineRepository;
+  private final IMicroServiceQueryRepository microServiceRepository;
 
-  public MergeNodeInterceptor(IPipelineNodeRepository pipelineNodeRepository,
-                              IPublishBindRepository publishBindRepository, IPipelineRepository pipelineRepository,
-                              IMicroServiceRepository microServiceRepository) {
+  public MergeNodeInterceptor(IPipelineNodeQueryRepository pipelineNodeRepository,
+                              IPublishBindQueryRepository publishBindRepository, IPipelineQueryRepository pipelineRepository,
+                              IMicroServiceQueryRepository microServiceRepository) {
     this.pipelineNodeRepository = pipelineNodeRepository;
     this.publishBindRepository = publishBindRepository;
     this.pipelineRepository = pipelineRepository;

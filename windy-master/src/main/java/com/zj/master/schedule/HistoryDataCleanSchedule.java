@@ -3,12 +3,12 @@ package com.zj.master.schedule;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
-import com.zj.domain.repository.feature.IExecuteRecordRepository;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
-import com.zj.domain.repository.pipeline.IOptimisticLockRepository;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
+import com.zj.domain.repository.feature.IExecuteRecordCommandRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryCommandRepository;
+import com.zj.domain.repository.feature.ITaskRecordCommandRepository;
+import com.zj.domain.repository.pipeline.INodeRecordCommandRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryCommandRepository;
+import com.zj.master.infrastructure.lock.IScheduleLock;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,18 +33,18 @@ public class HistoryDataCleanSchedule {
     private final String FEATURE_HISTORY_DATA_CLEAN = "feature_history_data_clean";
     private final String TASK_HISTORY_DATA_CLEAN = "task_history_data_clean";
 
-    private final IOptimisticLockRepository optimisticLockRepository;
-    private final IPipelineHistoryRepository pipelineHistoryRepository;
-    private final INodeRecordRepository nodeRecordRepository;
-    private final IFeatureHistoryRepository featureHistoryRepository;
-    private final IExecuteRecordRepository executeRecordRepository;
-    private final ITaskRecordRepository taskRecordRepository;
+    private final IScheduleLock scheduleLock;
+    private final IPipelineHistoryCommandRepository pipelineHistoryRepository;
+    private final INodeRecordCommandRepository nodeRecordRepository;
+    private final IFeatureHistoryCommandRepository featureHistoryRepository;
+    private final IExecuteRecordCommandRepository executeRecordRepository;
+    private final ITaskRecordCommandRepository taskRecordRepository;
 
-    public HistoryDataCleanSchedule(IOptimisticLockRepository optimisticLockRepository, IPipelineHistoryRepository pipelineHistoryRepository,
-                                    INodeRecordRepository nodeRecordRepository,
-                                    IFeatureHistoryRepository featureHistoryRepository,
-                                    IExecuteRecordRepository executeRecordRepository, ITaskRecordRepository taskRecordRepository) {
-        this.optimisticLockRepository = optimisticLockRepository;
+    public HistoryDataCleanSchedule(IScheduleLock scheduleLock, IPipelineHistoryCommandRepository pipelineHistoryRepository,
+                                    INodeRecordCommandRepository nodeRecordRepository,
+                                    IFeatureHistoryCommandRepository featureHistoryRepository,
+                                    IExecuteRecordCommandRepository executeRecordRepository, ITaskRecordCommandRepository taskRecordRepository) {
+        this.scheduleLock = scheduleLock;
         this.pipelineHistoryRepository = pipelineHistoryRepository;
         this.nodeRecordRepository = nodeRecordRepository;
         this.featureHistoryRepository = featureHistoryRepository;
@@ -55,7 +55,7 @@ public class HistoryDataCleanSchedule {
     @Scheduled(cron = "0 0 23 * * ?")
     public void cleanPipelineHistory() {
         log.info("start scan clean pipeline history");
-        boolean tryLock = optimisticLockRepository.tryLock(PIPELINE_HISTORY_DATA_CLEAN);
+        boolean tryLock = scheduleLock.tryLock(PIPELINE_HISTORY_DATA_CLEAN);
         if (!tryLock){
             return;
         }
@@ -68,7 +68,7 @@ public class HistoryDataCleanSchedule {
     @Scheduled(cron = "0 0 0 * * ?")
     public void cleanTaskHistory() {
         log.info("start scan clean task history");
-        boolean tryLock = optimisticLockRepository.tryLock(TASK_HISTORY_DATA_CLEAN);
+        boolean tryLock = scheduleLock.tryLock(TASK_HISTORY_DATA_CLEAN);
         if (!tryLock){
             return;
         }
@@ -87,7 +87,7 @@ public class HistoryDataCleanSchedule {
     @Scheduled(cron = "0 0 1 * * ?")
     public void cleanFeatureHistory() {
         log.info("start scan clean feature history");
-        boolean tryLock = optimisticLockRepository.tryLock(FEATURE_HISTORY_DATA_CLEAN);
+        boolean tryLock = scheduleLock.tryLock(FEATURE_HISTORY_DATA_CLEAN);
         if (!tryLock){
             return;
         }

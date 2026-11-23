@@ -1,11 +1,11 @@
 package com.zj.master.dispatch.pipeline;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.entity.pipeline.ConfigDetail;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.pipeline.ConfigDetail;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.DispatchTaskModel;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.json.ContractJson;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
 import com.zj.domain.entity.bo.log.SubDispatchLogBO;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
@@ -13,17 +13,21 @@ import com.zj.domain.entity.bo.pipeline.PipelineActionBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
 import com.zj.domain.entity.bo.pipeline.PipelineNodeBO;
-import com.zj.domain.repository.log.IDispatchLogRepository;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.IPipelineActionRepository;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
-import com.zj.domain.repository.pipeline.IPipelineNodeRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
+import com.zj.domain.repository.log.IDispatchLogCommandRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
+import com.zj.domain.repository.pipeline.IBindBranchQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineActionQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryCommandRepository;
+import com.zj.domain.repository.pipeline.IPipelineNodeQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineQueryRepository;
 import com.zj.master.dispatch.IDispatchExecutor;
 import com.zj.master.dispatch.pipeline.builder.RefreshContextBuilder;
 import com.zj.master.dispatch.pipeline.builder.RequestContextBuilder;
-import com.zj.master.entity.vo.*;
+import com.zj.contract.pipeline.node.NodeConfig;
+import com.zj.contract.pipeline.node.RefreshContext;
+import com.zj.contract.pipeline.node.RequestContext;
+import com.zj.contract.pipeline.node.TaskNode;
+import com.zj.master.entity.vo.ActionDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,22 +47,22 @@ import java.util.stream.Collectors;
 @Component
 public class PipelineDispatch implements IDispatchExecutor {
 
-  private final IPipelineRepository pipelineRepository;
-  private final IPipelineNodeRepository pipelineNodeRepository;
-  private final IPipelineHistoryRepository pipelineHistoryRepository;
-  private final IPipelineActionRepository pipelineActionRepository;
+  private final IPipelineQueryRepository pipelineRepository;
+  private final IPipelineNodeQueryRepository pipelineNodeRepository;
+  private final IPipelineHistoryCommandRepository pipelineHistoryRepository;
+  private final IPipelineActionQueryRepository pipelineActionRepository;
   private final UniqueIdService uniqueIdService;
   private final PipelineExecuteProxy pipelineExecuteProxy;
-  private final ISubDispatchLogRepository subDispatchLogRepository;
-  private final IDispatchLogRepository dispatchLogRepository;
-  private final IBindBranchRepository bindBranchRepository;
+  private final ISubDispatchLogCommandRepository subDispatchLogRepository;
+  private final IDispatchLogCommandRepository dispatchLogRepository;
+  private final IBindBranchQueryRepository bindBranchRepository;
 
-  public PipelineDispatch(IPipelineRepository pipelineRepository,
-                          IPipelineNodeRepository pipelineNodeRepository,
-                          IPipelineHistoryRepository pipelineHistoryRepository,
-                          IPipelineActionRepository pipelineActionRepository, UniqueIdService uniqueIdService,
-                          PipelineExecuteProxy pipelineExecuteProxy, ISubDispatchLogRepository subDispatchLogRepository,
-                          IDispatchLogRepository dispatchLogRepository, IBindBranchRepository bindBranchRepository) {
+  public PipelineDispatch(IPipelineQueryRepository pipelineRepository,
+                          IPipelineNodeQueryRepository pipelineNodeRepository,
+                          IPipelineHistoryCommandRepository pipelineHistoryRepository,
+                          IPipelineActionQueryRepository pipelineActionRepository, UniqueIdService uniqueIdService,
+                          PipelineExecuteProxy pipelineExecuteProxy, ISubDispatchLogCommandRepository subDispatchLogRepository,
+                          IDispatchLogCommandRepository dispatchLogRepository, IBindBranchQueryRepository bindBranchRepository) {
     this.pipelineRepository = pipelineRepository;
     this.pipelineNodeRepository = pipelineNodeRepository;
     this.pipelineHistoryRepository = pipelineHistoryRepository;
@@ -82,10 +86,11 @@ public class PipelineDispatch implements IDispatchExecutor {
 
   @Override
   public String dispatch(DispatchTaskModel task, String logId) {
-    PipelineBO pipeline = pipelineRepository.getPipeline(task.getSourceId());
+    String pipelineId = task.firstSourceId();
+    PipelineBO pipeline = pipelineRepository.getPipeline(pipelineId);
     if (Objects.isNull(pipeline)) {
       log.info("can not find pipeline name={} pipelineId={}", task.getSourceName(),
-          task.getSourceId());
+          pipelineId);
       return null;
     }
 
@@ -93,13 +98,13 @@ public class PipelineDispatch implements IDispatchExecutor {
         pipeline.getPipelineId());
     if (CollectionUtils.isEmpty(pipelineNodes)) {
       log.info("can not find pipeline nodes name={} pipelineId={}", task.getSourceName(),
-          task.getSourceId());
+          pipelineId);
       return null;
     }
 
     String historyId = uniqueIdService.getUniqueId();
     saveHistory(pipeline.getPipelineId(), historyId);
-    log.info("start run pipeline={} name={} historyId={}", task.getSourceId(), task.getSourceName(),
+    log.info("start run pipeline={} name={} historyId={}", pipelineId, task.getSourceName(),
         historyId);
 
     dispatchLogRepository.updateLogSourceRecord(logId, historyId);
@@ -163,7 +168,7 @@ public class PipelineDispatch implements IDispatchExecutor {
 
 
   private TaskNode buildTaskNode(PipelineNodeBO pipelineNode, String historyId, String serviceId) {
-    log.info("start build taskNode ={}", JSON.toJSONString(pipelineNode));
+    log.info("start build taskNode ={}", ContractJson.write(pipelineNode));
     TaskNode taskNode = new TaskNode();
     taskNode.setNodeId(pipelineNode.getNodeId());
     taskNode.setName(pipelineNode.getNodeName());
@@ -193,7 +198,11 @@ public class PipelineDispatch implements IDispatchExecutor {
 
   @Override
   public boolean resume(DispatchLogBO dispatchLog) {
-    String pipelineId = dispatchLog.getSourceId();
+    if (CollectionUtils.isEmpty(dispatchLog.getSourceIds())) {
+      log.info("resume task has no source id, logId={}", dispatchLog.getLogId());
+      return false;
+    }
+    String pipelineId = dispatchLog.getSourceIds().get(0);
     PipelineBO pipeline = pipelineRepository.getPipeline(pipelineId);
     if (Objects.isNull(pipeline)) {
       log.info("resume task not find pipeline name={} pipelineId={}", dispatchLog.getSourceName(),

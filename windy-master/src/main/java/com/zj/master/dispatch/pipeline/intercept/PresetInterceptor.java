@@ -1,13 +1,13 @@
 package com.zj.master.dispatch.pipeline.intercept;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.zj.common.adapter.git.GitAccessInfo;
-import com.zj.common.entity.pipeline.ServiceConfig;
+import com.zj.contract.git.GitAccessInfo;
+import com.zj.contract.pipeline.ServiceConfig;
 import com.zj.common.enums.GitType;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
+import com.zj.contract.pipeline.node.TaskNode;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -20,12 +20,12 @@ import java.util.Optional;
  */
 @Component
 public class PresetInterceptor implements INodeExecuteInterceptor {
-  private final IMicroServiceRepository microServiceRepository;
+  private final IMicroServiceQueryRepository microServiceRepository;
 
-  private final ISystemConfigRepository systemConfigRepository;
+  private final ISystemConfigQueryRepository systemConfigRepository;
 
-  public PresetInterceptor(IMicroServiceRepository microServiceRepository,
-      ISystemConfigRepository systemConfigRepository) {
+  public PresetInterceptor(IMicroServiceQueryRepository microServiceRepository,
+      ISystemConfigQueryRepository systemConfigRepository) {
     this.microServiceRepository = microServiceRepository;
     this.systemConfigRepository = systemConfigRepository;
   }

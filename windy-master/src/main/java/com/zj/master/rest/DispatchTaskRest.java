@@ -1,8 +1,9 @@
 package com.zj.master.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.master.service.TaskLogService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,7 +30,7 @@ public class DispatchTaskRest {
   }
 
   @PostMapping("/stop")
-  public ResponseMeta<Boolean> stopTask(@RequestBody DispatchTaskModel task) {
-    return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.pauseTask(task));
+  public ResponseMeta<Boolean> stopTask(@RequestBody StopDispatch stopDispatch) {
+    return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.pauseTask(stopDispatch));
   }
 }

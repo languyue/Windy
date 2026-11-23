@@ -1,11 +1,11 @@
 package com.zj.master.dispatch.listener;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.eventbus.EventBus;
 import java.util.List;
 
 import com.google.common.eventbus.SubscriberExceptionContext;
 import com.google.common.eventbus.SubscriberExceptionHandler;
+import com.zj.contract.json.ContractJson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +30,7 @@ public class InternalEventFactory {
   public static class  EventBusExceptionListener implements SubscriberExceptionHandler {
     @Override
     public void handleException(Throwable exception, SubscriberExceptionContext context) {
-      log.info("catch event bus exception event={}", JSON.toJSONString(context.getEvent()), exception);
+      log.info("catch event bus exception event={}", ContractJson.write(context.getEvent()), exception);
     }
   }
 }

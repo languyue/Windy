@@ -1,8 +1,8 @@
 package com.zj.master.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.entity.dto.ResponseStatusModel;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.rpc.ResponseStatusModel;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.master.service.RecordQueryService;
 import org.springframework.web.bind.annotation.GetMapping;

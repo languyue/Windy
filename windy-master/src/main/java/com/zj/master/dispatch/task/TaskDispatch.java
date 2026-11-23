@@ -1,26 +1,25 @@
 package com.zj.master.dispatch.task;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.DispatchTaskModel;
+import com.zj.contract.dispatch.DispatchTaskModel;
 import com.zj.common.enums.FeatureStatus;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.feature.exec.BatchFeatureVo;
 import com.zj.domain.entity.bo.auth.UserBO;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
 import com.zj.domain.entity.bo.log.SubDispatchLogBO;
-import com.zj.domain.repository.auth.IUserRepository;
-import com.zj.domain.repository.feature.IFeatureRepository;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
-import com.zj.domain.repository.feature.ITaskRepository;
-import com.zj.domain.repository.log.IDispatchLogRepository;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
+import com.zj.domain.repository.auth.IUserQueryRepository;
+import com.zj.domain.repository.feature.IFeatureQueryRepository;
+import com.zj.domain.repository.feature.ITaskRecordCommandRepository;
+import com.zj.domain.repository.feature.ITaskQueryRepository;
+import com.zj.domain.repository.log.IDispatchLogCommandRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
 import com.zj.master.dispatch.IDispatchExecutor;
-import com.zj.master.entity.vo.ExecuteContext;
+import com.zj.contract.feature.exec.ExecuteContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
@@ -40,19 +39,19 @@ import java.util.stream.Collectors;
 @Component
 public class TaskDispatch implements IDispatchExecutor {
 
-    private final ITaskRepository taskRepository;
-    private final IFeatureRepository featureRepository;
-    private final ITaskRecordRepository taskRecordRepository;
+    private final ITaskQueryRepository taskRepository;
+    private final IFeatureQueryRepository featureRepository;
+    private final ITaskRecordCommandRepository taskRecordRepository;
     private final FeatureExecuteProxy featureExecuteProxy;
-    private final ISubDispatchLogRepository subTaskLogRepository;
-    private final IDispatchLogRepository dispatchLogRepository;
+    private final ISubDispatchLogCommandRepository subTaskLogRepository;
+    private final IDispatchLogCommandRepository dispatchLogRepository;
     private final UniqueIdService uniqueIdService;
-    private IUserRepository userRepository;
+    private IUserQueryRepository userRepository;
 
-    public TaskDispatch(ITaskRepository taskRepository, IFeatureRepository featureRepository,
-                        ITaskRecordRepository taskRecordRepository, FeatureExecuteProxy featureExecuteProxy,
-                        ISubDispatchLogRepository subTaskLogRepository, IDispatchLogRepository dispatchLogRepository,
-                        UniqueIdService uniqueIdService, IUserRepository userRepository) {
+    public TaskDispatch(ITaskQueryRepository taskRepository, IFeatureQueryRepository featureRepository,
+                        ITaskRecordCommandRepository taskRecordRepository, FeatureExecuteProxy featureExecuteProxy,
+                        ISubDispatchLogCommandRepository subTaskLogRepository, IDispatchLogCommandRepository dispatchLogRepository,
+                        UniqueIdService uniqueIdService, IUserQueryRepository userRepository) {
         this.taskRepository = taskRepository;
         this.featureRepository = featureRepository;
         this.taskRecordRepository = taskRecordRepository;
@@ -75,9 +74,10 @@ public class TaskDispatch implements IDispatchExecutor {
 
     @Override
     public String dispatch(DispatchTaskModel task, String logId) {
-        TaskInfoBO taskDetail = taskRepository.getTaskDetail(task.getSourceId());
+        String taskId = task.firstSourceId();
+        TaskInfoBO taskDetail = taskRepository.getTaskDetail(taskId);
         if (Objects.isNull(taskDetail)) {
-            log.info("can not find task={}", task.getSourceId());
+            log.info("can not find task={}", taskId);
             return null;
         }
 
@@ -88,7 +88,7 @@ public class TaskDispatch implements IDispatchExecutor {
             return "";
         }
 
-        TaskRecordBO taskRecordBO = buildTaskRecord(taskDetail, task.getTriggerId(), task.getUser());
+        TaskRecordBO taskRecordBO = buildTaskRecord(taskDetail, task.firstTriggerId(), task.getUser());
         boolean saveTask = taskRecordRepository.save(taskRecordBO);
         log.info("save task record result = {}", saveTask);
 
@@ -126,32 +126,33 @@ public class TaskDispatch implements IDispatchExecutor {
     private FeatureTask buildFeatureTask(DispatchTaskModel task, String logId, List<String> featureIds,
                                          TaskRecordBO taskRecordBO) {
         FeatureTask featureTask = new FeatureTask();
-        ExecuteContext executeContext = buildTaskConfig(taskRecordBO.getTaskConfig());
+        ExecuteContext executeContext = buildTaskConfig(taskRecordBO.getExecuteConfig());
         featureTask.setExecuteContext(executeContext);
         featureTask.addAll(featureIds);
 
         featureTask.setTaskRecordId(taskRecordBO.getRecordId());
-        featureTask.setTaskId(task.getSourceId());
+        featureTask.setTaskId(joinIds(task.getSourceIds()));
         featureTask.setLogId(logId);
         return featureTask;
     }
 
-    private ExecuteContext buildTaskConfig(String taskConfig) {
+    private static String joinIds(List<String> ids) {
+        return Objects.isNull(ids) ? null : String.join(",", ids);
+    }
+
+    private ExecuteContext buildTaskConfig(BatchFeatureVo taskConfig) {
         ExecuteContext executeContext = new ExecuteContext();
-        if (StringUtils.isBlank(taskConfig)) {
+        if (Objects.isNull(taskConfig)) {
             return executeContext;
         }
 
-        JSONObject jsonObject = JSON.parseObject(taskConfig);
-        for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
-            executeContext.set(entry.getKey(), entry.getValue());
-        }
+        executeContext.set("featureIds", taskConfig.getFeatureIds());
         return executeContext;
     }
 
     private TaskRecordBO buildTaskRecord(TaskInfoBO taskDetail, String triggerId, String userId) {
         TaskRecordBO taskRecordBO = new TaskRecordBO();
-        taskRecordBO.setTaskConfig(taskDetail.getTaskConfig());
+        taskRecordBO.setExecuteConfig(taskDetail.getExecuteConfig());
         taskRecordBO.setTaskName(taskDetail.getTaskName());
         taskRecordBO.setTaskId(taskDetail.getTaskId());
         taskRecordBO.setRecordId(uniqueIdService.getUniqueId());
@@ -172,9 +173,14 @@ public class TaskDispatch implements IDispatchExecutor {
 
     @Override
     public boolean resume(DispatchLogBO dispatchLog) {
-        TaskInfoBO taskDetail = taskRepository.getTaskDetail(dispatchLog.getSourceId());
+        if (CollectionUtils.isEmpty(dispatchLog.getSourceIds())) {
+            log.info("resume task has no source id, logId={}", dispatchLog.getLogId());
+            return false;
+        }
+        String taskId = dispatchLog.getSourceIds().get(0);
+        TaskInfoBO taskDetail = taskRepository.getTaskDetail(taskId);
         if (Objects.isNull(taskDetail)) {
-            log.info("can not find task={}", dispatchLog.getSourceId());
+            log.info("can not find task={}", taskId);
             return false;
         }
 
@@ -213,7 +219,7 @@ public class TaskDispatch implements IDispatchExecutor {
     private FeatureTask buildResumeFeatureTask(DispatchLogBO taskLog, TaskInfoBO taskDetail,
                                                List<FeatureInfoBO> featureList, List<String> completedFeatures) {
         FeatureTask featureTask = new FeatureTask();
-        ExecuteContext executeContext = buildTaskConfig(taskDetail.getTaskConfig());
+        ExecuteContext executeContext = buildTaskConfig(taskDetail.getExecuteConfig());
         featureTask.setExecuteContext(executeContext);
 
         //已执行完成状态的任务无需在恢复
@@ -224,7 +230,7 @@ public class TaskDispatch implements IDispatchExecutor {
         featureTask.addAll(featureIds);
 
         featureTask.setTaskRecordId(taskLog.getSourceRecordId());
-        featureTask.setTaskId(taskLog.getSourceId());
+        featureTask.setTaskId(joinIds(taskLog.getSourceIds()));
         featureTask.setLogId(taskLog.getLogId());
         return featureTask;
     }

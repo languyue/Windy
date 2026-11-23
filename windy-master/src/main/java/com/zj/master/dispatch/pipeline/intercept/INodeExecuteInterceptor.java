@@ -1,6 +1,6 @@
 package com.zj.master.dispatch.pipeline.intercept;
 
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 
 /**
  * 每个子节点运行之前的拦截器

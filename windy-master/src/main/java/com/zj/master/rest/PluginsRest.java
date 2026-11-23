@@ -1,7 +1,7 @@
 package com.zj.master.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.domain.entity.bo.feature.PluginInfoBO;
 import com.zj.master.service.PluginsService;
 import org.springframework.web.bind.annotation.GetMapping;

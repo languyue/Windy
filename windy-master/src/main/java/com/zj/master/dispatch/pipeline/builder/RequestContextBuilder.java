@@ -1,29 +1,32 @@
 package com.zj.master.dispatch.pipeline.builder;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.common.enums.ExecuteType;
 import com.zj.common.enums.Position;
+import com.zj.contract.support.ParamValueCaster;
 import com.zj.domain.entity.bo.pipeline.ActionParam;
 import com.zj.domain.entity.bo.pipeline.PipelineActionBO;
 import com.zj.master.entity.vo.ActionDetail;
-import com.zj.master.entity.vo.ApprovalContext;
-import com.zj.master.entity.vo.BuildCodeContext;
-import com.zj.common.entity.pipeline.ConfigDetail;
-import com.zj.master.entity.vo.DeployContext;
-import com.zj.master.entity.vo.FeatureContext;
-import com.zj.master.entity.vo.HttpContext;
-import com.zj.master.entity.vo.MergeMasterContext;
-import com.zj.master.entity.vo.RequestContext;
-import com.zj.master.entity.vo.WaitContext;
+import com.zj.contract.pipeline.node.ApprovalContext;
+import com.zj.contract.pipeline.node.BuildCodeContext;
+import com.zj.contract.pipeline.ConfigDetail;
+import com.zj.contract.pipeline.node.DeployContext;
+import com.zj.contract.pipeline.node.FeatureContext;
+import com.zj.contract.pipeline.node.HttpContext;
+import com.zj.contract.pipeline.node.MergeMasterContext;
+import com.zj.contract.pipeline.node.RequestContext;
+import com.zj.contract.pipeline.node.WaitContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,48 +60,52 @@ public class RequestContextBuilder {
     }
 
     private static RequestContext buildWaitContext(ActionDetail actionDetail) {
-        ConfigDetail configDetail = actionDetail.getConfigDetail();
-        return JSON.parseObject(JSON.toJSONString(configDetail.getParamList()), WaitContext.class);
+        WaitContext context = new WaitContext();
+        Map<String, Object> paramList = getParamList(actionDetail);
+        context.setWaitTime(getInteger(paramList, "waitTime"));
+        return context;
     }
 
     private static RequestContext buildApprovalContext(ActionDetail actionDetail) {
-        ConfigDetail configDetail = actionDetail.getConfigDetail();
-        return JSON.parseObject(JSON.toJSONString(configDetail.getParamList()), ApprovalContext.class);
+        ApprovalContext context = new ApprovalContext();
+        Map<String, Object> paramList = getParamList(actionDetail);
+        context.setMaxWait(getInteger(paramList, "maxWait"));
+        return context;
     }
 
 
     private static RequestContext buildHttpContext(ActionDetail actionDetail) {
         ConfigDetail configDetail = actionDetail.getConfigDetail();
-        Map<String, String> requestContext = configDetail.getParamList();
+        Map<String, Object> requestContext = configDetail.getParamList();
         String actionUrl = actionDetail.getAction().getActionUrl();
         Map<String, String> headers = new HashMap<>();
-        Map<String, String> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>();
         if (CollectionUtils.isNotEmpty(actionDetail.getAction().getParamList())) {
             actionUrl = exchangeRequestUrl(actionDetail, requestContext, actionUrl);
-            headers = getActionParamsByPosition(actionDetail, Position.Header.name(), requestContext);
+            headers = toStringMap(getActionParamsByPosition(actionDetail, Position.Header.name(), requestContext));
             actionDetail.getAction().setHeaders(headers);
             actionUrl = warpPathParam(actionDetail, requestContext, actionUrl);
             body = getActionParamsByPosition(actionDetail, Position.Body.name(), requestContext);
         }
-        return HttpContext.builder().body(JSON.toJSONString(body)).bodyType(actionDetail.getAction().getBodyType())
+        return HttpContext.builder().body(body).bodyType(actionDetail.getAction().getBodyType())
                 .url(actionUrl).headers(headers).build();
     }
 
-    private static String warpPathParam(ActionDetail actionDetail, Map<String, String> requestContext, String actionUrl) {
-        Map<String, String> pathParams = getActionParamsByPosition(actionDetail, Position.Path.name(),
-                requestContext);
+    private static String warpPathParam(ActionDetail actionDetail, Map<String, Object> requestContext, String actionUrl) {
+        Map<String, String> pathParams = toStringMap(
+                getActionParamsByPosition(actionDetail, Position.Path.name(), requestContext));
         if (MapUtils.isEmpty(pathParams)) {
             return actionUrl;
         }
         StrSubstitutor strSubstitutor = new StrSubstitutor(pathParams);
-        actionUrl = strSubstitutor.replace(actionUrl);
-        return actionUrl;
+        return strSubstitutor.replace(actionUrl);
     }
 
-    private static String exchangeRequestUrl(ActionDetail actionDetail, Map<String, String> requestContext, String actionUrl) {
-        Map<String, String> queryParams = getActionParamsByPosition(actionDetail, Position.Query.name(), requestContext);
-        actionUrl = exchangeUrl(actionUrl, queryParams);
-        return actionUrl;
+    private static String exchangeRequestUrl(ActionDetail actionDetail, Map<String, Object> requestContext,
+            String actionUrl) {
+        Map<String, String> queryParams = toStringMap(
+                getActionParamsByPosition(actionDetail, Position.Query.name(), requestContext));
+        return exchangeUrl(actionUrl, queryParams);
     }
 
     private static String exchangeUrl(String actionUrl, Map<String, String> queryParams) {
@@ -115,32 +122,86 @@ public class RequestContextBuilder {
         return actionUrl + "&" + queryList;
     }
 
-    private static Map<String, String> getActionParamsByPosition(ActionDetail actionDetail, String position, Map<String,
-            String> requestContext) {
-        return actionDetail.getAction().getParamList().stream().filter(param -> Objects.equals(position,
-                param.getPosition())).map(param -> {
-            param.setValue(requestContext.get(param.getName()));
-            return param;
-        }).collect(Collectors.toMap(ActionParam::getName, ActionParam::getValue));
+    /**
+     * 参数值按声明的类型还原，后续链路只处理对象；Header/Path/Query 需要文本，单独收敛成字符串
+     */
+    private static Map<String, Object> getActionParamsByPosition(ActionDetail actionDetail, String position,
+            Map<String, Object> requestContext) {
+        Map<String, Object> params = new HashMap<>();
+        actionDetail.getAction().getParamList().stream()
+                .filter(param -> Objects.equals(position, param.getPosition()))
+                .forEach(param -> {
+                    Object value = ParamValueCaster.cast(requestContext.get(param.getName()), param.getType());
+                    param.setValue(value);
+                    params.put(param.getName(), value);
+                });
+        return params;
+    }
+
+    private static Map<String, String> toStringMap(Map<String, Object> params) {
+        Map<String, String> textParams = new HashMap<>();
+        params.forEach((name, value) -> textParams.put(name, Objects.isNull(value) ? null : String.valueOf(value)));
+        return textParams;
     }
 
     private static RequestContext buildTestContext(ActionDetail actionDetail) {
-        ConfigDetail configDetail = actionDetail.getConfigDetail();
-        return JSON.parseObject(JSON.toJSONString(configDetail.getParamList()), FeatureContext.class);
+        FeatureContext context = new FeatureContext();
+        context.setTaskId(getString(getParamList(actionDetail), "taskId"));
+        return context;
     }
 
     private static RequestContext buildDeployContext(ActionDetail actionDetail) {
-        ConfigDetail configDetail = actionDetail.getConfigDetail();
-        return JSON.parseObject(JSON.toJSONString(configDetail.getParamList()), DeployContext.class);
+        DeployContext context = new DeployContext();
+        context.setEnvId(getString(getParamList(actionDetail), "envId"));
+        return context;
     }
 
     private static RequestContext buildCodeContext(ActionDetail actionDetail) {
-        ConfigDetail configDetail = actionDetail.getConfigDetail();
-        return JSON.parseObject(JSON.toJSONString(configDetail.getParamList()), BuildCodeContext.class);
+        BuildCodeContext context = new BuildCodeContext();
+        Map<String, Object> paramList = getParamList(actionDetail);
+        context.setPomPath(getString(paramList, "pomPath"));
+        context.setBranches(getStringList(paramList, "branches"));
+        return context;
     }
 
     private static RequestContext buildMergeContext(ActionDetail actionDetail) {
-        ConfigDetail configDetail = actionDetail.getConfigDetail();
-        return JSON.parseObject(JSON.toJSONString(configDetail.getParamList()), MergeMasterContext.class);
+        MergeMasterContext context = new MergeMasterContext();
+        Map<String, Object> paramList = getParamList(actionDetail);
+        context.setTagName(getString(paramList, "tagName"));
+        context.setMessage(getString(paramList, "message"));
+        context.setBranches(getStringList(paramList, "branches"));
+        context.setDeleteBranch(getString(paramList, "deleteBranch"));
+        context.setMainBranch(getString(paramList, "mainBranch"));
+        return context;
+    }
+
+    private static Map<String, Object> getParamList(ActionDetail actionDetail) {
+        return Optional.ofNullable(actionDetail.getConfigDetail())
+                .map(ConfigDetail::getParamList).orElseGet(HashMap::new);
+    }
+
+    /**
+     * 空白值按 null 处理：历史上 fastjson 把空串转成 null，这里保持一致
+     */
+    private static String getString(Map<String, Object> paramList, String name) {
+        Object value = paramList.get(name);
+        if (Objects.isNull(value)) {
+            return null;
+        }
+        String text = String.valueOf(value);
+        return StringUtils.isBlank(text) ? null : text.trim();
+    }
+
+    private static Integer getInteger(Map<String, Object> paramList, String name) {
+        String value = getString(paramList, name);
+        return Objects.isNull(value) ? null : Integer.valueOf(value);
+    }
+
+    /**
+     * 历史上 fastjson 会把 "a,b" 这类字符串拆成列表，这里保持一致
+     */
+    private static List<String> getStringList(Map<String, Object> paramList, String name) {
+        String value = getString(paramList, name);
+        return Objects.isNull(value) ? null : Arrays.asList(value.split(","));
     }
 }

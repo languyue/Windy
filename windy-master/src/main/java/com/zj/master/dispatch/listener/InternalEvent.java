@@ -1,6 +1,6 @@
 package com.zj.master.dispatch.listener;
 
-import com.zj.common.enums.LogType;
+import com.zj.contract.enums.LogType;
 import com.zj.master.entity.enums.EventType;
 import lombok.Data;
 import lombok.NoArgsConstructor;

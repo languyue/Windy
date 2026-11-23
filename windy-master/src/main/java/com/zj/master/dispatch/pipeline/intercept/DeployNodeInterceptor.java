@@ -1,25 +1,24 @@
 package com.zj.master.dispatch.pipeline.intercept;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.common.entity.WindyConstants;
 import com.zj.common.enums.ExecuteType;
-import com.zj.common.entity.pipeline.DeployParams;
-import com.zj.common.entity.pipeline.K8SAccessParams;
-import com.zj.common.entity.pipeline.SSHParams;
-import com.zj.common.entity.pipeline.ServiceConfig;
+import com.zj.contract.pipeline.DeployParams;
+import com.zj.contract.pipeline.K8SAccessParams;
+import com.zj.contract.pipeline.SSHParams;
+import com.zj.contract.pipeline.ServiceConfig;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
 import com.zj.domain.entity.bo.log.SubDispatchLogBO;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.domain.entity.bo.service.DeployEnvironmentBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.enums.EnvType;
-import com.zj.domain.repository.log.IDispatchLogRepository;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
-import com.zj.domain.repository.service.IEnvironmentRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.master.entity.vo.DeployContext;
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.domain.repository.log.IDispatchLogQueryRepository;
+import com.zj.domain.repository.log.ISubDispatchLogQueryRepository;
+import com.zj.domain.repository.pipeline.INodeRecordQueryRepository;
+import com.zj.domain.repository.service.IEnvironmentQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
+import com.zj.contract.pipeline.node.DeployContext;
+import com.zj.contract.pipeline.node.TaskNode;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -35,17 +34,17 @@ import java.util.Optional;
  */
 @Component
 public class DeployNodeInterceptor implements INodeExecuteInterceptor {
-    private final ISubDispatchLogRepository subDispatchLogRepository;
-    private final IEnvironmentRepository environmentRepository;
-    private final IDispatchLogRepository dispatchLogRepository;
-    private final INodeRecordRepository nodeRecordRepository;
-    private final IMicroServiceRepository microServiceRepository;
+    private final ISubDispatchLogQueryRepository subDispatchLogRepository;
+    private final IEnvironmentQueryRepository environmentRepository;
+    private final IDispatchLogQueryRepository dispatchLogRepository;
+    private final INodeRecordQueryRepository nodeRecordRepository;
+    private final IMicroServiceQueryRepository microServiceRepository;
 
-    public DeployNodeInterceptor(ISubDispatchLogRepository subDispatchLogRepository,
-                                 IEnvironmentRepository environmentRepository,
-                                 IDispatchLogRepository dispatchLogRepository,
-                                 INodeRecordRepository nodeRecordRepository,
-                                 IMicroServiceRepository microServiceRepository) {
+    public DeployNodeInterceptor(ISubDispatchLogQueryRepository subDispatchLogRepository,
+                                 IEnvironmentQueryRepository environmentRepository,
+                                 IDispatchLogQueryRepository dispatchLogRepository,
+                                 INodeRecordQueryRepository nodeRecordRepository,
+                                 IMicroServiceQueryRepository microServiceRepository) {
         this.subDispatchLogRepository = subDispatchLogRepository;
         this.environmentRepository = environmentRepository;
         this.dispatchLogRepository = dispatchLogRepository;
@@ -73,8 +72,9 @@ public class DeployNodeInterceptor implements INodeExecuteInterceptor {
             SubDispatchLogBO subDispatchLogBO = optional.get();
             wrapBuildContext(subDispatchLogBO, deployContext);
 
-            deployContext.setSingleClientIp(subDispatchLogBO.getClientIp());
-            deployContext.setRequestSingle(true);
+            //固定回到构建节点所在的 client 执行，保证构建产物在本节点可见
+            taskNode.setSingleClientIp(subDispatchLogBO.getClientIp());
+            taskNode.setRequestSingle(true);
         }
 
         DeployEnvironmentBO deployEnvironment = environmentRepository.getEnvironment(deployContext.getEnvId());
@@ -88,13 +88,11 @@ public class DeployNodeInterceptor implements INodeExecuteInterceptor {
     public DeployParams getDeployParams(String serviceId, DeployEnvironmentBO environment, String imageName) {
         DeployParams deployParams = new DeployParams();
         if (Objects.equals(environment.getEnvType(), EnvType.K8S.getType())) {
-            K8SAccessParams k8SAccessParams = JSON.parseObject(environment.getEnvParams(), K8SAccessParams.class);
-            deployParams.setK8SAccessParams(k8SAccessParams);
+            deployParams.setK8SAccessParams((K8SAccessParams) environment.getAccessParams());
         }
 
         if (Objects.equals(environment.getEnvType(), EnvType.SSH.getType())) {
-            SSHParams sshParams = JSON.parseObject(environment.getEnvParams(), SSHParams.class);
-            deployParams.setSshParams(sshParams);
+            deployParams.setSshParams((SSHParams) environment.getAccessParams());
         }
 
         MicroserviceBO serviceDetail = microServiceRepository.queryServiceDetail(serviceId);

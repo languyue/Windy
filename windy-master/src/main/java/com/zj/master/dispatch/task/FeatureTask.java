@@ -1,6 +1,6 @@
 package com.zj.master.dispatch.task;
 
-import com.zj.master.entity.vo.ExecuteContext;
+import com.zj.contract.feature.exec.ExecuteContext;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.Data;

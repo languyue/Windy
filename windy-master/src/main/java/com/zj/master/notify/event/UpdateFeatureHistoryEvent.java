@@ -1,14 +1,14 @@
 package com.zj.master.notify.event;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryCommandRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
 import com.zj.master.dispatch.task.FeatureExecuteProxy;
 import com.zj.master.notify.INotifyEvent;
+import com.zj.master.notify.NotifyPayloadMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +22,12 @@ import java.util.Map;
 @Component
 public class UpdateFeatureHistoryEvent implements INotifyEvent {
 
-  private final IFeatureHistoryRepository featureHistoryRepository;
+  private final IFeatureHistoryCommandRepository featureHistoryRepository;
   private final FeatureExecuteProxy featureExecuteProxy;
-  private final ISubDispatchLogRepository subTaskLogRepository;
+  private final ISubDispatchLogCommandRepository subTaskLogRepository;
 
-  public UpdateFeatureHistoryEvent(IFeatureHistoryRepository featureHistoryRepository,
-      FeatureExecuteProxy featureExecuteProxy, ISubDispatchLogRepository subTaskLogRepository) {
+  public UpdateFeatureHistoryEvent(IFeatureHistoryCommandRepository featureHistoryRepository,
+      FeatureExecuteProxy featureExecuteProxy, ISubDispatchLogCommandRepository subTaskLogRepository) {
     this.featureHistoryRepository = featureHistoryRepository;
     this.featureExecuteProxy = featureExecuteProxy;
     this.subTaskLogRepository = subTaskLogRepository;
@@ -41,8 +41,8 @@ public class UpdateFeatureHistoryEvent implements INotifyEvent {
   @Override
   public boolean handle(ResultEvent resultEvent) {
     log.info("receive update feature history event id = {} event={}", resultEvent.getExecuteId(),
-        JSON.toJSONString(resultEvent));
-    FeatureHistoryBO history = JSON.parseObject(JSON.toJSONString(resultEvent.getParams()), FeatureHistoryBO.class);
+        resultEvent);
+    FeatureHistoryBO history = NotifyPayloadMapper.toFeatureHistoryBO(resultEvent);
     FeatureHistoryBO featureHistory = featureHistoryRepository.getFeatureHistory(history.getHistoryId());
     boolean updateStatus = true;
     if (!ProcessStatus.isCompleteStatus(featureHistory.getExecuteStatus())) {

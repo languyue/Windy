@@ -1,14 +1,13 @@
 package com.zj.master.notify.event;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.entity.dto.ResultEvent;
-import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.event.ResultEvent;
 import com.zj.common.entity.generate.GenerateRecordBO;
-import com.zj.domain.repository.service.IGenerateRecordRepository;
+import com.zj.domain.repository.service.IGenerateRecordCommandRepository;
 import java.util.Objects;
 
 import com.zj.master.notify.INotifyEvent;
+import com.zj.master.notify.NotifyPayloadMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +15,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class UpdateGenerateRecordEvent implements INotifyEvent {
 
-  private final IGenerateRecordRepository generateRecordRepository;
+  private final IGenerateRecordCommandRepository generateRecordRepository;
 
-  public UpdateGenerateRecordEvent(IGenerateRecordRepository generateRecordRepository) {
+  public UpdateGenerateRecordEvent(IGenerateRecordCommandRepository generateRecordRepository) {
     this.generateRecordRepository = generateRecordRepository;
   }
 
@@ -29,8 +28,8 @@ public class UpdateGenerateRecordEvent implements INotifyEvent {
 
   @Override
   public boolean handle(ResultEvent resultEvent) {
-    log.info("receive generate record update event={}", JSON.toJSONString(resultEvent.getParams()));
-    GenerateRecordBO recordDto = JSON.parseObject(JSON.toJSONString(resultEvent.getParams()), GenerateRecordBO.class);
+    log.info("receive generate record update event={}", resultEvent.getParams());
+    GenerateRecordBO recordDto = NotifyPayloadMapper.toGenerateRecordBO(resultEvent);
     if (Objects.isNull(recordDto)) {
       return false;
     }

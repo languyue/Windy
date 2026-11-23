@@ -1,14 +1,15 @@
 package com.zj.master.config;
 
-import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.alibaba.fastjson.support.config.FastJsonConfig;
-import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.zj.contract.json.WireJson;
+
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -40,7 +41,6 @@ public class RestTemplateConfig {
 
     RestTemplate restTemplate = new RestTemplate(interceptorFactory);
 
-    //换上fastjson
     List<HttpMessageConverter<?>> messageConverters = restTemplate.getMessageConverters();
     Iterator<HttpMessageConverter<?>> iterator = messageConverters.iterator();
     while (iterator.hasNext()) {
@@ -56,13 +56,11 @@ public class RestTemplateConfig {
       }
     }
     messageConverters.add(new StringHttpMessageConverter(StandardCharsets.UTF_8));
-    FastJsonHttpMessageConverter fastJsonHttpMessageConverter = new FastJsonHttpMessageConverter();
-    FastJsonConfig fastJsonConfig = new FastJsonConfig();
-    fastJsonConfig.setSerializerFeatures(SerializerFeature.WriteNullNumberAsZero,
-        SerializerFeature.WriteMapNullValue, SerializerFeature.WriteNullStringAsEmpty,
-        SerializerFeature.WriteNullListAsEmpty, SerializerFeature.DisableCircularReferenceDetect);
-    fastJsonHttpMessageConverter.setFastJsonConfig(fastJsonConfig);
-    messageConverters.add(fastJsonHttpMessageConverter);
+    //出站统一走契约层的 Jackson 配置，与入站（Spring MVC 默认 Jackson）保持同一套语义
+    MappingJackson2HttpMessageConverter jacksonConverter =
+        new MappingJackson2HttpMessageConverter(WireJson.mapper());
+    jacksonConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_JSON));
+    messageConverters.add(jacksonConverter);
 
     restTemplate.getMessageConverters()
         .add(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));

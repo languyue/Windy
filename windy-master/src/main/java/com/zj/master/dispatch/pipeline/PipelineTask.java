@@ -1,6 +1,6 @@
 package com.zj.master.dispatch.pipeline;
 
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.Data;

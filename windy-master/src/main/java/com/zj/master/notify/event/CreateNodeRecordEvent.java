@@ -1,12 +1,12 @@
 package com.zj.master.notify.event;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.event.ResultEvent;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
+import com.zj.domain.repository.pipeline.INodeRecordCommandRepository;
 import com.zj.master.notify.INotifyEvent;
+import com.zj.master.notify.NotifyPayloadMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +18,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class CreateNodeRecordEvent implements INotifyEvent {
 
-  private final INodeRecordRepository nodeRecordRepository;
-  private final ISubDispatchLogRepository subDispatchLogRepository;
+  private final INodeRecordCommandRepository nodeRecordRepository;
+  private final ISubDispatchLogCommandRepository subDispatchLogRepository;
 
-  public CreateNodeRecordEvent(INodeRecordRepository nodeRecordRepository,
-      ISubDispatchLogRepository subDispatchLogRepository) {
+  public CreateNodeRecordEvent(INodeRecordCommandRepository nodeRecordRepository,
+      ISubDispatchLogCommandRepository subDispatchLogRepository) {
     this.nodeRecordRepository = nodeRecordRepository;
     this.subDispatchLogRepository = subDispatchLogRepository;
   }
@@ -35,9 +35,8 @@ public class CreateNodeRecordEvent implements INotifyEvent {
   @Override
   public boolean handle(ResultEvent resultEvent) {
     log.info("receive node record create event id = {} event={}", resultEvent.getExecuteId(),
-        JSON.toJSONString(resultEvent.getParams()));
-    NodeRecordBO nodeRecord = JSON.parseObject(JSON.toJSONString(resultEvent.getParams()),
-        NodeRecordBO.class);
+        resultEvent.getParams());
+    NodeRecordBO nodeRecord = NotifyPayloadMapper.toNodeRecordBO(resultEvent);
 
     subDispatchLogRepository.updateSubLogClientIp(resultEvent.getLogId(), nodeRecord.getNodeId(),
         resultEvent.getClientIp());

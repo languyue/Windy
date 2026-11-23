@@ -1,26 +1,27 @@
 package com.zj.master.dispatch.generate;
 
+import com.zj.contract.feature.exec.GenerateParam;
+import com.zj.contract.service.ApiModel;
 import com.zj.common.adapter.invoker.IClientInvoker;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.pipeline.ServiceConfig;
-import com.zj.common.entity.service.ApiParamModel;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.pipeline.ServiceConfig;
+import com.zj.contract.service.ApiParamModel;
 import com.zj.common.enums.DispatchType;
-import com.zj.common.enums.LogType;
+import com.zj.contract.enums.LogType;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
 import com.zj.domain.entity.bo.service.ServiceGenerateBO;
 import com.zj.domain.entity.vo.GenerateMavenConfigDto;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IGenerateRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IGenerateQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
+import com.zj.domain.repository.service.IServiceApiQueryRepository;
 import com.zj.master.dispatch.IDispatchExecutor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,15 +30,15 @@ import java.util.stream.Collectors;
 @Component
 public class GenerateDispatcher implements IDispatchExecutor {
 
-  private final IGenerateRepository generateRepository;
-  private final IServiceApiRepository serviceApiRepository;
-  private final ISystemConfigRepository systemConfigRepository;
-  private final IMicroServiceRepository serviceRepository;
+  private final IGenerateQueryRepository generateRepository;
+  private final IServiceApiQueryRepository serviceApiRepository;
+  private final ISystemConfigQueryRepository systemConfigRepository;
+  private final IMicroServiceQueryRepository serviceRepository;
   private final IClientInvoker clientInvoker;
 
-  public GenerateDispatcher(IGenerateRepository generateRepository,
-                            IServiceApiRepository serviceApiRepository, ISystemConfigRepository systemConfigRepository,
-                            IMicroServiceRepository serviceRepository, IClientInvoker clientInvoker) {
+  public GenerateDispatcher(IGenerateQueryRepository generateRepository,
+                            IServiceApiQueryRepository serviceApiRepository, ISystemConfigQueryRepository systemConfigRepository,
+                            IMicroServiceQueryRepository serviceRepository, IClientInvoker clientInvoker) {
     this.generateRepository = generateRepository;
     this.serviceApiRepository = serviceApiRepository;
     this.systemConfigRepository = systemConfigRepository;
@@ -57,7 +58,7 @@ public class GenerateDispatcher implements IDispatchExecutor {
 
   @Override
   public Boolean dispatch(DispatchTaskModel task, String logId) {
-    String serviceId = task.getSourceId();
+    String serviceId = task.firstSourceId();
     ServiceGenerateBO serviceGenerate = generateRepository.getByService(serviceId);
     if (Objects.isNull(serviceGenerate)) {
       return false;
@@ -71,7 +72,10 @@ public class GenerateDispatcher implements IDispatchExecutor {
     generateParam.setMavenRepository(mavenConfig.getMavenUrl());
     generateParam.setServiceId(serviceId);
 
-    List<String> apiIdList = Arrays.asList(task.getTriggerId().split(","));
+    List<String> apiIdList = task.getTriggerIds();
+    if (CollectionUtils.isEmpty(apiIdList)) {
+      return false;
+    }
     List<ServiceApiBO> apiList = serviceApiRepository.getServiceApiList(apiIdList);
     if (CollectionUtils.isEmpty(apiList)) {
       return false;

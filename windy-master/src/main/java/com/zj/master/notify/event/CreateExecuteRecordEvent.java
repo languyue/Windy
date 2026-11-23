@@ -1,11 +1,11 @@
 package com.zj.master.notify.event;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.event.ResultEvent;
 import com.zj.domain.entity.bo.feature.ExecuteRecordBO;
-import com.zj.domain.repository.feature.IExecuteRecordRepository;
+import com.zj.domain.repository.feature.IExecuteRecordCommandRepository;
 import com.zj.master.notify.INotifyEvent;
+import com.zj.master.notify.NotifyPayloadMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -17,9 +17,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class CreateExecuteRecordEvent implements INotifyEvent {
 
-  private final IExecuteRecordRepository executeRecordRepository;
+  private final IExecuteRecordCommandRepository executeRecordRepository;
 
-  public CreateExecuteRecordEvent(IExecuteRecordRepository executeRecordRepository) {
+  public CreateExecuteRecordEvent(IExecuteRecordCommandRepository executeRecordRepository) {
     this.executeRecordRepository = executeRecordRepository;
   }
 
@@ -31,8 +31,8 @@ public class CreateExecuteRecordEvent implements INotifyEvent {
   @Override
   public boolean handle(ResultEvent resultEvent) {
     log.info("receive execute record create event id = {} event={}", resultEvent.getExecuteId(),
-        JSON.toJSONString(resultEvent.getParams()));
-    ExecuteRecordBO executeRecord = JSON.parseObject(JSON.toJSONString(resultEvent.getParams()), ExecuteRecordBO.class);
+        resultEvent.getParams());
+    ExecuteRecordBO executeRecord = NotifyPayloadMapper.toExecuteRecordBO(resultEvent);
     return executeRecordRepository.saveRecord(executeRecord);
   }
 }

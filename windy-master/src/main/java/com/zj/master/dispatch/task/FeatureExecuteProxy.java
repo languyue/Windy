@@ -1,12 +1,14 @@
 package com.zj.master.dispatch.task;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.zj.common.enums.DispatchType;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.feature.ExecutorUnit;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.exec.ExecutePointVo;
+import com.zj.contract.feature.exec.FeatureExecuteParam;
+import com.zj.contract.json.ContractJson;
 import com.zj.common.adapter.invoker.IClientInvoker;
 import com.zj.common.utils.IpUtils;
 import com.zj.common.utils.OrikaUtil;
@@ -16,18 +18,19 @@ import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
-import com.zj.domain.repository.feature.IExecutePointRepository;
-import com.zj.domain.repository.feature.IExecuteTemplateRepository;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
-import com.zj.domain.repository.feature.IFeatureRepository;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
-import com.zj.domain.repository.feature.ITestCaseConfigRepository;
+import com.zj.domain.repository.feature.ICaseGlobalContextCommandRepository;
+import com.zj.domain.repository.feature.IExecutePointQueryRepository;
+import com.zj.domain.repository.feature.IExecuteTemplateQueryRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryCommandRepository;
+import com.zj.domain.repository.feature.IFeatureQueryRepository;
+import com.zj.domain.repository.feature.ITaskRecordCommandRepository;
+import com.zj.domain.repository.feature.ITestCaseConfigQueryRepository;
 import com.zj.master.dispatch.feature.FeatureDispatch;
 import com.zj.master.dispatch.listener.IStopEventListener;
 import com.zj.master.dispatch.listener.InternalEvent;
 import com.zj.master.dispatch.listener.InternalEventFactory;
 import com.zj.master.entity.enums.EventType;
-import com.zj.master.entity.vo.ExecuteContext;
+import com.zj.contract.feature.exec.ExecuteContext;
 import com.zj.plugin.loader.ExecuteStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -41,6 +44,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -61,22 +65,24 @@ public class FeatureExecuteProxy implements IStopEventListener {
     private final Map<String, FeatureTask> featureTaskMap = new ConcurrentHashMap<>();
     private final Executor executorService;
     private final TaskEndProcessor taskEndProcessor;
-    private final IExecutePointRepository executePointRepository;
-    private final ITaskRecordRepository taskRecordRepository;
-    private final IFeatureHistoryRepository featureHistoryRepository;
-    private final IExecuteTemplateRepository executeTemplateRepository;
-    private final ITestCaseConfigRepository caseConfigRepository;
-    private final IFeatureRepository featureRepository;
+    private final IExecutePointQueryRepository executePointRepository;
+    private final ITaskRecordCommandRepository taskRecordRepository;
+    private final IFeatureHistoryCommandRepository featureHistoryRepository;
+    private final IExecuteTemplateQueryRepository executeTemplateRepository;
+    private final ITestCaseConfigQueryRepository caseConfigRepository;
+    private final ICaseGlobalContextCommandRepository caseGlobalContextRepository;
+    private final IFeatureQueryRepository featureRepository;
     private final IClientInvoker clientInvoker;
 
     public FeatureExecuteProxy(@Qualifier("featureExecutorPool") Executor executorService,
                                TaskEndProcessor taskEndProcessor,
-                               IExecutePointRepository executePointRepository,
-                               ITaskRecordRepository taskRecordRepository,
-                               IFeatureHistoryRepository featureHistoryRepository,
-                               IExecuteTemplateRepository executeTemplateRepository,
-                               ITestCaseConfigRepository caseConfigRepository,
-                               IFeatureRepository featureRepository, IClientInvoker clientInvoker) {
+                               IExecutePointQueryRepository executePointRepository,
+                               ITaskRecordCommandRepository taskRecordRepository,
+                               IFeatureHistoryCommandRepository featureHistoryRepository,
+                               IExecuteTemplateQueryRepository executeTemplateRepository,
+                               ITestCaseConfigQueryRepository caseConfigRepository,
+                               ICaseGlobalContextCommandRepository caseGlobalContextRepository,
+                               IFeatureQueryRepository featureRepository, IClientInvoker clientInvoker) {
         this.executorService = executorService;
         this.taskEndProcessor = taskEndProcessor;
         this.executePointRepository = executePointRepository;
@@ -84,6 +90,7 @@ public class FeatureExecuteProxy implements IStopEventListener {
         this.featureHistoryRepository = featureHistoryRepository;
         this.executeTemplateRepository = executeTemplateRepository;
         this.caseConfigRepository = caseConfigRepository;
+        this.caseGlobalContextRepository = caseGlobalContextRepository;
         this.featureRepository = featureRepository;
         this.clientInvoker = clientInvoker;
     }
@@ -135,14 +142,19 @@ public class FeatureExecuteProxy implements IStopEventListener {
         featureExecuteParam.setFeatureId(featureId);
         featureExecuteParam.setExecuteContext(featureTask.getExecuteContext().toMap());
         featureExecuteParam.setTaskRecordId(featureTask.getTaskRecordId());
-        List<ExecutePointBO> executePoints = executePointRepository.getExecutePointByFeatureId(featureId);
-        //将用例关联模版信息也添加到用例信息中
-        executePoints.forEach(executePoint -> {
-            ExecutorUnit executorUnit = wrapExecutorUnitTemplate(executePoint);
-            executePoint.setExecutorUnit(executorUnit);
-        });
+        List<ExecutePointVo> executePoints = executePointRepository.getExecutePointByFeatureId(featureId)
+                .stream().map(this::toExecutePointVo).collect(Collectors.toList());
         featureExecuteParam.setExecutePointList(executePoints);
         return featureExecuteParam;
+    }
+
+    /**
+     * 存储层的执行点只取执行任务需要的字段下发，同时把关联模版信息合并进执行点
+     */
+    private ExecutePointVo toExecutePointVo(ExecutePointBO executePoint) {
+        ExecutePointVo pointVo = OrikaUtil.convert(executePoint, ExecutePointVo.class);
+        pointVo.setExecutorUnit(wrapExecutorUnitTemplate(executePoint));
+        return pointVo;
     }
 
     private ExecutorUnit wrapExecutorUnitTemplate(ExecutePointBO executePoint) {
@@ -157,7 +169,7 @@ public class FeatureExecuteProxy implements IStopEventListener {
         }
         ExecutorUnit related = OrikaUtil.convert(executeTemplate, ExecutorUnit.class);
         related.setParams(executeTemplate.getParameterDefines());
-        related.setHeaders((Map<String, String>) JSON.parse(executeTemplate.getHeader()));
+        related.setHeaders(executeTemplate.getHeaders());
         executorUnit.setRelatedTemplate(related);
         return executorUnit;
     }
@@ -180,7 +192,7 @@ public class FeatureExecuteProxy implements IStopEventListener {
             }
             ExecutorUnit related = OrikaUtil.convert(executeTemplate, ExecutorUnit.class);
             related.setParams(executeTemplate.getParameterDefines());
-            related.setHeaders((Map<String, String>) JSON.parse(executeTemplate.getHeader()));
+            related.setHeaders(executeTemplate.getHeaders());
             point.getExecutorUnit().setRelatedTemplate(related);
         });
     }
@@ -223,15 +235,13 @@ public class FeatureExecuteProxy implements IStopEventListener {
         }
         List<TestCaseConfigBO> caseConfigs = caseConfigRepository.getCaseConfigs(
                 feature.getTestCaseId());
-        List<TestCaseConfigBO> updateList =
-                caseConfigs.stream().filter(config -> event.getContext().containsKey(config.getParamKey())
-                        && !Objects.equals(event.getContext().get(config.getParamKey()), config.getValue()))
-                        .map(config -> {
-                            config.setValue(String.valueOf(event.getContext().get(config.getParamKey())));
-                            return config;
-                        }).collect(Collectors.toList());
-        boolean result = caseConfigRepository.batchUpdateCaseConfig(updateList);
-        log.info("batch recover global context result={} context={}", result, JSON.toJSONString(updateList));
+        //只回收那些在配置里声明过的全局参数，回收结果写运行态的 case_global_context，不回写配置表
+        Set<String> declareKeys = caseConfigs.stream().map(TestCaseConfigBO::getParamKey).collect(Collectors.toSet());
+        Map<String, String> recoverValues = event.getContext().entrySet().stream()
+                .filter(entry -> declareKeys.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> String.valueOf(entry.getValue())));
+        boolean result = caseGlobalContextRepository.recoverContext(feature.getTestCaseId(), recoverValues);
+        log.info("batch recover global context result={} context={}", result, ContractJson.write(recoverValues));
     }
 
     @Override

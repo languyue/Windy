@@ -1,14 +1,14 @@
 package com.zj.master.schedule;
 
 import com.zj.common.adapter.monitor.InstanceMonitor;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.pipeline.PipelineConfig;
-import com.zj.common.enums.LogType;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.pipeline.PipelineConfig;
+import com.zj.contract.enums.LogType;
 import com.zj.common.utils.TraceUtils;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
-import com.zj.domain.repository.pipeline.IOptimisticLockRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
+import com.zj.domain.repository.pipeline.IPipelineQueryRepository;
 import com.zj.master.entity.vo.ScheduleHolder;
+import com.zj.master.infrastructure.lock.IScheduleLock;
 import com.zj.master.service.TaskLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,6 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,16 +36,16 @@ import java.util.stream.Collectors;
 public class PipelineSchedule implements CommandLineRunner {
 
     public static final String PIPELINE_SCHEDULE = "pipeline_schedule";
-    private final IOptimisticLockRepository lockRepository;
-    private final IPipelineRepository pipelineRepository;
+    private final IScheduleLock lockRepository;
+    private final IPipelineQueryRepository pipelineRepository;
     private final TaskScheduler taskScheduler;
     private final TaskLogService taskLogService;
     private final InstanceMonitor instanceMonitor;
 
     private final Map<String, ScheduleHolder> scheduledMap = new ConcurrentHashMap<>();
 
-    public PipelineSchedule(IOptimisticLockRepository lockRepository,
-                            IPipelineRepository pipelineRepository, TaskScheduler taskScheduler,
+    public PipelineSchedule(IScheduleLock lockRepository,
+                            IPipelineQueryRepository pipelineRepository, TaskScheduler taskScheduler,
                             TaskLogService taskLogService, InstanceMonitor instanceMonitor) {
         this.lockRepository = lockRepository;
         this.pipelineRepository = pipelineRepository;
@@ -97,7 +98,7 @@ public class PipelineSchedule implements CommandLineRunner {
                     DispatchTaskModel dispatchPipeline = new DispatchTaskModel();
                     dispatchPipeline.setType(LogType.PIPELINE.getType());
                     dispatchPipeline.setSourceName(pipeline.getPipelineName());
-                    dispatchPipeline.setSourceId(pipeline.getPipelineId());
+                    dispatchPipeline.setSourceIds(Collections.singletonList(pipeline.getPipelineId()));
                     taskLogService.createTask(dispatchPipeline);
                 }, trigger);
 

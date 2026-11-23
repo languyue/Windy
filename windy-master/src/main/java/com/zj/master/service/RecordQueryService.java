@@ -1,14 +1,14 @@
 package com.zj.master.service;
 
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.dto.ResponseStatusModel;
-import com.zj.common.entity.dto.ResponseStatusModel.PercentStatics;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.rpc.ResponseStatusModel;
+import com.zj.contract.rpc.ResponseStatusModel.PercentStatics;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryQueryRepository;
+import com.zj.domain.repository.feature.ITaskRecordQueryRepository;
+import com.zj.domain.repository.pipeline.INodeRecordQueryRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,15 +21,15 @@ import java.util.Objects;
 @Service
 public class RecordQueryService {
 
-  private final INodeRecordRepository nodeRecordRepository;
-  private final ITaskRecordRepository taskRecordRepository;
-  private final IFeatureHistoryRepository featureHistoryRepository;
+  private final INodeRecordQueryRepository nodeRecordRepository;
+  private final ITaskRecordQueryRepository taskRecordRepository;
+  private final IFeatureHistoryQueryRepository featureHistoryRepository;
 
   public static final String FORMAT_TIPS = "任务执行状态: 成功数: %s 成功率百分比: %s";
 
-  public RecordQueryService(INodeRecordRepository nodeRecordRepository,
-      ITaskRecordRepository taskRecordRepository,
-      IFeatureHistoryRepository featureHistoryRepository) {
+  public RecordQueryService(INodeRecordQueryRepository nodeRecordRepository,
+      ITaskRecordQueryRepository taskRecordRepository,
+      IFeatureHistoryQueryRepository featureHistoryRepository) {
     this.nodeRecordRepository = nodeRecordRepository;
     this.taskRecordRepository = taskRecordRepository;
     this.featureHistoryRepository = featureHistoryRepository;

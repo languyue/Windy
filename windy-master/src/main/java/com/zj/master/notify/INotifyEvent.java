@@ -1,7 +1,7 @@
 package com.zj.master.notify;
 
-import com.zj.common.enums.NotifyType;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.event.ResultEvent;
 
 /**
  * @author guyuelan

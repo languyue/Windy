@@ -1,26 +1,28 @@
 package com.zj.master.dispatch.feature;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.dto.DispatchTaskModel;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.dispatch.DispatchTaskModel;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
-import com.zj.domain.repository.feature.IFeatureRepository;
-import com.zj.domain.repository.feature.ITestCaseConfigRepository;
-import com.zj.domain.repository.log.IDispatchLogRepository;
+import com.zj.domain.repository.feature.ICaseGlobalContextQueryRepository;
+import com.zj.domain.repository.feature.IFeatureQueryRepository;
+import com.zj.domain.repository.feature.ITestCaseConfigQueryRepository;
+import com.zj.domain.repository.log.IDispatchLogCommandRepository;
 import com.zj.master.dispatch.IDispatchExecutor;
 import com.zj.master.dispatch.task.FeatureExecuteProxy;
 import com.zj.master.dispatch.task.FeatureTask;
-import com.zj.master.entity.vo.ExecuteContext;
+import com.zj.contract.feature.exec.ExecuteContext;
+import com.zj.contract.support.ParamValueCaster;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -32,18 +34,21 @@ import java.util.Optional;
 public class FeatureDispatch implements IDispatchExecutor {
 
     public static final String TEMP_KEY = "temp_";
-    private final IFeatureRepository featureRepository;
-    private final ITestCaseConfigRepository testCaseConfigRepository;
+    private final IFeatureQueryRepository featureRepository;
+    private final ITestCaseConfigQueryRepository testCaseConfigRepository;
+    private final ICaseGlobalContextQueryRepository caseGlobalContextRepository;
     private final UniqueIdService uniqueIdService;
     private final FeatureExecuteProxy featureExecuteProxy;
-    private final IDispatchLogRepository dispatchLogRepository;
+    private final IDispatchLogCommandRepository dispatchLogRepository;
 
-    public FeatureDispatch(IFeatureRepository featureRepository,
-                           ITestCaseConfigRepository testCaseConfigRepository,
+    public FeatureDispatch(IFeatureQueryRepository featureRepository,
+                           ITestCaseConfigQueryRepository testCaseConfigRepository,
+                           ICaseGlobalContextQueryRepository caseGlobalContextRepository,
                            UniqueIdService uniqueIdService, FeatureExecuteProxy featureExecuteProxy,
-                           IDispatchLogRepository dispatchLogRepository) {
+                           IDispatchLogCommandRepository dispatchLogRepository) {
         this.featureRepository = featureRepository;
         this.testCaseConfigRepository = testCaseConfigRepository;
+        this.caseGlobalContextRepository = caseGlobalContextRepository;
         this.uniqueIdService = uniqueIdService;
         this.featureExecuteProxy = featureExecuteProxy;
         this.dispatchLogRepository = dispatchLogRepository;
@@ -61,12 +66,15 @@ public class FeatureDispatch implements IDispatchExecutor {
 
     @Override
     public String dispatch(DispatchTaskModel task, String logId) {
-        String featureString = task.getSourceId();
-        List<String> featureIds = JSON.parseArray(featureString, String.class);
+        List<String> featureIds = task.getSourceIds();
+        if (CollectionUtils.isEmpty(featureIds)) {
+            log.info("feature task has no source id, logId={}", logId);
+            return null;
+        }
         FeatureInfoBO feature = featureRepository.getFeatureById(featureIds.get(0));
         List<TestCaseConfigBO> caseConfigs = testCaseConfigRepository.getCaseConfigs(
                 feature.getTestCaseId());
-        ExecuteContext executeContext = buildTaskConfig(caseConfigs);
+        ExecuteContext executeContext = buildTaskConfig(feature.getTestCaseId(), caseConfigs);
         FeatureTask featureTask = new FeatureTask();
         featureTask.setExecuteContext(executeContext);
         featureTask.addAll(featureIds);
@@ -74,7 +82,7 @@ public class FeatureDispatch implements IDispatchExecutor {
 
         //这个是临时的recordId，没有任何业务含义，只是为了支持多个用例的执行
         String tempRecordId =
-                Optional.ofNullable(task.getTriggerId()).filter(StringUtils::isNotBlank).orElseGet(() -> TEMP_KEY + uniqueIdService.getUniqueId());
+                Optional.ofNullable(task.firstTriggerId()).filter(StringUtils::isNotBlank).orElseGet(() -> TEMP_KEY + uniqueIdService.getUniqueId());
         featureTask.setTaskRecordId(tempRecordId);
 
         featureExecuteProxy.execute(featureTask);
@@ -88,15 +96,28 @@ public class FeatureDispatch implements IDispatchExecutor {
         return false;
     }
 
-    private ExecuteContext buildTaskConfig(List<TestCaseConfigBO> configs) {
+    /**
+     * 全局参数以配置表的声明为基线，再叠加运行期回收回来的值。
+     * 回收值存在 master 独占的 case_global_context，配置域本身不会被运行态改写。
+     */
+    private ExecuteContext buildTaskConfig(String caseId, List<TestCaseConfigBO> configs) {
         ExecuteContext executeContext = new ExecuteContext();
         if (CollectionUtils.isEmpty(configs)) {
             return executeContext;
         }
 
         for (TestCaseConfigBO config : configs) {
-            executeContext.set(config.getParamKey(), Optional.ofNullable(config.getValue()).orElse(""));
+            //全局参数在配置表里存的是文本，先按声明类型还原；空值统一收敛成空串
+            Object value = ParamValueCaster.cast(config.getValue(), config.getParamType());
+            executeContext.set(config.getParamKey(), Optional.ofNullable(value).orElse(""));
         }
+
+        Map<String, String> recoverValues = caseGlobalContextRepository.getContextValues(caseId);
+        recoverValues.forEach((paramKey, paramValue) -> {
+            if (executeContext.toMap().containsKey(paramKey)) {
+                executeContext.set(paramKey, paramValue);
+            }
+        });
         return executeContext;
     }
 

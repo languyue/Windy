@@ -1,8 +1,8 @@
 package com.zj.master.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.event.ResultEvent;
 import com.zj.master.service.ClientNotifyService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

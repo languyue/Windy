@@ -1,16 +1,15 @@
 package com.zj.master.dispatch.task;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.common.enums.FeatureStatus;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
-import com.zj.domain.repository.feature.IFeatureRepository;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
-import com.zj.domain.repository.log.IDispatchLogRepository;
-import com.zj.master.entity.vo.BatchFeatureVo;
+import com.zj.domain.repository.feature.IFeatureHistoryQueryRepository;
+import com.zj.domain.repository.feature.IFeatureQueryRepository;
+import com.zj.domain.repository.feature.ITaskRecordCommandRepository;
+import com.zj.domain.repository.log.IDispatchLogCommandRepository;
+import com.zj.contract.feature.exec.BatchFeatureVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,14 +25,14 @@ import java.util.stream.Collectors;
 @Component
 public class TaskEndProcessor {
 
-    private final ITaskRecordRepository taskRecordRepository;
-    private final IFeatureHistoryRepository featureHistoryRepository;
-    private final IFeatureRepository featureRepository;
-    private final IDispatchLogRepository taskLogRepository;
+    private final ITaskRecordCommandRepository taskRecordRepository;
+    private final IFeatureHistoryQueryRepository featureHistoryRepository;
+    private final IFeatureQueryRepository featureRepository;
+    private final IDispatchLogCommandRepository taskLogRepository;
 
-    public TaskEndProcessor(ITaskRecordRepository taskRecordRepository,
-                            IFeatureHistoryRepository featureHistoryRepository, IFeatureRepository featureRepository,
-                            IDispatchLogRepository taskLogRepository) {
+    public TaskEndProcessor(ITaskRecordCommandRepository taskRecordRepository,
+                            IFeatureHistoryQueryRepository featureHistoryRepository, IFeatureQueryRepository featureRepository,
+                            IDispatchLogCommandRepository taskLogRepository) {
         this.taskRecordRepository = taskRecordRepository;
         this.featureHistoryRepository = featureHistoryRepository;
         this.featureRepository = featureRepository;
@@ -57,8 +56,7 @@ public class TaskEndProcessor {
                         .collect(Collectors.toList());
         if (Objects.equals(taskRecord.getTestCaseId(), taskRecord.getTriggerId())) {
             //如果测试集ID与触发源Id一致证明是临时批量执行任务，需要根据任务选择的用例个数来判断最终状态
-            String taskConfig = taskRecord.getTaskConfig();
-            BatchFeatureVo batchFeatureVo = JSON.parseObject(taskConfig, BatchFeatureVo.class);
+            BatchFeatureVo batchFeatureVo = taskRecord.getExecuteConfig();
             featureIds = batchFeatureVo.getFeatureIds();
         }
 

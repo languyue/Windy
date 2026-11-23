@@ -1,11 +1,11 @@
 package com.zj.master.dispatch.pipeline.intercept;
 
-import com.zj.common.entity.pipeline.PipelineConfig;
-import com.zj.common.entity.pipeline.ServiceConfig;
-import com.zj.common.entity.pipeline.ServiceContext;
+import com.zj.contract.pipeline.PipelineConfig;
+import com.zj.contract.pipeline.ServiceConfig;
+import com.zj.contract.pipeline.ServiceContext;
 import com.zj.common.enums.ExecuteType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.pipeline.PipelineNodeBO;
@@ -13,14 +13,14 @@ import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.enums.PipelineType;
 import com.zj.domain.entity.vo.ImageRepositoryVo;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.IPipelineNodeRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
-import com.zj.domain.repository.pipeline.IPublishBindRepository;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.master.entity.vo.BuildCodeContext;
-import com.zj.master.entity.vo.TaskNode;
+import com.zj.domain.repository.pipeline.IBindBranchQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineNodeQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineQueryRepository;
+import com.zj.domain.repository.pipeline.IPublishBindQueryRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
+import com.zj.contract.pipeline.node.BuildCodeContext;
+import com.zj.contract.pipeline.node.TaskNode;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.stereotype.Component;
 
@@ -37,17 +37,17 @@ import java.util.stream.Collectors;
 @Component
 public class BuildCodeInterceptor implements INodeExecuteInterceptor {
 
-    private final IPipelineNodeRepository pipelineNodeRepository;
-    private final IPublishBindRepository publishBindRepository;
-    private final IPipelineRepository pipelineRepository;
-    private final IBindBranchRepository gitBindRepository;
-    private final ISystemConfigRepository configRepository;
-    private final IMicroServiceRepository microServiceRepository;
+    private final IPipelineNodeQueryRepository pipelineNodeRepository;
+    private final IPublishBindQueryRepository publishBindRepository;
+    private final IPipelineQueryRepository pipelineRepository;
+    private final IBindBranchQueryRepository gitBindRepository;
+    private final ISystemConfigQueryRepository configRepository;
+    private final IMicroServiceQueryRepository microServiceRepository;
 
-    public BuildCodeInterceptor(IPipelineNodeRepository pipelineNodeRepository,
-                                IPublishBindRepository publishBindRepository, IPipelineRepository pipelineRepository,
-                                IBindBranchRepository gitBindRepository, ISystemConfigRepository configRepository,
-                                IMicroServiceRepository microServiceRepository) {
+    public BuildCodeInterceptor(IPipelineNodeQueryRepository pipelineNodeRepository,
+                                IPublishBindQueryRepository publishBindRepository, IPipelineQueryRepository pipelineRepository,
+                                IBindBranchQueryRepository gitBindRepository, ISystemConfigQueryRepository configRepository,
+                                IMicroServiceQueryRepository microServiceRepository) {
         this.pipelineNodeRepository = pipelineNodeRepository;
         this.publishBindRepository = publishBindRepository;
         this.pipelineRepository = pipelineRepository;
