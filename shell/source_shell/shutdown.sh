@@ -55,14 +55,8 @@ stop_service_by_port() {
   local SERVICE_NAME=$2
   local PIDS
 
-  # 适配 macOS 和 Linux 获取占用端口的 PID
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS 使用 lsof 获取占用端口的 PID
-    PIDS=$(lsof -t -i:$PORT)
-  else
-    # Linux 使用 lsof 获取占用端口的 PID
-    PIDS=$(lsof -t -i:$PORT)
-  fi
+  # 只匹配监听该端口的进程，避免误杀连接到该端口的其他服务（如 Eureka 客户端长连接）
+  PIDS=$(lsof -nP -t -iTCP:$PORT -sTCP:LISTEN)
 
   # 如果找到了 PID，则停止对应进程
   if [ -n "$PIDS" ]; then

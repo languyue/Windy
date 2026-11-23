@@ -14,7 +14,7 @@ DB_PASSWORD=$3
 MAVEN_PATH=${4:-'/opt/windy-client/maven'}
 EUREKA_ZONE=${5:-'http://localhost:9888/eureka'}  # 默认 Eureka 地址
 TOKEN_SECRET=${6:-$TOKEN_SECRET}  # 可选,第6个参数或同名环境变量,未提供则自动生成密钥
-SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+SCRIPT_DIR=$(cd -P "$(dirname "$0")" && pwd)
 
 # 封装复制 maven 目录的逻辑
 copy_maven_directory() {
@@ -53,7 +53,8 @@ fi
 # 检查端口是否被占用，并停止占用端口的进程
 stop_existing_process_by_port() {
   local PORT=$1
-  local PIDS=$(lsof -t -i:$PORT)
+  # 只匹配监听该端口的进程，避免误杀连接到该端口的其他服务（如 Eureka 客户端长连接）
+  local PIDS=$(lsof -nP -t -iTCP:$PORT -sTCP:LISTEN)
 
   if [ -n "$PIDS" ]; then
     for PID in $PIDS; do
