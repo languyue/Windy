@@ -1,14 +1,14 @@
 package com.zj.domain.repository.feature.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.feature.FeatureResponse;
+import com.zj.contract.feature.FeatureResponse;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecuteRecordBO;
 import com.zj.domain.entity.po.feature.ExecuteRecord;
 import com.zj.domain.mapper.feature.ExecuteRecordMapper;
-import com.zj.domain.repository.feature.IExecuteRecordRepository;
+import com.zj.domain.repository.feature.IExecuteRecordCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class ExecuteRecordRepository extends
-    ServiceImpl<ExecuteRecordMapper, ExecuteRecord> implements IExecuteRecordRepository {
+    ServiceImpl<ExecuteRecordMapper, ExecuteRecord> implements IExecuteRecordCommandRepository {
 
   @Override
   public List<ExecuteRecordBO> getExecuteRecords(String historyId) {
@@ -47,7 +47,7 @@ public class ExecuteRecordRepository extends
     ExecuteRecord executeRecord = new ExecuteRecord();
     executeRecord.setExecuteRecordId(executeRecordBO.getExecuteRecordId());
     executeRecord.setStatus(executeRecordBO.getStatus());
-    executeRecord.setExecuteResult(JSON.toJSONString(executeRecordBO.getRecordResult()));
+    executeRecord.setExecuteResult(ContractJson.write(executeRecordBO.getRecordResult()));
     executeRecord.setUpdateTime(System.currentTimeMillis());
     return update(executeRecord, Wrappers.lambdaUpdate(ExecuteRecord.class).eq(ExecuteRecord::getExecuteRecordId,
             executeRecordBO.getExecuteRecordId()));
@@ -68,13 +68,13 @@ public class ExecuteRecordRepository extends
 
   private static ExecuteRecordBO convertExecuteRecordBO(ExecuteRecord executeRecord) {
     ExecuteRecordBO executeRecordBO = OrikaUtil.convert(executeRecord, ExecuteRecordBO.class);
-    executeRecordBO.setRecordResult(JSON.parseArray(executeRecord.getExecuteResult(), FeatureResponse.class));
+    executeRecordBO.setRecordResult(ContractJson.readList(executeRecord.getExecuteResult(), FeatureResponse.class));
     return executeRecordBO;
   }
 
   private static ExecuteRecord convertExecuteRecord(ExecuteRecordBO executeRecordBO) {
     ExecuteRecord executeRecord = OrikaUtil.convert(executeRecordBO, ExecuteRecord.class);
-    executeRecord.setExecuteResult(JSON.toJSONString(executeRecordBO.getRecordResult()));
+    executeRecord.setExecuteResult(ContractJson.write(executeRecordBO.getRecordResult()));
     return executeRecord;
   }
 }

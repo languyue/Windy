@@ -5,12 +5,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.po.pipeline.CodeChange;
 import com.zj.domain.mapper.pipeline.CodeChangeMapper;
-import com.zj.domain.repository.pipeline.ICodeChangeRepository;
+import com.zj.domain.repository.pipeline.ICodeChangeCommandRepository;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Repository;
 @Slf4j
 @Repository
 public class CodeChangeRepository extends ServiceImpl<CodeChangeMapper, CodeChange> implements
-    ICodeChangeRepository {
+    ICodeChangeCommandRepository {
 
   @Override
   public CodeChangeBO getCodeChange(String codeChangeId) {

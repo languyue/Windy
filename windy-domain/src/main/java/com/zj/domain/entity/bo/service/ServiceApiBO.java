@@ -1,6 +1,6 @@
 package com.zj.domain.entity.bo.service;
 
-import com.zj.common.entity.service.ApiParamModel;
+import com.zj.contract.service.ApiParamModel;
 import com.zj.common.enums.ApiType;
 import lombok.Data;
 

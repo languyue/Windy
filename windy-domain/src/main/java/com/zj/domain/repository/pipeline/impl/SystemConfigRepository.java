@@ -1,9 +1,9 @@
 package com.zj.domain.repository.pipeline.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.SystemConfigBO;
 import com.zj.domain.entity.po.pipeline.SystemConfig;
@@ -11,7 +11,7 @@ import com.zj.domain.entity.vo.DefaultPipelineVo;
 import com.zj.domain.entity.vo.ImageRepositoryVo;
 import com.zj.domain.entity.vo.GenerateMavenConfigDto;
 import com.zj.domain.mapper.pipeline.SystemConfigMapper;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigCommandRepository;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, SystemConfig> implements
-        ISystemConfigRepository {
+        ISystemConfigCommandRepository {
 
     public static final String GIT_ACCESS = "git_access";
     public static final String IMAGE_REPOSITORY = "image_repository";
@@ -77,7 +77,7 @@ public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, Syst
 
     @Override
     public boolean updateGitAccess(GitAccessInfo gitAccess) {
-        return updateGlobalConfig(JSON.toJSONString(gitAccess), GIT_ACCESS);
+        return updateGlobalConfig(ContractJson.write(gitAccess), GIT_ACCESS);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, Syst
 
     @Override
     public boolean updateImageRepository(ImageRepositoryVo imageRepositoryVo) {
-        return updateGlobalConfig(JSON.toJSONString(imageRepositoryVo), IMAGE_REPOSITORY);
+        return updateGlobalConfig(ContractJson.write(imageRepositoryVo), IMAGE_REPOSITORY);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, Syst
 
     @Override
     public boolean updateMavenConfig(GenerateMavenConfigDto mavenConfig) {
-        return updateGlobalConfig(JSON.toJSONString(mavenConfig), MAVEN_REPOSITORY);
+        return updateGlobalConfig(ContractJson.write(mavenConfig), MAVEN_REPOSITORY);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class SystemConfigRepository extends ServiceImpl<SystemConfigMapper, Syst
         if (Objects.isNull(systemConfig)) {
             return null;
         }
-        return JSON.parseObject(systemConfig.getConfigDetail(), cls);
+        return ContractJson.read(systemConfig.getConfigDetail(), cls);
     }
 
     private Boolean updateGlobalConfig(String mavenConfig, String configType) {

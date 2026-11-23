@@ -1,8 +1,8 @@
 package com.zj.domain.entity.bo.feature;
 
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.VariableDefine;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.VariableDefine;
 import lombok.Data;
 
 import java.util.List;

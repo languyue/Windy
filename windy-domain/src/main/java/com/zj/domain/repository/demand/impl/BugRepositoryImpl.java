@@ -6,14 +6,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.demand.BugBO;
 import com.zj.domain.entity.bo.demand.BugQueryBO;
 import com.zj.domain.entity.enums.BugStatus;
 import com.zj.domain.entity.po.demand.Bug;
 import com.zj.domain.mapper.demand.BugMapper;
-import com.zj.domain.repository.demand.IBugRepository;
+import com.zj.domain.repository.demand.IBugCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Repository;
@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-public class BugRepositoryImpl extends ServiceImpl<BugMapper, Bug> implements IBugRepository {
+public class BugRepositoryImpl extends ServiceImpl<BugMapper, Bug> implements IBugCommandRepository {
 
     public static final String BUG_STATUS_COLUM_NAME = "status";
     public static final String BUG_ID_COLUMN_NAME = "bug_id";

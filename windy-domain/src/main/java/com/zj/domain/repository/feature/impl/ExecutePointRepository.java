@@ -1,20 +1,19 @@
 package com.zj.domain.repository.feature.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.VariableDefine;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.VariableDefine;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
 import com.zj.domain.entity.po.feature.ExecutePoint;
 import com.zj.domain.mapper.feature.ExecutePointMapper;
-import com.zj.domain.repository.feature.IExecutePointRepository;
+import com.zj.domain.repository.feature.IExecutePointCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Repository
 public class ExecutePointRepository extends ServiceImpl<ExecutePointMapper, ExecutePoint> implements
-    IExecutePointRepository {
+    IExecutePointCommandRepository {
 
   @Override
   public ExecutePointBO getExecutePoint(String executePointId) {
@@ -92,7 +91,6 @@ public class ExecutePointRepository extends ServiceImpl<ExecutePointMapper, Exec
   }
 
   @Override
-  @Transactional
   public boolean batchSavePoints(List<ExecutePointBO> executePointBOList) {
     if (CollectionUtils.isEmpty(executePointBOList)) {
       return false;
@@ -103,7 +101,6 @@ public class ExecutePointRepository extends ServiceImpl<ExecutePointMapper, Exec
 
 
   @Override
-  @Transactional
   public boolean updateBatch(List<ExecutePointBO> executePointBOList) {
     if (CollectionUtils.isEmpty(executePointBOList)) {
       return false;
@@ -127,17 +124,17 @@ public class ExecutePointRepository extends ServiceImpl<ExecutePointMapper, Exec
       return null;
     }
     ExecutePointBO executePointBO = OrikaUtil.convert(executePoint, ExecutePointBO.class);
-    executePointBO.setCompareDefines(JSON.parseArray(executePoint.getCompareDefine(), CompareDefine.class));
-    executePointBO.setExecutorUnit(JSON.parseObject(executePoint.getFeatureInfo(), ExecutorUnit.class));
-    executePointBO.setVariableDefines(JSON.parseArray(executePoint.getVariables(), VariableDefine.class));
+    executePointBO.setCompareDefines(ContractJson.readList(executePoint.getCompareDefine(), CompareDefine.class));
+    executePointBO.setExecutorUnit(ContractJson.read(executePoint.getFeatureInfo(), ExecutorUnit.class));
+    executePointBO.setVariableDefines(ContractJson.readList(executePoint.getVariables(), VariableDefine.class));
     return executePointBO;
   }
 
   public ExecutePoint convertExecutePoint(ExecutePointBO executePointBO){
     ExecutePoint executePoint = OrikaUtil.convert(executePointBO, ExecutePoint.class);
-    executePoint.setCompareDefine(JSON.toJSONString(executePointBO.getCompareDefines()));
-    executePoint.setFeatureInfo(JSON.toJSONString(executePointBO.getExecutorUnit()));
-    executePoint.setVariables(JSON.toJSONString(executePointBO.getVariableDefines()));
+    executePoint.setCompareDefine(ContractJson.write(executePointBO.getCompareDefines()));
+    executePoint.setFeatureInfo(ContractJson.write(executePointBO.getExecutorUnit()));
+    executePoint.setVariables(ContractJson.write(executePointBO.getVariableDefines()));
     return executePoint;
   }
 

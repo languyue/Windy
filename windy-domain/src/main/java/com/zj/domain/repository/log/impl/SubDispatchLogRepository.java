@@ -2,13 +2,17 @@ package com.zj.domain.repository.log.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.json.ContractJson;
 import com.zj.domain.entity.bo.log.SubDispatchLogBO;
 import com.zj.domain.entity.po.log.SubDispatchLog;
 import com.zj.domain.mapper.log.SubTaskLogMapper;
-import com.zj.domain.repository.log.ISubDispatchLogRepository;
+import com.zj.domain.repository.log.ISubDispatchLogCommandRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -17,11 +21,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class SubDispatchLogRepository extends
-    ServiceImpl<SubTaskLogMapper, SubDispatchLog> implements ISubDispatchLogRepository {
+    ServiceImpl<SubTaskLogMapper, SubDispatchLog> implements ISubDispatchLogCommandRepository {
 
   @Override
   public void batchSaveLogs(List<SubDispatchLogBO> subTaskLogs) {
-    List<SubDispatchLog> subLogs = OrikaUtil.convertList(subTaskLogs, SubDispatchLog.class);
+    List<SubDispatchLog> subLogs = subTaskLogs.stream().map(this::convertSubDispatchLog)
+        .collect(Collectors.toList());
     saveBatch(subLogs);
   }
 
@@ -45,7 +50,7 @@ public class SubDispatchLogRepository extends
   public List<SubDispatchLogBO> getSubLogByLogId(String logId) {
     List<SubDispatchLog> taskLogs = list(
         Wrappers.lambdaQuery(SubDispatchLog.class).eq(SubDispatchLog::getLogId, logId));
-    return OrikaUtil.convertList(taskLogs, SubDispatchLogBO.class);
+    return taskLogs.stream().map(this::convertSubDispatchLogBO).collect(Collectors.toList());
   }
 
   @Override
@@ -58,7 +63,7 @@ public class SubDispatchLogRepository extends
     SubDispatchLog subDispatchLog = getOne(
         Wrappers.lambdaQuery(SubDispatchLog.class).eq(SubDispatchLog::getLogId, logId)
             .eq(SubDispatchLog::getExecuteId, executeId));
-    return OrikaUtil.convert(subDispatchLog, SubDispatchLogBO.class);
+    return convertSubDispatchLogBO(subDispatchLog);
   }
 
   @Override
@@ -71,5 +76,27 @@ public class SubDispatchLogRepository extends
     update(subDispatchLog,
         Wrappers.lambdaQuery(SubDispatchLog.class).eq(SubDispatchLog::getLogId, logId)
             .eq(SubDispatchLog::getExecuteId, executeId));
+  }
+
+  private SubDispatchLog convertSubDispatchLog(SubDispatchLogBO subTaskLog) {
+    SubDispatchLog subDispatchLog = OrikaUtil.convert(subTaskLog, SubDispatchLog.class);
+    Map<String, Object> executeParams = subTaskLog.getExecuteParams();
+    subDispatchLog.setExecuteParam(
+        Objects.isNull(executeParams) ? null : ContractJson.write(executeParams));
+    return subDispatchLog;
+  }
+
+  private SubDispatchLogBO convertSubDispatchLogBO(SubDispatchLog subDispatchLog) {
+    if (Objects.isNull(subDispatchLog)) {
+      return null;
+    }
+    SubDispatchLogBO subTaskLog = OrikaUtil.convert(subDispatchLog, SubDispatchLogBO.class);
+    String executeParam = subDispatchLog.getExecuteParam();
+    if (Objects.nonNull(executeParam) && !executeParam.trim().isEmpty()) {
+      subTaskLog.setExecuteParams(
+          ContractJson.read(executeParam, new TypeReference<Map<String, Object>>() {
+          }));
+    }
+    return subTaskLog;
   }
 }

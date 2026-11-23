@@ -5,12 +5,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.auth.UserBO;
 import com.zj.domain.entity.po.auth.User;
 import com.zj.domain.mapper.auth.UserMapper;
-import com.zj.domain.repository.auth.IUserRepository;
+import com.zj.domain.repository.auth.IUserCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public class UserRepositoryImpl extends ServiceImpl<UserMapper, User> implements IUserRepository {
+public class UserRepositoryImpl extends ServiceImpl<UserMapper, User> implements IUserCommandRepository {
 
 
     @Override

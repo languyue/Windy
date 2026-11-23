@@ -6,7 +6,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.po.pipeline.BindBranch;
 import com.zj.domain.mapper.pipeline.BindBranchMapper;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
+import com.zj.domain.repository.pipeline.IBindBranchCommandRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class BindBranchRepository extends ServiceImpl<BindBranchMapper, BindBranch> implements
-    IBindBranchRepository {
+    IBindBranchCommandRepository {
 
   @Override
   public boolean saveGitBranch(BindBranchBO bindBranchBO) {

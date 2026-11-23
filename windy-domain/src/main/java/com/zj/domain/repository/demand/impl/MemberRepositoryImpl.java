@@ -8,12 +8,11 @@ import com.zj.domain.entity.bo.service.ResourceMemberBO;
 import com.zj.domain.entity.enums.MemberType;
 import com.zj.domain.entity.po.service.ResourceMember;
 import com.zj.domain.mapper.service.ResourceMemberMapper;
-import com.zj.domain.repository.auth.IUserRepository;
-import com.zj.domain.repository.demand.IMemberRepository;
+import com.zj.domain.repository.auth.IUserQueryRepository;
+import com.zj.domain.repository.demand.IMemberCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,11 +20,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
-public class MemberRepositoryImpl extends ServiceImpl<ResourceMemberMapper, ResourceMember> implements IMemberRepository {
+public class MemberRepositoryImpl extends ServiceImpl<ResourceMemberMapper, ResourceMember> implements IMemberCommandRepository {
 
-    private final IUserRepository userRepository;
+    private final IUserQueryRepository userRepository;
 
-    public MemberRepositoryImpl(IUserRepository userRepository) {
+    public MemberRepositoryImpl(IUserQueryRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -71,7 +70,6 @@ public class MemberRepositoryImpl extends ServiceImpl<ResourceMemberMapper, Reso
     }
 
     @Override
-    @Transactional
     public Boolean batchUpdateMembers(List<ResourceMemberBO> resourceMembers, String memberType) {
         if (CollectionUtils.isEmpty(resourceMembers)) {
             return false;

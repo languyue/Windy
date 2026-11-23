@@ -1,15 +1,15 @@
 package com.zj.domain.repository.pipeline.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
+import com.zj.contract.json.ContractJson;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.domain.entity.po.pipeline.NodeRecord;
 import com.zj.domain.mapper.pipeline.NodeRecordMapper;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
+import com.zj.domain.repository.pipeline.INodeRecordCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Repository;
 @Slf4j
 @Repository
 public class NodeRecordRepository extends ServiceImpl<NodeRecordMapper, NodeRecord> implements
-    INodeRecordRepository {
+    INodeRecordCommandRepository {
 
   @Override
   public boolean saveNodeRecord(NodeRecordBO nodeRecordBO) {
@@ -81,7 +81,7 @@ public class NodeRecordRepository extends ServiceImpl<NodeRecordMapper, NodeReco
   public void updateRunningNodeStatus(String historyId, ProcessStatus processStatus) {
     NodeRecord nodeRecord = new NodeRecord();
     nodeRecord.setStatus(processStatus.getType());
-    nodeRecord.setRecordResult(JSON.toJSONString(Collections.singleton(processStatus.getDesc())));
+    nodeRecord.setRecordResult(ContractJson.write(Collections.singleton(processStatus.getDesc())));
     nodeRecord.setUpdateTime(System.currentTimeMillis());
     update(nodeRecord,
         Wrappers.lambdaUpdate(NodeRecord.class).eq(NodeRecord::getHistoryId, historyId)
@@ -104,17 +104,17 @@ public class NodeRecordRepository extends ServiceImpl<NodeRecordMapper, NodeReco
   private static NodeRecord convertNodeRecord(NodeRecordBO nodeRecordBO) {
     NodeRecord nodeRecord = OrikaUtil.convert(nodeRecordBO, NodeRecord.class);
 
-    nodeRecord.setRecordResult(JSON.toJSONString(nodeRecordBO.getResult()));
-    nodeRecord.setContext(JSON.toJSONString(nodeRecordBO.getPipelineContext()));
+    nodeRecord.setRecordResult(ContractJson.write(nodeRecordBO.getResult()));
+    nodeRecord.setContext(ContractJson.write(nodeRecordBO.getPipelineContext()));
     return nodeRecord;
   }
 
   private static NodeRecordBO convertNodeRecordBO(NodeRecord nodeRecord) {
     NodeRecordBO nodeRecordBO = OrikaUtil.convert(nodeRecord, NodeRecordBO.class);
     Optional.ofNullable(nodeRecord.getRecordResult()).ifPresent(result ->
-            nodeRecordBO.setResult(JSON.parseArray(result, String.class)));
+            nodeRecordBO.setResult(ContractJson.readList(result, String.class)));
     Optional.ofNullable(nodeRecord.getRecordResult()).ifPresent(result ->
-            nodeRecordBO.setPipelineContext(JSON.parseObject(nodeRecord.getContext(),
+            nodeRecordBO.setPipelineContext(ContractJson.read(nodeRecord.getContext(),
                     new TypeReference<Map<String, Object>>() {
                     })));
     return nodeRecordBO;

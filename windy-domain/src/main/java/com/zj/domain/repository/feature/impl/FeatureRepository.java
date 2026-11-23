@@ -9,11 +9,10 @@ import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.enums.FeatureType;
 import com.zj.domain.entity.po.feature.FeatureInfo;
 import com.zj.domain.mapper.feature.FeatureMapper;
-import com.zj.domain.repository.feature.IFeatureRepository;
+import com.zj.domain.repository.feature.IFeatureCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +24,7 @@ import java.util.List;
 @Slf4j
 @Repository
 public class FeatureRepository extends ServiceImpl<FeatureMapper, FeatureInfo> implements
-        IFeatureRepository {
+        IFeatureCommandRepository {
 
     @Override
     public List<FeatureInfoBO> queryFeatureList(String testCaseId) {
@@ -97,7 +96,6 @@ public class FeatureRepository extends ServiceImpl<FeatureMapper, FeatureInfo> i
     }
 
     @Override
-    @Transactional
     public Boolean batchUpdate(List<FeatureInfoBO> features) {
         if (CollectionUtils.isEmpty(features)) {
             return false;

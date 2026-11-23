@@ -6,12 +6,11 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
 import com.zj.domain.entity.po.feature.TestCaseConfig;
 import com.zj.domain.mapper.feature.TestCaseConfigMapper;
-import com.zj.domain.repository.feature.ITestCaseConfigRepository;
+import com.zj.domain.repository.feature.ITestCaseConfigCommandRepository;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author guyuelan
@@ -19,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Repository
 public class TestCaseConfigRepository extends
-    ServiceImpl<TestCaseConfigMapper, TestCaseConfig> implements ITestCaseConfigRepository {
+    ServiceImpl<TestCaseConfigMapper, TestCaseConfig> implements ITestCaseConfigCommandRepository {
 
   @Override
   public List<TestCaseConfigBO> getCaseConfigs(String caseId) {
@@ -57,7 +56,6 @@ public class TestCaseConfigRepository extends
   }
 
   @Override
-  @Transactional
   public boolean batchUpdateCaseConfig(List<TestCaseConfigBO> updateList) {
     if (CollectionUtils.isEmpty(updateList)) {
       return false;

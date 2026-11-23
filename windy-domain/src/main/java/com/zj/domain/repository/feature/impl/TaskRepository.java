@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.feature.exec.BatchFeatureVo;
+import com.zj.contract.json.ContractJson;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
 import com.zj.domain.entity.po.feature.TaskInfo;
 import com.zj.domain.mapper.feature.TaskInfoMapper;
-import com.zj.domain.repository.feature.ITaskRepository;
+import com.zj.domain.repository.feature.ITaskCommandRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
@@ -21,7 +23,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class TaskRepository extends ServiceImpl<TaskInfoMapper, TaskInfo> implements
-    ITaskRepository {
+    ITaskCommandRepository {
 
   @Override
   public IPage<TaskInfo> getFuzzTaskList(String name, Integer pageNum, Integer size, String userId, String serviceId) {
@@ -41,7 +43,7 @@ public class TaskRepository extends ServiceImpl<TaskInfoMapper, TaskInfo> implem
 
   @Override
   public boolean createTask(TaskInfoBO taskInfoBO) {
-    TaskInfo taskInfo = OrikaUtil.convert(taskInfoBO, TaskInfo.class);
+    TaskInfo taskInfo = convertTaskInfo(taskInfoBO);
     taskInfo.setCreateTime(System.currentTimeMillis());
     taskInfo.setUpdateTime(System.currentTimeMillis());
     return save(taskInfo);
@@ -49,7 +51,7 @@ public class TaskRepository extends ServiceImpl<TaskInfoMapper, TaskInfo> implem
 
   @Override
   public boolean updateTask(TaskInfoBO taskInfoBO) {
-    TaskInfo taskInfo = OrikaUtil.convert(taskInfoBO, TaskInfo.class);
+    TaskInfo taskInfo = convertTaskInfo(taskInfoBO);
     taskInfo.setUpdateTime(System.currentTimeMillis());
 
     return update(taskInfo,
@@ -65,14 +67,25 @@ public class TaskRepository extends ServiceImpl<TaskInfoMapper, TaskInfo> implem
   public TaskInfoBO getTaskDetail(String taskId) {
     TaskInfo taskInfo = getOne(
         Wrappers.lambdaQuery(TaskInfo.class).eq(TaskInfo::getTaskId, taskId));
-    return OrikaUtil.convert(taskInfo, TaskInfoBO.class);
+    return convertTaskInfoBO(taskInfo);
   }
 
   @Override
   public List<TaskInfoBO> getAllTaskList(String serviceId) {
     List<TaskInfo> taskInfos = list(
         Wrappers.lambdaQuery(TaskInfo.class).eq(TaskInfo::getServiceId, serviceId));
-    return taskInfos.stream().map(task -> OrikaUtil.convert(task, TaskInfoBO.class))
-        .collect(Collectors.toList());
+    return taskInfos.stream().map(this::convertTaskInfoBO).collect(Collectors.toList());
+  }
+
+  private TaskInfo convertTaskInfo(TaskInfoBO taskInfoBO) {
+    TaskInfo taskInfo = OrikaUtil.convert(taskInfoBO, TaskInfo.class);
+    taskInfo.setTaskConfig(ContractJson.write(taskInfoBO.getExecuteConfig()));
+    return taskInfo;
+  }
+
+  private TaskInfoBO convertTaskInfoBO(TaskInfo taskInfo) {
+    TaskInfoBO taskInfoBO = OrikaUtil.convert(taskInfo, TaskInfoBO.class);
+    taskInfoBO.setExecuteConfig(ContractJson.read(taskInfo.getTaskConfig(), BatchFeatureVo.class));
+    return taskInfoBO;
   }
 }

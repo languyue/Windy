@@ -5,23 +5,22 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.auth.RoleBO;
 import com.zj.domain.entity.po.auth.Role;
 import com.zj.domain.entity.po.auth.UserRole;
 import com.zj.domain.mapper.auth.RoleMapper;
 import com.zj.domain.mapper.auth.UserRoleMapper;
-import com.zj.domain.repository.auth.IRoleRepository;
+import com.zj.domain.repository.auth.IRoleCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
-public class RoleRepositoryImpl extends ServiceImpl<RoleMapper, Role> implements IRoleRepository {
+public class RoleRepositoryImpl extends ServiceImpl<RoleMapper, Role> implements IRoleCommandRepository {
     private final UserRoleMapper userRoleMapper;
 
     public RoleRepositoryImpl(UserRoleMapper userRoleMapper) {
@@ -97,7 +96,6 @@ public class RoleRepositoryImpl extends ServiceImpl<RoleMapper, Role> implements
     }
 
     @Override
-    @Transactional
     public boolean bindRole(String relationId, List<String> roleIds) {
         roleIds.forEach(roleId ->{
             UserRole userRole = new UserRole();

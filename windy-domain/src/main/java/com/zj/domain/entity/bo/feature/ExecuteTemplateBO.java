@@ -4,6 +4,7 @@ import com.zj.plugin.loader.ParameterDefine;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class ExecuteTemplateBO {
@@ -40,7 +41,7 @@ public class ExecuteTemplateBO {
     /**
      * 如果invokeType是HTTP时有值，代表HTTP的Header
      */
-    private String header;
+    private Map<String, String> headers;
 
     /**
      * 模版名称

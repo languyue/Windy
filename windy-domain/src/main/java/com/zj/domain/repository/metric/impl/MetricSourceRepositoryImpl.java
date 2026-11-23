@@ -6,14 +6,14 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.metric.MetricSourceBO;
 import com.zj.domain.entity.po.metric.MetricSource;
 import com.zj.domain.mapper.metric.MetricSourceMapper;
-import com.zj.domain.repository.metric.IMetricSourceRepository;
+import com.zj.domain.repository.metric.IMetricSourceCommandRepository;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public class MetricSourceRepositoryImpl extends ServiceImpl<MetricSourceMapper, MetricSource> implements IMetricSourceRepository {
+public class MetricSourceRepositoryImpl extends ServiceImpl<MetricSourceMapper, MetricSource> implements IMetricSourceCommandRepository {
 
     @Override
     public List<MetricSourceBO> loadYesterdaySourceData() {

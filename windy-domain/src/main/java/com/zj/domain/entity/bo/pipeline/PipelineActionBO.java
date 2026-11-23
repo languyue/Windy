@@ -1,6 +1,6 @@
 package com.zj.domain.entity.bo.pipeline;
 
-import com.zj.common.entity.pipeline.CompareParameter;
+import com.zj.contract.pipeline.CompareParameter;
 import lombok.Data;
 
 import java.util.List;

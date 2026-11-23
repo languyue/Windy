@@ -6,7 +6,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.PipelineStageBO;
 import com.zj.domain.entity.po.pipeline.PipelineStage;
 import com.zj.domain.mapper.pipeline.PipelineStageMapper;
-import com.zj.domain.repository.pipeline.IPipelineStageRepository;
+import com.zj.domain.repository.pipeline.IPipelineStageCommandRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class PipelineStageRepository extends
-    ServiceImpl<PipelineStageMapper, PipelineStage> implements IPipelineStageRepository {
+    ServiceImpl<PipelineStageMapper, PipelineStage> implements IPipelineStageCommandRepository {
 
   @Override
   public boolean deletePipelineStages(List<String> stageIds) {

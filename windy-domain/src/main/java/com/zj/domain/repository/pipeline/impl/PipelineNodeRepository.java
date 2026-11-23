@@ -1,14 +1,14 @@
 package com.zj.domain.repository.pipeline.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.pipeline.ConfigDetail;
+import com.zj.contract.pipeline.ConfigDetail;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.PipelineNodeBO;
 import com.zj.domain.entity.po.pipeline.PipelineNode;
 import com.zj.domain.mapper.pipeline.PipelineNodeMapper;
-import com.zj.domain.repository.pipeline.IPipelineNodeRepository;
+import com.zj.domain.repository.pipeline.IPipelineNodeCommandRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class PipelineNodeRepository extends ServiceImpl<PipelineNodeMapper, PipelineNode> implements
-        IPipelineNodeRepository {
+        IPipelineNodeCommandRepository {
 
     @Override
     public PipelineNodeBO getPipelineNode(String pipelineNodeId) {
@@ -67,14 +67,14 @@ public class PipelineNodeRepository extends ServiceImpl<PipelineNodeMapper, Pipe
 
     private static PipelineNodeBO convertPipelineNode(PipelineNode pipelineNode) {
         PipelineNodeBO pipelineNodeBO = OrikaUtil.convert(pipelineNode, PipelineNodeBO.class);
-        pipelineNodeBO.setConfigDetail(JSON.parseObject(pipelineNode.getConfig(), ConfigDetail.class));
+        pipelineNodeBO.setConfigDetail(ContractJson.read(pipelineNode.getConfig(), ConfigDetail.class));
         return pipelineNodeBO;
     }
 
     private static PipelineNode convertPipelineNode(PipelineNodeBO pipelineNodeBO) {
         PipelineNode pipelineNode = OrikaUtil.convert(pipelineNodeBO, PipelineNode.class);
         Optional.ofNullable(pipelineNodeBO.getConfigDetail()).ifPresent(configDetail ->
-                pipelineNode.setConfig(JSON.toJSONString(pipelineNodeBO.getConfigDetail())));
+                pipelineNode.setConfig(ContractJson.write(pipelineNodeBO.getConfigDetail())));
         return pipelineNode;
     }
 }

@@ -1,20 +1,20 @@
 package com.zj.domain.repository.service.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.pipeline.ServiceConfig;
+import com.zj.contract.pipeline.ServiceConfig;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.bo.service.ResourceMemberBO;
 import com.zj.domain.entity.enums.MemberType;
 import com.zj.domain.entity.po.service.Microservice;
 import com.zj.domain.mapper.service.MicroServiceMapper;
-import com.zj.domain.repository.demand.IMemberRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
+import com.zj.domain.repository.demand.IMemberCommandRepository;
+import com.zj.domain.repository.service.IMicroServiceCommandRepository;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 /**
@@ -35,17 +34,16 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @Repository
 public class MicroServiceRepository extends ServiceImpl<MicroServiceMapper, Microservice> implements
-    IMicroServiceRepository {
+    IMicroServiceCommandRepository {
 
-  private final IMemberRepository memberRepository;
+  private final IMemberCommandRepository memberRepository;
 
-  public MicroServiceRepository(IMemberRepository memberRepository) {
+  public MicroServiceRepository(IMemberCommandRepository memberRepository) {
     this.memberRepository = memberRepository;
   }
 
 
   @Override
-  @Transactional
   public String createService(String userId, MicroserviceBO microserviceBO) {
     Microservice microservice = convertService(microserviceBO);
     microservice.setCreateTime(System.currentTimeMillis());
@@ -136,7 +134,7 @@ public class MicroServiceRepository extends ServiceImpl<MicroServiceMapper, Micr
 
   private static Microservice convertService(MicroserviceBO microserviceBO) {
     Microservice microservice = OrikaUtil.convert(microserviceBO, Microservice.class);
-    microservice.setConfig(JSON.toJSONString(microserviceBO.getServiceConfig()));
+    microservice.setConfig(ContractJson.write(microserviceBO.getServiceConfig()));
     return microservice;
   }
 
@@ -145,7 +143,7 @@ public class MicroServiceRepository extends ServiceImpl<MicroServiceMapper, Micr
       return null;
     }
     MicroserviceBO microserviceBO = OrikaUtil.convert(microservice, MicroserviceBO.class);
-    microserviceBO.setServiceConfig(JSON.parseObject(microservice.getConfig(), ServiceConfig.class));
+    microserviceBO.setServiceConfig(ContractJson.read(microservice.getConfig(), ServiceConfig.class));
     return microserviceBO;
   }
 

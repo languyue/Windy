@@ -1,6 +1,7 @@
 package com.zj.domain.repository.feature.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -11,7 +12,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
 import com.zj.domain.entity.po.feature.ExecuteTemplate;
 import com.zj.domain.mapper.feature.ExecuteTemplateMapper;
-import com.zj.domain.repository.feature.IExecuteTemplateRepository;
+import com.zj.domain.repository.feature.IExecuteTemplateCommandRepository;
 import com.zj.plugin.loader.ParameterDefine;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
@@ -19,6 +20,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class ExecuteTemplateRepository extends
-    ServiceImpl<ExecuteTemplateMapper, ExecuteTemplate> implements IExecuteTemplateRepository {
+    ServiceImpl<ExecuteTemplateMapper, ExecuteTemplate> implements IExecuteTemplateCommandRepository {
 
   @Override
   public ExecuteTemplateBO getExecuteTemplate(String templateId) {
@@ -151,13 +153,17 @@ public class ExecuteTemplateRepository extends
 
   private ExecuteTemplateBO convertExecuteTemplateBO(ExecuteTemplate executeTemplate) {
     ExecuteTemplateBO executeTemplateBO = OrikaUtil.convert(executeTemplate, ExecuteTemplateBO.class);
-    executeTemplateBO.setParameterDefines(JSON.parseArray(executeTemplate.getParam(), ParameterDefine.class));
+    executeTemplateBO.setParameterDefines(ContractJson.readList(executeTemplate.getParam(), ParameterDefine.class));
+    executeTemplateBO.setHeaders(ContractJson.read(executeTemplate.getHeader(),
+            new TypeReference<Map<String, String>>() {
+            }));
     return executeTemplateBO;
   }
 
   private ExecuteTemplate convertExecuteTemplate(ExecuteTemplateBO executeTemplateBO) {
     ExecuteTemplate executeTemplate = OrikaUtil.convert(executeTemplateBO, ExecuteTemplate.class);
-    executeTemplate.setParam(JSON.toJSONString(executeTemplateBO.getParameterDefines()));
+    executeTemplate.setParam(ContractJson.write(executeTemplateBO.getParameterDefines()));
+    executeTemplate.setHeader(ContractJson.write(executeTemplateBO.getHeaders()));
     return executeTemplate;
   }
 

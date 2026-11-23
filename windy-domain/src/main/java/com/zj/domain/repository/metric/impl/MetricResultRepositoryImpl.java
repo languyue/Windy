@@ -6,13 +6,13 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.metric.MetricResultBO;
 import com.zj.domain.entity.po.metric.MetricResult;
 import com.zj.domain.mapper.metric.MetricResultMapper;
-import com.zj.domain.repository.metric.IMetricResultRepository;
+import com.zj.domain.repository.metric.IMetricResultCommandRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public class MetricResultRepositoryImpl extends ServiceImpl<MetricResultMapper, MetricResult> implements IMetricResultRepository {
+public class MetricResultRepositoryImpl extends ServiceImpl<MetricResultMapper, MetricResult> implements IMetricResultCommandRepository {
 
     @Override
     public boolean batchSaveResult(List<MetricResultBO> metricResultList) {

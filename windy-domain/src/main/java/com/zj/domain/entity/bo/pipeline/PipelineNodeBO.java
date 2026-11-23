@@ -2,7 +2,7 @@ package com.zj.domain.entity.bo.pipeline;
 
 import javax.validation.constraints.NotEmpty;
 
-import com.zj.common.entity.pipeline.ConfigDetail;
+import com.zj.contract.pipeline.ConfigDetail;
 import lombok.Data;
 
 /**

@@ -6,12 +6,12 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.service.ServiceGenerateBO;
 import com.zj.domain.entity.po.service.ServiceGenerate;
 import com.zj.domain.mapper.service.ServiceGenerateMapper;
-import com.zj.domain.repository.service.IGenerateRepository;
+import com.zj.domain.repository.service.IGenerateCommandRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class GenerateRepository extends
-    ServiceImpl<ServiceGenerateMapper, ServiceGenerate> implements IGenerateRepository {
+    ServiceImpl<ServiceGenerateMapper, ServiceGenerate> implements IGenerateCommandRepository {
 
   @Override
   public ServiceGenerateBO getByService(String serviceId) {

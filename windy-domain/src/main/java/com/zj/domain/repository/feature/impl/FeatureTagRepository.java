@@ -6,14 +6,13 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureTagBO;
 import com.zj.domain.entity.po.feature.FeatureTag;
 import com.zj.domain.mapper.feature.FeatureTagMapper;
-import com.zj.domain.repository.feature.IFeatureTagRepository;
+import com.zj.domain.repository.feature.IFeatureTagCommandRepository;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author guyuelan
@@ -21,10 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Repository
 public class FeatureTagRepository extends ServiceImpl<FeatureTagMapper, FeatureTag> implements
-    IFeatureTagRepository {
+    IFeatureTagCommandRepository {
 
   @Override
-  @Transactional
   public boolean saveBatchTag(List<FeatureTagBO> tagList) {
     if (CollectionUtils.isEmpty(tagList)) {
       return false;

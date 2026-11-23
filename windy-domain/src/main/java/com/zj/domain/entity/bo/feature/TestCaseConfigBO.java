@@ -39,9 +39,9 @@ public class TestCaseConfigBO {
   private String paramType;
 
   /**
-   * 参数值
+   * 参数值，按 paramType 还原后的具体对象
    * */
-  private String value;
+  private Object value;
 
   /**
    * 参数描述

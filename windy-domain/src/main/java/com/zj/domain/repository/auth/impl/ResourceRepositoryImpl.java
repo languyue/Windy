@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.auth.ResourceBO;
 import com.zj.domain.entity.enums.ResourceType;
@@ -17,11 +17,10 @@ import com.zj.domain.mapper.auth.ResourceMapper;
 import com.zj.domain.mapper.auth.RoleResourceMapper;
 import com.zj.domain.mapper.auth.UserMapper;
 import com.zj.domain.mapper.auth.UserRoleMapper;
-import com.zj.domain.repository.auth.IResourceRepository;
+import com.zj.domain.repository.auth.IResourceCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Repository
-public class ResourceRepositoryImpl extends ServiceImpl<ResourceMapper, Resource> implements IResourceRepository {
+public class ResourceRepositoryImpl extends ServiceImpl<ResourceMapper, Resource> implements IResourceCommandRepository {
 
     private final UserRoleMapper userRoleMapper;
 
@@ -122,7 +121,6 @@ public class ResourceRepositoryImpl extends ServiceImpl<ResourceMapper, Resource
     }
 
     @Override
-    @Transactional
     public boolean resourceBind(String relationId, List<String> resourceIds) {
         resourceIds.forEach(resourceId -> {
             RoleResource userRole = new RoleResource();

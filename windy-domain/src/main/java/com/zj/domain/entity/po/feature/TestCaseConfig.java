@@ -39,9 +39,9 @@ public class TestCaseConfig {
   private String paramType;
 
   /**
-   * 参数值
+   * 参数值，落库时按文本存储，运行态按 paramType 还原
    * */
-  private String value;
+  private Object value;
 
   /**
    * 参数描述

@@ -1,6 +1,6 @@
 package com.zj.domain.entity.bo.feature;
 
-import com.zj.common.entity.feature.FeatureResponse;
+import com.zj.contract.feature.FeatureResponse;
 import lombok.Data;
 
 import java.util.List;

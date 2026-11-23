@@ -6,13 +6,13 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.auth.GroupBO;
 import com.zj.domain.entity.po.auth.Group;
 import com.zj.domain.mapper.auth.GroupMapper;
-import com.zj.domain.repository.auth.IGroupRepository;
+import com.zj.domain.repository.auth.IGroupCommandRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public class GroupRepositoryImpl extends ServiceImpl<GroupMapper, Group> implements IGroupRepository {
+public class GroupRepositoryImpl extends ServiceImpl<GroupMapper, Group> implements IGroupCommandRepository {
 
     @Override
     public boolean createGroup(GroupBO groupBO) {

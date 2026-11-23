@@ -9,7 +9,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.NodeBindBO;
 import com.zj.domain.entity.po.pipeline.NodeBind;
 import com.zj.domain.mapper.pipeline.NodeBindMapper;
-import com.zj.domain.repository.pipeline.INodeBindRepository;
+import com.zj.domain.repository.pipeline.INodeBindCommandRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -20,7 +20,7 @@ import org.springframework.util.StringUtils;
  */
 @Repository
 public class NodeBindRepository extends ServiceImpl<NodeBindMapper, NodeBind> implements
-    INodeBindRepository {
+    INodeBindCommandRepository {
 
   @Override
   public boolean saveNodeBind(NodeBindBO nodeBindBO) {

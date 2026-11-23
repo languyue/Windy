@@ -6,7 +6,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.demand.CommentBO;
 import com.zj.domain.entity.po.demand.Comment;
 import com.zj.domain.mapper.demand.CommentMapper;
-import com.zj.domain.repository.demand.ICommentRepository;
+import com.zj.domain.repository.demand.ICommentCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Repository
-public class CommentRepository extends ServiceImpl<CommentMapper, Comment> implements ICommentRepository {
+public class CommentRepository extends ServiceImpl<CommentMapper, Comment> implements ICommentCommandRepository {
     @Override
     public List<CommentBO> getRelativeComments(String relativeId) {
         List<Comment> comments = list(Wrappers.lambdaQuery(Comment.class).eq(Comment::getRelativeId, relativeId)

@@ -1,5 +1,6 @@
 package com.zj.domain.entity.bo.feature;
 
+import com.zj.contract.feature.exec.BatchFeatureVo;
 import lombok.Data;
 
 @Data
@@ -40,7 +41,7 @@ public class TaskRecordBO {
   /**
    * 任务配置
    * */
-  private String taskConfig;
+  private BatchFeatureVo executeConfig;
 
   /**
    * 任务执行成功率

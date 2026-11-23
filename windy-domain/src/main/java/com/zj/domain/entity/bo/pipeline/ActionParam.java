@@ -11,6 +11,13 @@ public class ActionParam {
   private String name;
   private String description;
   private String position;
+  /**
+   * 参数类型，取值对应 ParamValueType 的枚举名
+   */
   private String type;
-  private String value;
+
+  /**
+   * 参数值，按 type 还原后的具体对象
+   */
+  private Object value;
 }

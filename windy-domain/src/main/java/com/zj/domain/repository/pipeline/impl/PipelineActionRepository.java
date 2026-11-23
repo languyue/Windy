@@ -1,20 +1,20 @@
 package com.zj.domain.repository.pipeline.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
+import com.zj.contract.json.ContractJson;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.ActionParam;
-import com.zj.common.entity.pipeline.CompareParameter;
+import com.zj.contract.pipeline.CompareParameter;
 import com.zj.domain.entity.bo.pipeline.PipelineActionBO;
 import com.zj.domain.entity.po.pipeline.PipelineAction;
 import com.zj.domain.mapper.pipeline.PipelineActionMapper;
-import com.zj.domain.repository.pipeline.IPipelineActionRepository;
+import com.zj.domain.repository.pipeline.IPipelineActionCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class PipelineActionRepository extends
-        ServiceImpl<PipelineActionMapper, PipelineAction> implements IPipelineActionRepository {
+        ServiceImpl<PipelineActionMapper, PipelineAction> implements IPipelineActionCommandRepository {
 
     @Override
     public Boolean createAction(PipelineActionBO actionDto) {
@@ -39,9 +39,9 @@ public class PipelineActionRepository extends
         long dateNow = System.currentTimeMillis();
         pipelineAction.setCreateTime(dateNow);
         pipelineAction.setUpdateTime(dateNow);
-        pipelineAction.setHeaders(JSON.toJSONString(actionDto.getHeaders()));
-        pipelineAction.setResult(JSON.toJSONString(actionDto.getCompareResults()));
-        pipelineAction.setParamDetail(JSON.toJSONString(actionDto.getParamList()));
+        pipelineAction.setHeaders(ContractJson.write(actionDto.getHeaders()));
+        pipelineAction.setResult(ContractJson.write(actionDto.getCompareResults()));
+        pipelineAction.setParamDetail(ContractJson.write(actionDto.getParamList()));
         return save(pipelineAction);
     }
 
@@ -105,19 +105,19 @@ public class PipelineActionRepository extends
 
     private PipelineActionBO convertActionBO(PipelineAction action) {
         PipelineActionBO actionDto = OrikaUtil.convert(action, PipelineActionBO.class);
-        actionDto.setHeaders(JSON.parseObject(action.getHeaders(), new TypeReference<Map<String, String>>() {
+        actionDto.setHeaders(ContractJson.read(action.getHeaders(), new TypeReference<Map<String, String>>() {
         }));
-        actionDto.setCompareResults(JSON.parseArray(action.getResult(), CompareParameter.class));
-        actionDto.setParamList(JSON.parseArray(action.getParamDetail(), ActionParam.class));
-        actionDto.setLoopExpression(JSON.parseObject(action.getQueryExpression(), CompareParameter.class));
+        actionDto.setCompareResults(ContractJson.readList(action.getResult(), CompareParameter.class));
+        actionDto.setParamList(ContractJson.readList(action.getParamDetail(), ActionParam.class));
+        actionDto.setLoopExpression(ContractJson.read(action.getQueryExpression(), CompareParameter.class));
         return actionDto;
     }
     private static PipelineAction convertPipelineAction(PipelineActionBO actionDto) {
         PipelineAction pipelineAction = OrikaUtil.convert(actionDto, PipelineAction.class);
-        Optional.ofNullable(actionDto.getHeaders()).ifPresent(headers -> pipelineAction.setHeaders(JSON.toJSONString(headers)));
-        Optional.ofNullable(actionDto.getLoopExpression()).ifPresent(loopExpression -> pipelineAction.setQueryExpression(JSON.toJSONString(loopExpression)));
-        Optional.ofNullable(actionDto.getParamList()).ifPresent(params -> pipelineAction.setParamDetail(JSON.toJSONString(params)));
-        Optional.ofNullable(actionDto.getCompareResults()).ifPresent(compareResults -> pipelineAction.setResult(JSON.toJSONString(compareResults)));
+        Optional.ofNullable(actionDto.getHeaders()).ifPresent(headers -> pipelineAction.setHeaders(ContractJson.write(headers)));
+        Optional.ofNullable(actionDto.getLoopExpression()).ifPresent(loopExpression -> pipelineAction.setQueryExpression(ContractJson.write(loopExpression)));
+        Optional.ofNullable(actionDto.getParamList()).ifPresent(params -> pipelineAction.setParamDetail(ContractJson.write(params)));
+        Optional.ofNullable(actionDto.getCompareResults()).ifPresent(compareResults -> pipelineAction.setResult(ContractJson.write(compareResults)));
         return pipelineAction;
     }
 }

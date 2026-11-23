@@ -9,7 +9,7 @@ import com.zj.domain.entity.bo.feature.TestCaseBO;
 import com.zj.domain.entity.enums.CaseType;
 import com.zj.domain.entity.po.feature.TestCase;
 import com.zj.domain.mapper.feature.TestCaseMapper;
-import com.zj.domain.repository.feature.ITestCaseRepository;
+import com.zj.domain.repository.feature.ITestCaseCommandRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class TestCaseRepository extends ServiceImpl<TestCaseMapper, TestCase> implements
-    ITestCaseRepository {
+    ITestCaseCommandRepository {
 
   @Override
   public TestCaseBO getTestCaseById(String caseId) {

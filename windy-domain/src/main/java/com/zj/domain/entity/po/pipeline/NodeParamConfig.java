@@ -1,8 +1,13 @@
 package com.zj.domain.entity.po.pipeline;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+/**
+ * 节点参数配置，对应 node_config 表
+ */
 @Data
+@TableName("node_config")
 public class NodeParamConfig {
 
     private Long id;
@@ -20,7 +25,7 @@ public class NodeParamConfig {
     /**
      * 配置类型
      * */
-    private String type;
+    private Integer type;
 
     /**
      * 配置信息
@@ -30,7 +35,7 @@ public class NodeParamConfig {
     /**
      * 排序
      * */
-    private Integer sort;
+    private Integer sortOrder;
 
     /**
      * 创建时间

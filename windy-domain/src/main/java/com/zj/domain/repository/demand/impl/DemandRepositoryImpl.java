@@ -6,14 +6,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.demand.DemandBO;
 import com.zj.domain.entity.bo.demand.DemandQueryBO;
 import com.zj.domain.entity.enums.DemandStatus;
 import com.zj.domain.entity.po.demand.Demand;
 import com.zj.domain.mapper.demand.DemandMapper;
-import com.zj.domain.repository.demand.IDemandRepository;
+import com.zj.domain.repository.demand.IDemandCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
-public class DemandRepositoryImpl extends ServiceImpl<DemandMapper, Demand> implements IDemandRepository {
+public class DemandRepositoryImpl extends ServiceImpl<DemandMapper, Demand> implements IDemandCommandRepository {
 
     public static final String DEMAND_STATUS_COLUMN_NAME = "status";
     public static final String DEMAND_ID_COLUMN_NAME = "demand_id";

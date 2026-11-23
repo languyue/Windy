@@ -6,13 +6,13 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.demand.SpaceBO;
 import com.zj.domain.entity.po.demand.Space;
 import com.zj.domain.mapper.demand.SpaceMapper;
-import com.zj.domain.repository.demand.ISpaceRepository;
+import com.zj.domain.repository.demand.ISpaceCommandRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public class SpaceRepositoryImpl extends ServiceImpl<SpaceMapper, Space> implements ISpaceRepository {
+public class SpaceRepositoryImpl extends ServiceImpl<SpaceMapper, Space> implements ISpaceCommandRepository {
 
     @Override
     public List<SpaceBO> getSpaceList() {

@@ -1,18 +1,17 @@
 package com.zj.domain.repository.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
+import com.zj.contract.json.ContractJson;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.service.ApiParamModel;
+import com.zj.contract.service.ApiParamModel;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
 import com.zj.domain.entity.po.service.ServiceApi;
 import com.zj.domain.mapper.service.IServiceApiMapper;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.service.IServiceApiCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class ServiceApiRepository extends ServiceImpl<IServiceApiMapper, ServiceApi> implements
-        IServiceApiRepository {
+        IServiceApiCommandRepository {
 
     @Override
     public boolean saveApi(ServiceApiBO serviceApi) {
@@ -38,7 +37,6 @@ public class ServiceApiRepository extends ServiceImpl<IServiceApiMapper, Service
     }
 
     @Override
-    @Transactional
     public boolean saveBatch(List<ServiceApiBO> serviceApis) {
         List<ServiceApi> serviceApiList = OrikaUtil.convertList(serviceApis, ServiceApi.class);
         return saveBatch(serviceApiList);
@@ -90,10 +88,10 @@ public class ServiceApiRepository extends ServiceImpl<IServiceApiMapper, Service
 
     private static ServiceApiBO convertServiceApiBO(ServiceApi serviceApi) {
         ServiceApiBO serviceApiBO = OrikaUtil.convert(serviceApi, ServiceApiBO.class);
-        serviceApiBO.setRequestParams(JSON.parseArray(serviceApi.getRequestParameter(), ApiParamModel.class));
-        serviceApiBO.setResponseParams(JSON.parseArray(serviceApi.getResponseParameter(), ApiParamModel.class));
+        serviceApiBO.setRequestParams(ContractJson.readList(serviceApi.getRequestParameter(), ApiParamModel.class));
+        serviceApiBO.setResponseParams(ContractJson.readList(serviceApi.getResponseParameter(), ApiParamModel.class));
         Optional.ofNullable(serviceApi.getHeader()).ifPresent(header ->
-                serviceApiBO.setHeader(JSON.parseObject(header, new TypeReference<Map<String, String>>() {
+                serviceApiBO.setHeader(ContractJson.read(header, new TypeReference<Map<String, String>>() {
         })));
 
         return serviceApiBO;
@@ -101,9 +99,9 @@ public class ServiceApiRepository extends ServiceImpl<IServiceApiMapper, Service
 
     private static ServiceApi convertServiceApi(ServiceApiBO serviceApiBO) {
         ServiceApi serviceApi = OrikaUtil.convert(serviceApiBO, ServiceApi.class);
-        serviceApi.setRequestParameter(JSON.toJSONString(serviceApiBO.getRequestParams()));
-        serviceApi.setResponseParameter(JSON.toJSONString(serviceApiBO.getResponseParams()));
-        serviceApi.setHeader(JSON.toJSONString(serviceApiBO.getHeader()));
+        serviceApi.setRequestParameter(ContractJson.write(serviceApiBO.getRequestParams()));
+        serviceApi.setResponseParameter(ContractJson.write(serviceApiBO.getResponseParams()));
+        serviceApi.setHeader(ContractJson.write(serviceApiBO.getHeader()));
         return serviceApi;
     }
 }

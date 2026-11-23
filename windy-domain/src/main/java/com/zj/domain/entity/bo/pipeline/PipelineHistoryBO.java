@@ -1,6 +1,6 @@
 package com.zj.domain.entity.bo.pipeline;
 
-import com.zj.common.entity.pipeline.PipelineConfig;
+import com.zj.contract.pipeline.PipelineConfig;
 import lombok.Data;
 import javax.validation.constraints.NotEmpty;
 

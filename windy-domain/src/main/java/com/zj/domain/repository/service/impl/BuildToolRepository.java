@@ -6,13 +6,13 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.service.BuildToolBO;
 import com.zj.domain.entity.po.service.BuildTool;
 import com.zj.domain.mapper.service.IBuildToolMapper;
-import com.zj.domain.repository.service.IBuildToolRepository;
+import com.zj.domain.repository.service.IBuildToolCommandRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public class BuildToolRepository extends ServiceImpl<IBuildToolMapper, BuildTool> implements IBuildToolRepository {
+public class BuildToolRepository extends ServiceImpl<IBuildToolMapper, BuildTool> implements IBuildToolCommandRepository {
     @Override
     public boolean saveBuildTool(BuildToolBO buildToolBO) {
         BuildTool buildTool = OrikaUtil.convert(buildToolBO, BuildTool.class);

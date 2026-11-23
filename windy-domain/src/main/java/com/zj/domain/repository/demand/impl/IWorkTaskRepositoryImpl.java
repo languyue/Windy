@@ -6,14 +6,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.demand.TaskQueryBO;
 import com.zj.domain.entity.bo.demand.WorkTaskBO;
 import com.zj.domain.entity.enums.WorkTaskStatus;
 import com.zj.domain.entity.po.demand.WorkTask;
 import com.zj.domain.mapper.demand.WorkTaskMapper;
-import com.zj.domain.repository.demand.IWorkTaskRepository;
+import com.zj.domain.repository.demand.IWorkTaskCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Repository
-public class IWorkTaskRepositoryImpl extends ServiceImpl<WorkTaskMapper, WorkTask> implements IWorkTaskRepository {
+public class IWorkTaskRepositoryImpl extends ServiceImpl<WorkTaskMapper, WorkTask> implements IWorkTaskCommandRepository {
     @Override
     public boolean createTask(WorkTaskBO workTaskBO) {
         WorkTask workTask = OrikaUtil.convert(workTaskBO, WorkTask.class);

@@ -1,0 +1,48 @@
+package com.zj.domain.repository.feature;
+
+import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
+import java.util.List;
+import com.zj.domain.repository.marker.ConfigCommandRepository;
+
+/**
+* @author guyuelan
+* @since 2023/5/18
+*/
+public interface ITestCaseConfigCommandRepository extends ITestCaseConfigQueryRepository, ConfigCommandRepository {
+
+  /**
+  * 保存测试集配置
+  * @param caseConfig 配置信息
+  * @return 是否成功
+  */
+  boolean saveConfig(TestCaseConfigBO caseConfig);
+
+  /**
+  * 更新测试集配置
+  * @param configDto 配置信息
+  * @return 是否成功
+  */
+  boolean updateCaseConfig(TestCaseConfigBO configDto);
+
+  /**
+  * 删除测试集配置
+  * @param configId 配置ID
+  * @return 是否成功
+  */
+  boolean deleteCaseConfig(String configId);
+
+  /**
+  * 批量更新测试集配置
+  * @param updateList 配置列表
+  * @return 是否成功
+  */
+  boolean batchUpdateCaseConfig(List<TestCaseConfigBO> updateList);
+
+  /**
+  * 删除测试集关联的配置项
+  * @param caseId 测试集ID
+  * @return 返回删除结果
+  */
+  boolean deleteByCaseId(String caseId);
+
+}

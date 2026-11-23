@@ -1,15 +1,15 @@
 package com.zj.domain.repository.pipeline.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.pipeline.PipelineConfig;
+import com.zj.contract.pipeline.PipelineConfig;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.enums.PipelineType;
 import com.zj.domain.entity.po.pipeline.Pipeline;
 import com.zj.domain.mapper.pipeline.PipelineMapper;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
+import com.zj.domain.repository.pipeline.IPipelineCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class PipelineRepository extends ServiceImpl<PipelineMapper, Pipeline> implements
-    IPipelineRepository {
+    IPipelineCommandRepository {
 
   public boolean updatePipeline(PipelineBO pipelineBO) {
     Long currentTime = System.currentTimeMillis();
@@ -83,7 +83,7 @@ public class PipelineRepository extends ServiceImpl<PipelineMapper, Pipeline> im
   private static Pipeline convertPipeline(PipelineBO pipelineBO) {
     Pipeline pipeline = OrikaUtil.convert(pipelineBO, Pipeline.class);
     Optional.ofNullable(pipelineBO.getPipelineConfig()).ifPresent(config ->
-            pipeline.setConfig(JSON.toJSONString(config)));
+            pipeline.setConfig(ContractJson.write(config)));
     return pipeline;
   }
 
@@ -92,7 +92,7 @@ public class PipelineRepository extends ServiceImpl<PipelineMapper, Pipeline> im
       return null;
     }
     PipelineBO pipelineBO = OrikaUtil.convert(pipeline, PipelineBO.class);
-    pipelineBO.setPipelineConfig(JSON.parseObject(pipeline.getConfig(), PipelineConfig.class));
+    pipelineBO.setPipelineConfig(ContractJson.read(pipeline.getConfig(), PipelineConfig.class));
     return pipelineBO;
   }
 }

@@ -2,19 +2,18 @@ package com.zj.domain.repository.feature.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.po.feature.FeatureHistory;
 import com.zj.domain.mapper.feature.FeatureHistoryMapper;
-import com.zj.domain.repository.feature.IExecuteRecordRepository;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
+import com.zj.domain.repository.feature.IExecuteRecordCommandRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -24,11 +23,11 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 @Repository
 public class FeatureHistoryRepository extends
-    ServiceImpl<FeatureHistoryMapper, FeatureHistory> implements IFeatureHistoryRepository {
+    ServiceImpl<FeatureHistoryMapper, FeatureHistory> implements IFeatureHistoryCommandRepository {
 
-  private final IExecuteRecordRepository executeRecordRepository;
+  private final IExecuteRecordCommandRepository executeRecordRepository;
 
-  public FeatureHistoryRepository(IExecuteRecordRepository executeRecordRepository) {
+  public FeatureHistoryRepository(IExecuteRecordCommandRepository executeRecordRepository) {
     this.executeRecordRepository = executeRecordRepository;
   }
 
@@ -86,7 +85,6 @@ public class FeatureHistoryRepository extends
   }
 
   @Override
-  @Transactional
   public boolean deleteByRecordId(String taskRecordId) {
     List<FeatureHistory> histories = list(Wrappers.lambdaQuery(FeatureHistory.class)
             .eq(FeatureHistory::getRecordId, taskRecordId));

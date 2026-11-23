@@ -7,7 +7,7 @@ import com.zj.domain.entity.bo.demand.BusinessStatusBO;
 import com.zj.domain.entity.enums.BusinessStatusType;
 import com.zj.domain.entity.po.demand.BusinessStatus;
 import com.zj.domain.mapper.demand.BusinessStatusMapper;
-import com.zj.domain.repository.demand.IBusinessStatusRepository;
+import com.zj.domain.repository.demand.IBusinessStatusCommandRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Repository
-public class IBusinessStatusRepositoryImpl extends ServiceImpl<BusinessStatusMapper, BusinessStatus> implements IBusinessStatusRepository {
+public class IBusinessStatusRepositoryImpl extends ServiceImpl<BusinessStatusMapper, BusinessStatus> implements IBusinessStatusCommandRepository {
 
     public static final int UNCHANGEABLE_TYPE = 2;
 

@@ -1,11 +1,11 @@
 package com.zj.domain.entity.bo.service;
 
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.zj.contract.pipeline.EnvAccessParams;
 import com.zj.domain.entity.enums.EnvType;
 import lombok.Data;
 
 @Data
-@TableName("environment")
 public class DeployEnvironmentBO {
 
   /**
@@ -30,9 +30,10 @@ public class DeployEnvironmentBO {
   private Integer envType;
 
   /**
-   * 环境执行的必要参数
+   * 环境执行的必要参数，具体类型由 {@link #envType} 决定
    * */
-  private String envParams;
+  @JsonProperty("envParams")
+  private EnvAccessParams accessParams;
 
   /**
    * 创建时间

@@ -7,13 +7,13 @@ import com.zj.domain.entity.bo.feature.PluginInfoBO;
 import com.zj.domain.entity.enums.SourceStatus;
 import com.zj.domain.entity.po.feature.PluginInfo;
 import com.zj.domain.mapper.feature.PluginInfoMapper;
-import com.zj.domain.repository.feature.IPluginRepository;
+import com.zj.domain.repository.feature.IPluginCommandRepository;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class PluginRepository extends ServiceImpl<PluginInfoMapper, PluginInfo> implements
-    IPluginRepository {
+    IPluginCommandRepository {
 
   @Override
   public List<PluginInfoBO> getAllPlugins() {

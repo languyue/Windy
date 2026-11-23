@@ -1,19 +1,19 @@
 package com.zj.domain.repository.pipeline.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zj.common.entity.pipeline.PipelineConfig;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.pipeline.PipelineConfig;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
 import com.zj.domain.entity.po.pipeline.PipelineHistory;
 import com.zj.domain.mapper.pipeline.PipelineHistoryMapper;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryCommandRepository;
+import com.zj.domain.repository.pipeline.IPipelineCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -28,13 +28,13 @@ import org.springframework.util.CollectionUtils;
  */
 @Repository
 public class PipelineHistoryRepository extends
-    ServiceImpl<PipelineHistoryMapper, PipelineHistory> implements IPipelineHistoryRepository {
+    ServiceImpl<PipelineHistoryMapper, PipelineHistory> implements IPipelineHistoryCommandRepository {
 
   public static final String LAST_SQL = "limit 1";
 
-  private final IPipelineRepository pipelineRepository;
+  private final IPipelineCommandRepository pipelineRepository;
 
-  public PipelineHistoryRepository(IPipelineRepository pipelineRepository) {
+  public PipelineHistoryRepository(IPipelineCommandRepository pipelineRepository) {
     this.pipelineRepository = pipelineRepository;
   }
 
@@ -100,14 +100,14 @@ public class PipelineHistoryRepository extends
 
   private static PipelineHistoryBO cenvertPipelineHistoryBO(PipelineHistory pipelineHistory) {
     PipelineHistoryBO pipelineHistoryBO = OrikaUtil.convert(pipelineHistory, PipelineHistoryBO.class);
-    pipelineHistoryBO.setPipelineConfig(JSON.parseObject(pipelineHistory.getConfig(), PipelineConfig.class));
+    pipelineHistoryBO.setPipelineConfig(ContractJson.read(pipelineHistory.getConfig(), PipelineConfig.class));
     return pipelineHistoryBO;
   }
 
   private static PipelineHistory convertPipelineHistory(PipelineHistoryBO pipelineHistoryBO) {
     PipelineHistory pipelineHistory = OrikaUtil.convert(pipelineHistoryBO, PipelineHistory.class);
     Optional.ofNullable(pipelineHistoryBO.getPipelineConfig()).ifPresent(config ->
-            pipelineHistory.setConfig(JSON.toJSONString(config)));
+            pipelineHistory.setConfig(ContractJson.write(config)));
     return pipelineHistory;
   }
 

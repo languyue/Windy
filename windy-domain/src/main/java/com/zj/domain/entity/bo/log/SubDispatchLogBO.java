@@ -2,6 +2,8 @@ package com.zj.domain.entity.bo.log;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * @author guyuelan
  * @since 2023/5/12
@@ -29,7 +31,7 @@ public class SubDispatchLogBO {
   /**
    * 执行任务参数
    * */
-  private String executeParam;
+  private Map<String, Object> executeParams;
 
   /**
    * 父任务Id

@@ -2,6 +2,8 @@ package com.zj.domain.entity.bo.log;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author guyuelan
  * @since 2023/5/12
@@ -22,9 +24,9 @@ public class DispatchLogBO {
   private Integer logType;
 
   /**
-   * 任务来源Id
+   * 任务来源Id列表，对应 DB 中 source_id 列的 JSON 数组
    * */
-  private String sourceId;
+  private List<String> sourceIds;
 
   /**
    * 来源记录Id

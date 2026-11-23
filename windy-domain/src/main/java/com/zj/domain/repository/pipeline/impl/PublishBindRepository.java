@@ -6,7 +6,7 @@ import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.domain.entity.po.pipeline.PublishBind;
 import com.zj.domain.mapper.pipeline.PublishBindMapper;
-import com.zj.domain.repository.pipeline.IPublishBindRepository;
+import com.zj.domain.repository.pipeline.IPublishBindCommandRepository;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Repository;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class PublishBindRepository extends ServiceImpl<PublishBindMapper, PublishBind> implements
-    IPublishBindRepository {
+    IPublishBindCommandRepository {
 
   @Override
   public boolean createPublish(PublishBindBO publishBind) {
