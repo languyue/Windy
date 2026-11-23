@@ -203,7 +203,8 @@ public class NodeStatusQueryLooper implements Runnable {
   private boolean checkRunTimeout(TaskNode taskNode) {
     long dateNow = System.currentTimeMillis();
     long mills = dateNow - taskNode.getExecuteTime();
-    Long timeout = Optional.ofNullable(taskNode.getExpireTime()).orElseGet(globalEnvConfig::getLoopQueryTimeout) ;
+    Long timeout = Optional.ofNullable(taskNode.getExpireTime()).filter(expire -> expire > 0)
+        .orElseGet(globalEnvConfig::getLoopQueryTimeout);
     return mills >= timeout;
   }
 
