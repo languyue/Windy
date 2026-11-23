@@ -1,13 +1,15 @@
 package com.zj.contract.pipeline.node;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * @author guyuelan
  * @since 2022/5/23
  */
-@Data
+@Getter
+@Setter
 public class TaskNode extends BaseDispatch{
   /**
    * 流水线节点Id

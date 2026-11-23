@@ -1,8 +1,11 @@
 package com.zj.contract.pipeline.node;
 
 import com.zj.contract.pipeline.CompareParameter;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
@@ -11,8 +14,11 @@ import java.util.Map;
  * @author guyuelan
  * @since 2022/6/15
  */
-@Data
+@Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshContext {
 
   private String url;

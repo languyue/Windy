@@ -1,12 +1,14 @@
 package com.zj.contract.pipeline.node;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * @author guyuelan
  * @since 2022/5/24
  */
-@Data
+@Getter
+@Setter
 public class NodeConfig {
 
   /**
