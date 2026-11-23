@@ -6,7 +6,7 @@ import com.zj.contract.event.payload.NodeRecordPayload;
 import com.zj.client.handler.notify.IResultEventNotify;
 import com.zj.client.handler.pipeline.executer.notify.IPipelineStatusListener;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.contract.event.ResultEvent;
 import com.zj.contract.enums.NotifyType;
 import com.zj.contract.enums.ProcessStatus;

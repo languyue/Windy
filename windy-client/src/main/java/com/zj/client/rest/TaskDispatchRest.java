@@ -2,7 +2,7 @@ package com.zj.client.rest;
 
 import com.zj.contract.feature.exec.GenerateParam;
 import com.zj.contract.feature.exec.FeatureExecuteParam;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.client.service.TaskDispatchService;
 import com.zj.contract.rpc.ResponseMeta;
 import com.zj.contract.dispatch.StopDispatch;

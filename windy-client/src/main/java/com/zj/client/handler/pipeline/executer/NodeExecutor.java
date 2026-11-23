@@ -5,7 +5,7 @@ import com.zj.client.handler.pipeline.executer.intercept.INodeExecuteInterceptor
 import com.zj.client.handler.pipeline.executer.notify.PipelineEventFactory;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.contract.event.payload.NodeRecordPayload;
 import com.zj.client.utils.ExceptionUtils;
 import com.zj.contract.enums.NotifyType;

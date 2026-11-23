@@ -6,7 +6,7 @@ import com.zj.contract.feature.exec.FeatureExecuteParam;
 import com.zj.client.handler.generate.MavenGenerator;
 import com.zj.client.handler.pipeline.executer.ExecuteProxy;
 import com.zj.client.handler.pipeline.executer.notify.NodeStatusQueryLooper;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.contract.dispatch.StopDispatch;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

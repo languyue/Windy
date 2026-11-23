@@ -7,10 +7,10 @@ import com.zj.client.handler.feature.executor.compare.CompareOperator;
 import com.zj.contract.feature.CompareResult;
 import com.zj.client.handler.feature.executor.compare.operator.CompareFactory;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
-import com.zj.client.handler.pipeline.executer.vo.CompareInfo;
+import com.zj.contract.pipeline.CompareParameter;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.contract.json.ContractJson;
 import com.zj.plugin.loader.ExecuteStatus;
@@ -129,7 +129,7 @@ public class NodeStatusQueryLooper implements Runnable {
    */
   private void compareResultWithExpect(TaskNode node, QueryResponseModel responseModel) {
     //如果没有断言比较直接退出
-    List<CompareInfo> compareConfigs = node.getRefreshContext().getCompareConfig();
+    List<CompareParameter> compareConfigs = node.getRefreshContext().getCompareConfig();
     if (CollectionUtils.isEmpty(compareConfigs) || Objects.isNull(responseModel.getData())) {
       log.info("compare info is empty or response data is null");
       return;
@@ -153,7 +153,7 @@ public class NodeStatusQueryLooper implements Runnable {
     log.info("feature result compare with expect = {}", !anyMatch);
   }
 
-  private CompareResult handleCompare(Map<String, Object> response, CompareInfo compareInfo) {
+  private CompareResult handleCompare(Map<String, Object> response, CompareParameter compareInfo) {
     CompareOperator compareOperator = compareFactory.getOperator(compareInfo.getOperator());
     CompareDefine compareDefine = new CompareDefine();
     compareDefine.setResponseValue(response.get(compareInfo.getCompareKey()));
@@ -161,7 +161,7 @@ public class NodeStatusQueryLooper implements Runnable {
     return compareOperator.compare(compareDefine);
   }
 
-  private List<String> exchangeTips(Map<String, Object> response, CompareInfo compareInfo) {
+  private List<String> exchangeTips(Map<String, Object> response, CompareParameter compareInfo) {
     if (MapUtils.isEmpty(response)) {
       return Collections.emptyList();
     }

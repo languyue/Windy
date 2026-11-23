@@ -22,4 +22,9 @@ public class RefreshContext {
   private Map<String, String> headers;
 
   private List<CompareParameter> compareConfig;
+
+  /**
+   * 运行记录Id，client 触发节点后回填，用于轮询任务状态；master 下发时不填。
+   * */
+  private String recordId;
 }

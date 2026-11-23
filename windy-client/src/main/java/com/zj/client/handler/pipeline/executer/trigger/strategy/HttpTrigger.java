@@ -5,10 +5,10 @@ import com.zj.client.handler.feature.executor.compare.CompareOperator;
 import com.zj.contract.feature.CompareResult;
 import com.zj.client.handler.feature.executor.compare.operator.CompareFactory;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
-import com.zj.client.handler.pipeline.executer.vo.CompareInfo;
+import com.zj.contract.pipeline.CompareParameter;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.client.handler.pipeline.executer.vo.RefreshContext;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.RefreshContext;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.common.enums.ExecuteType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ExecuteException;
@@ -112,7 +112,7 @@ public class HttpTrigger implements INodeTrigger<HttpContext> {
         return null;
     }
 
-    private CompareResult handleCompare(Map<String, Object> response, CompareInfo compareInfo) {
+    private CompareResult handleCompare(Map<String, Object> response, CompareParameter compareInfo) {
         if (Objects.isNull(compareInfo)) {
             return null;
         }

@@ -1,5 +1,6 @@
 package com.zj.contract.pipeline.node;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -57,6 +58,14 @@ public class TaskNode extends BaseDispatch{
    * 任务开始执行的时间点
    * */
   private Long executeTime;
+
+  /**
+   * 等待类节点的超时时间（毫秒）。由 client 在触发阶段按节点配置写入，
+   * master 下发时不填该字段。
+   * 不填时不出现在报文里（WireJson 会把 null 数值写成 0，client 会误判为立即超时）
+   * */
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Long expireTime;
 
   private String logId;
 

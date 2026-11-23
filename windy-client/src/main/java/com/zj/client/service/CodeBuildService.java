@@ -17,7 +17,7 @@ import com.zj.client.handler.pipeline.build.ICodeBuilder;
 import com.zj.client.handler.pipeline.executer.notify.PipelineEventFactory;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.client.handler.pipeline.git.IGitProcessor;
 import com.zj.common.entity.WindyConstants;
 import com.zj.contract.enums.DeployType;

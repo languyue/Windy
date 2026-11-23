@@ -1,7 +1,7 @@
 package com.zj.client.handler.pipeline.executer.intercept;
 
 
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.contract.enums.ProcessStatus;
 
 /**

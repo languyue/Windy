@@ -1,6 +1,6 @@
 package com.zj.client.entity.bo;
 
-import com.zj.client.handler.pipeline.executer.vo.TaskNode;
+import com.zj.contract.pipeline.node.TaskNode;
 import lombok.Data;
 
 import java.util.concurrent.Delayed;

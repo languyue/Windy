@@ -1,5 +1,7 @@
 package com.zj.client.handler.pipeline.executer.vo;
 
+import com.zj.contract.pipeline.node.TaskNode;
+
 import com.zj.contract.enums.ProcessStatus;
 import lombok.Builder;
 import lombok.Data;
