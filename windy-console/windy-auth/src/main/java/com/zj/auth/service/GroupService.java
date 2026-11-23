@@ -3,13 +3,13 @@ package com.zj.auth.service;
 import com.zj.auth.entity.GroupTree;
 import com.zj.auth.entity.GroupUserTree;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.auth.GroupBO;
 import com.zj.domain.entity.bo.auth.UserBO;
-import com.zj.domain.repository.auth.IGroupRepository;
-import com.zj.domain.repository.auth.IUserRepository;
+import com.zj.domain.repository.auth.IGroupCommandRepository;
+import com.zj.domain.repository.auth.IUserQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -25,11 +25,11 @@ import java.util.stream.Collectors;
 @Service
 public class GroupService {
 
-    private final IGroupRepository groupRepository;
-    private final IUserRepository userRepository;
+    private final IGroupCommandRepository groupRepository;
+    private final IUserQueryRepository userRepository;
     private final UniqueIdService uniqueIdService;
 
-    public GroupService(IGroupRepository groupRepository, IUserRepository userRepository, UniqueIdService uniqueIdService) {
+    public GroupService(IGroupCommandRepository groupRepository, IUserQueryRepository userRepository, UniqueIdService uniqueIdService) {
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.uniqueIdService = uniqueIdService;

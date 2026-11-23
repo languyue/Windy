@@ -1,7 +1,7 @@
 package com.zj.metrics.rest;
 
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.metrics.entity.*;
 import com.zj.metrics.service.MetricsService;
 import org.springframework.web.bind.annotation.GetMapping;

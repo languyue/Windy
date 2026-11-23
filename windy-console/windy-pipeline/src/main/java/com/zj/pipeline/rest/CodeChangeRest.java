@@ -1,8 +1,8 @@
 package com.zj.pipeline.rest;
 
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.rpc.PageSize;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.RelationDemandBug;
 import com.zj.pipeline.entity.dto.CodeChangeDto;

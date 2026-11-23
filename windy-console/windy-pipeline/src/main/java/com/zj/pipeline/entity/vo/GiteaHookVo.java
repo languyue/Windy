@@ -1,6 +1,6 @@
 package com.zj.pipeline.entity.vo;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -16,7 +16,7 @@ public class GiteaHookVo {
 
   private Commit commit;
 
-  @JSONField(name = "event_type")
+  @JsonProperty("event_type")
   private String eventType;
 
 

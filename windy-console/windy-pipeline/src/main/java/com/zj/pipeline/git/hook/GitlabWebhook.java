@@ -1,10 +1,10 @@
 package com.zj.pipeline.git.hook;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.adapter.git.GitAccessInfo;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
+import com.zj.contract.git.GitAccessInfo;
+import com.zj.contract.json.ContractJson;
+import com.zj.domain.repository.pipeline.IBindBranchQueryRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
 import com.zj.pipeline.entity.enums.PlatformEnum;
 import com.zj.pipeline.entity.vo.GitPushResultVo;
 import com.zj.pipeline.entity.vo.GitlabBaseEventVo;
@@ -31,9 +31,9 @@ public class GitlabWebhook extends AbstractWebhook {
 
   public static final String PUSH_EVENT_NAME = "push";
 
-  public GitlabWebhook(IMicroServiceRepository serviceRepository, PipelineService pipelineService,
+  public GitlabWebhook(IMicroServiceQueryRepository serviceRepository, PipelineService pipelineService,
                        @Qualifier("webHookExecutorPool") Executor executorService,
-                       IBindBranchRepository gitBindRepository, ISystemConfigRepository systemConfigRepository) {
+                       IBindBranchQueryRepository gitBindRepository, ISystemConfigQueryRepository systemConfigRepository) {
     super(serviceRepository, pipelineService, executorService, gitBindRepository, systemConfigRepository);
   }
 
@@ -45,12 +45,12 @@ public class GitlabWebhook extends AbstractWebhook {
       return null;
     }
 
-    GitlabBaseEventVo gitEvent = JSON.parseObject(data, GitlabBaseEventVo.class);
+    GitlabBaseEventVo gitEvent = ContractJson.read(data, GitlabBaseEventVo.class);
     GitlabBaseEventVo.GitProject gitProject = gitEvent.getProject();
     if (!Objects.equals(gitEvent.getEventType(), PUSH_EVENT_NAME)){
       return null;
     }
-    GitlabCommitVo gitlabCommitVo = JSON.parseObject(data, GitlabCommitVo.class);
+    GitlabCommitVo gitlabCommitVo = ContractJson.read(data, GitlabCommitVo.class);
     String branch = getBranchFromHookData(gitlabCommitVo.getRef());
     log.info("get repository name={} url={} branch name={}", gitProject.getName(), gitProject.getGitUrl(), branch);
     return GitPushResultVo.builder().repository(gitProject.getGitUrl()).eventType(gitEvent.getEventType()).branch(branch).build();

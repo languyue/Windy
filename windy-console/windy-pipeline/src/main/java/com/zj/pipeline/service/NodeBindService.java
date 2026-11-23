@@ -3,10 +3,10 @@ package com.zj.pipeline.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.pipeline.NodeBindBO;
 import com.zj.domain.entity.bo.pipeline.PipelineActionBO;
-import com.zj.domain.repository.pipeline.INodeBindRepository;
+import com.zj.domain.repository.pipeline.INodeBindCommandRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +22,12 @@ import org.springframework.util.CollectionUtils;
 @Service
 public class NodeBindService {
   private final PipelineActionService actionService;
-  private final INodeBindRepository nodeBindRepository;
+  private final INodeBindCommandRepository nodeBindRepository;
   private final UniqueIdService uniqueIdService;
   private final IAuthService authService;
 
   public NodeBindService(PipelineActionService actionService,
-                         INodeBindRepository nodeBindRepository, UniqueIdService uniqueIdService, IAuthService authService) {
+                         INodeBindCommandRepository nodeBindRepository, UniqueIdService uniqueIdService, IAuthService authService) {
     this.actionService = actionService;
     this.nodeBindRepository = nodeBindRepository;
     this.uniqueIdService = uniqueIdService;

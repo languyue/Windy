@@ -6,7 +6,7 @@ import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.CommentDto;
 import com.zj.domain.entity.bo.demand.CommentBO;
-import com.zj.domain.repository.demand.ICommentRepository;
+import com.zj.domain.repository.demand.ICommentCommandRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +20,11 @@ import java.util.Optional;
 @Service
 public class CommentService {
 
-  private final ICommentRepository commentRepository;
+  private final ICommentCommandRepository commentRepository;
   private final UniqueIdService uniqueIdService;
   private final IAuthService authService;
 
-  public CommentService(ICommentRepository commentRepository, UniqueIdService uniqueIdService, IAuthService authService) {
+  public CommentService(ICommentCommandRepository commentRepository, UniqueIdService uniqueIdService, IAuthService authService) {
     this.commentRepository = commentRepository;
     this.uniqueIdService = uniqueIdService;
     this.authService = authService;

@@ -1,16 +1,16 @@
 package com.zj.pipeline.service;
 
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.invoker.IClientInvoker;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.ClientCollectDto;
-import com.zj.common.entity.dto.MasterCollectDto;
+import com.zj.contract.rpc.ClientCollectDto;
+import com.zj.contract.rpc.MasterCollectDto;
 import com.zj.domain.entity.bo.pipeline.SystemConfigBO;
 import com.zj.domain.entity.vo.DefaultPipelineVo;
 import com.zj.domain.entity.vo.ImageRepositoryVo;
 import com.zj.domain.entity.vo.GenerateMavenConfigDto;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigCommandRepository;
 import com.zj.pipeline.entity.dto.SystemMonitorDto;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -18,13 +18,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class SystemConfigService {
 
-  private final ISystemConfigRepository systemConfigRepository;
+  private final ISystemConfigCommandRepository systemConfigRepository;
   private final UniqueIdService uniqueIdService;
-  private final IMasterInvoker masterInvoker;
+  private final IMasterApi masterInvoker;
   private final IClientInvoker clientInvoker;
 
-  public SystemConfigService(ISystemConfigRepository systemConfigRepository,
-                             UniqueIdService uniqueIdService, IMasterInvoker masterInvoker, IClientInvoker clientInvoker) {
+  public SystemConfigService(ISystemConfigCommandRepository systemConfigRepository,
+                             UniqueIdService uniqueIdService, IMasterApi masterInvoker, IClientInvoker clientInvoker) {
     this.systemConfigRepository = systemConfigRepository;
     this.uniqueIdService = uniqueIdService;
     this.masterInvoker = masterInvoker;

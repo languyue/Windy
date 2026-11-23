@@ -1,8 +1,8 @@
 package com.zj.feature.entity;
 
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.VariableDefine;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.VariableDefine;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
 import java.util.List;
 import javax.validation.Valid;

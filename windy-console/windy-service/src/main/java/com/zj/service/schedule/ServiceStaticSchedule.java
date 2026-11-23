@@ -3,8 +3,8 @@ package com.zj.service.schedule;
 import com.zj.common.enums.ApiType;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.service.IMicroServiceCommandRepository;
+import com.zj.domain.repository.service.IServiceApiQueryRepository;
 import com.zj.service.service.MicroserviceService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @Component
 public class ServiceStaticSchedule {
 
-    private final IMicroServiceRepository microServiceRepository;
+    private final IMicroServiceCommandRepository microServiceRepository;
 
-    private final IServiceApiRepository serviceApiRepository;
+    private final IServiceApiQueryRepository serviceApiRepository;
 
     private final MicroserviceService microserviceService;
 
-    public ServiceStaticSchedule(IMicroServiceRepository microServiceRepository,
-                                 IServiceApiRepository serviceApiRepository, MicroserviceService microserviceService) {
+    public ServiceStaticSchedule(IMicroServiceCommandRepository microServiceRepository,
+                                 IServiceApiQueryRepository serviceApiRepository, MicroserviceService microserviceService) {
         this.microServiceRepository = microServiceRepository;
         this.serviceApiRepository = serviceApiRepository;
         this.microserviceService = microserviceService;

@@ -1,7 +1,7 @@
 package com.zj.pipeline.git;
 
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import okhttp3.MediaType;

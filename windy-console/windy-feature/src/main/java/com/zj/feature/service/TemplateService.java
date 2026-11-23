@@ -1,15 +1,16 @@
 package com.zj.feature.service;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.feature.entity.ExecuteTemplateDto;
-import com.zj.common.entity.feature.ExecutorUnit;
+import com.zj.contract.feature.ExecutorUnit;
 import com.zj.common.enums.InvokerType;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
@@ -17,10 +18,10 @@ import com.zj.domain.entity.bo.feature.PluginInfoBO;
 import com.zj.domain.entity.bo.service.ResourceMemberBO;
 import com.zj.domain.entity.enums.MemberType;
 import com.zj.domain.entity.enums.SourceStatus;
-import com.zj.domain.repository.demand.IMemberRepository;
-import com.zj.domain.repository.feature.IExecutePointRepository;
-import com.zj.domain.repository.feature.IExecuteTemplateRepository;
-import com.zj.domain.repository.feature.IPluginRepository;
+import com.zj.domain.repository.demand.IMemberCommandRepository;
+import com.zj.domain.repository.feature.IExecutePointCommandRepository;
+import com.zj.domain.repository.feature.IExecuteTemplateCommandRepository;
+import com.zj.domain.repository.feature.IPluginCommandRepository;
 import com.zj.feature.entity.BatchTemplates;
 import com.zj.feature.entity.RelatedTemplateDto;
 import com.zj.feature.entity.UploadResultDto;
@@ -58,15 +59,15 @@ public class TemplateService {
 
     public static final String PLUGINS_PATH = "plugins";
     private final UniqueIdService uniqueIdService;
-    private final IExecuteTemplateRepository templateRepository;
-    private final IExecutePointRepository executePointRepository;
-    private final IPluginRepository pluginRepository;
-    private final IMemberRepository memberRepository;
+    private final IExecuteTemplateCommandRepository templateRepository;
+    private final IExecutePointCommandRepository executePointRepository;
+    private final IPluginCommandRepository pluginRepository;
+    private final IMemberCommandRepository memberRepository;
 
     public TemplateService(UniqueIdService uniqueIdService,
-                           IExecuteTemplateRepository templateRepository,
-                           IExecutePointRepository executePointRepository, IPluginRepository pluginRepository,
-                           IMemberRepository memberRepository) {
+                           IExecuteTemplateCommandRepository templateRepository,
+                           IExecutePointCommandRepository executePointRepository, IPluginCommandRepository pluginRepository,
+                           IMemberCommandRepository memberRepository) {
         this.uniqueIdService = uniqueIdService;
         this.templateRepository = templateRepository;
         this.executePointRepository = executePointRepository;
@@ -110,7 +111,7 @@ public class TemplateService {
                 ExecuteTemplateBO.class);
         executeTemplate.setUpdateTime(System.currentTimeMillis());
         executeTemplate.setParameterDefines(executeTemplateDto.getParams());
-        executeTemplate.setHeader(JSON.toJSONString(executeTemplateDto.getHeaders()));
+        executeTemplate.setHeaders(executeTemplateDto.getHeaders());
         return templateRepository.updateTemplate(executeTemplate)
                 ? executeTemplate.getTemplateId() : "";
     }
@@ -137,6 +138,7 @@ public class TemplateService {
     }
 
 
+    @Transactional
     public Boolean refreshTemplate(String templateId) {
         List<ExecutePointBO> executePoints = executePointRepository.getTemplateExecutePoints(templateId);
         if (CollectionUtils.isEmpty(executePoints)) {
@@ -157,7 +159,7 @@ public class TemplateService {
         executorUnit.setService(executeTemplate.getService());
         executorUnit.setMethod(executeTemplate.getMethod());
         executorUnit.setInvokeType(executeTemplate.getInvokeType());
-        Map<String, String> map = JSON.parseObject(executeTemplate.getHeader(), Map.class);
+        Map<String, String> map = executeTemplate.getHeaders();
         executorUnit.setHeaders(map);
         Map<String, ParameterDefine> pointParameterMap = executorUnit.getParams().stream().collect(
                 Collectors.toMap(ParameterDefine::getParamKey, param -> param));
@@ -335,7 +337,7 @@ public class TemplateService {
         executeTemplate.setTemplateId(templateId);
         executeTemplate.setCreateTime(System.currentTimeMillis());
         executeTemplate.setUpdateTime(System.currentTimeMillis());
-        executeTemplate.setHeader(JSON.toJSONString(executeTemplateDto.getHeaders()));
+        executeTemplate.setHeaders(executeTemplateDto.getHeaders());
         executeTemplate.setParameterDefines(executeTemplateDto.getParams());
         return executeTemplate;
     }
@@ -353,7 +355,7 @@ public class TemplateService {
     public ExecuteTemplateDto toExecuteTemplateDto(ExecuteTemplateBO executeTemplate) {
         ExecuteTemplateDto templateVo = OrikaUtil.convert(executeTemplate, ExecuteTemplateDto.class);
         templateVo.setParams(executeTemplate.getParameterDefines());
-        templateVo.setHeaders((Map<String, String>) JSON.parse(executeTemplate.getHeader()));
+        templateVo.setHeaders(executeTemplate.getHeaders());
         return templateVo;
     }
 
@@ -372,6 +374,7 @@ public class TemplateService {
                 .values());
     }
 
+    @Transactional
     public Boolean addRelatedTemplate(RelatedTemplateDto relatedTemplateDto) {
         List<ResourceMemberBO> resourceMembers =
                 relatedTemplateDto.getRelatedServiceIds().stream().map(relatedServiceId -> {

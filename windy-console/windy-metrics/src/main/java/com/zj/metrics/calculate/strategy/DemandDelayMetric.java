@@ -6,8 +6,8 @@ import com.zj.domain.entity.bo.demand.DemandBO;
 import com.zj.domain.entity.bo.metric.MetricDefinitionBO;
 import com.zj.domain.entity.bo.metric.MetricResultBO;
 import com.zj.domain.entity.bo.metric.MetricSourceBO;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.metric.IMetricResultRepository;
+import com.zj.domain.repository.demand.IDemandQueryRepository;
+import com.zj.domain.repository.metric.IMetricResultCommandRepository;
 import com.zj.metrics.utils.MetricUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -23,10 +23,10 @@ import java.util.Optional;
 public class DemandDelayMetric extends BaseMetric {
 
     private static final Logger log = LoggerFactory.getLogger(DemandDelayMetric.class);
-    private final IDemandRepository demandRepository;
+    private final IDemandQueryRepository demandRepository;
 
-    public DemandDelayMetric(IDemandRepository demandRepository, UniqueIdService uniqueIdService,
-                             IMetricResultRepository metricResultRepository) {
+    public DemandDelayMetric(IDemandQueryRepository demandRepository, UniqueIdService uniqueIdService,
+                             IMetricResultCommandRepository metricResultRepository) {
         super(uniqueIdService, metricResultRepository);
         this.demandRepository = demandRepository;
     }

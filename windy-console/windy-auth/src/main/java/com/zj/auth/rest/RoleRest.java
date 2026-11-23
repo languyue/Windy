@@ -2,9 +2,9 @@ package com.zj.auth.rest;
 
 import com.zj.auth.entity.RoleBind;
 import com.zj.auth.service.RoleService;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.PageSize;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.domain.entity.bo.auth.RoleBO;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

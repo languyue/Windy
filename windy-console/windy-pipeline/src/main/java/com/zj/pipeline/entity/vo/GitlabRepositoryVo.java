@@ -1,6 +1,6 @@
 package com.zj.pipeline.entity.vo;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import lombok.Data;
 
@@ -21,10 +21,10 @@ public class GitlabRepositoryVo {
   @Data
   public static class Permissions {
 
-    @JSONField(name = "project_access")
+    @JsonProperty("project_access")
     private Access projectAccess;
 
-    @JSONField(name = "group_access")
+    @JsonProperty("group_access")
     private Access groupAccess;
 
     public boolean checkPermission() {

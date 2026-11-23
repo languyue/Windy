@@ -1,19 +1,26 @@
 package com.zj.feature.service;
 
+import com.zj.common.adapter.invoker.IMasterCommand;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
-import com.zj.domain.repository.feature.IFeatureHistoryRepository;
+import com.zj.domain.repository.feature.IFeatureHistoryQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * feature_history 属于运行态域，console 只读；删除一律下发命令给 master。
+ */
 @Slf4j
 @Service
 public class FeatureHistoryService {
-  private final IFeatureHistoryRepository featureHistoryRepository;
+  private final IFeatureHistoryQueryRepository featureHistoryRepository;
+  private final IMasterCommand masterCommand;
 
-  public FeatureHistoryService(IFeatureHistoryRepository featureHistoryRepository) {
+  public FeatureHistoryService(IFeatureHistoryQueryRepository featureHistoryRepository,
+      IMasterCommand masterCommand) {
     this.featureHistoryRepository = featureHistoryRepository;
+    this.masterCommand = masterCommand;
   }
 
   public List<FeatureHistoryBO> featureHistories(String featureId) {
@@ -21,14 +28,10 @@ public class FeatureHistoryService {
   }
 
   public boolean deleteHistory(String historyId) {
-    return featureHistoryRepository.deleteHistory(historyId);
+    return masterCommand.deleteFeatureHistory(historyId);
   }
 
   public List<FeatureHistoryBO> getHistories(String taskId) {
     return featureHistoryRepository.getHistoriesByTaskRecordId(taskId);
-  }
-
-  public boolean deleteByRecordId(String taskRecordId) {
-    return featureHistoryRepository.deleteByRecordId(taskRecordId);
   }
 }

@@ -2,7 +2,7 @@ package com.zj.demand.service;
 
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.SpaceDto;
@@ -10,10 +10,10 @@ import com.zj.domain.entity.bo.demand.BugBO;
 import com.zj.domain.entity.bo.demand.DemandBO;
 import com.zj.domain.entity.bo.demand.IterationBO;
 import com.zj.domain.entity.bo.demand.SpaceBO;
-import com.zj.domain.repository.demand.IBugRepository;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.demand.ISpaceRepository;
-import com.zj.domain.repository.demand.IterationRepository;
+import com.zj.domain.repository.demand.IBugQueryRepository;
+import com.zj.domain.repository.demand.IDemandQueryRepository;
+import com.zj.domain.repository.demand.ISpaceCommandRepository;
+import com.zj.domain.repository.demand.IterationQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -25,16 +25,16 @@ import java.util.Objects;
 @Service
 public class SpaceService {
 
-    private final ISpaceRepository spaceRepository;
+    private final ISpaceCommandRepository spaceRepository;
     private final UniqueIdService uniqueIdService;
-    private final IDemandRepository demandRepository;
-    private final IBugRepository bugRepository;
-    private final IterationRepository iterationRepository;
+    private final IDemandQueryRepository demandRepository;
+    private final IBugQueryRepository bugRepository;
+    private final IterationQueryRepository iterationRepository;
     private final IAuthService authService;
 
-    public SpaceService(ISpaceRepository spaceRepository, UniqueIdService uniqueIdService,
-                        IDemandRepository demandRepository, IBugRepository bugRepository,
-                        IterationRepository iterationRepository, IAuthService authService) {
+    public SpaceService(ISpaceCommandRepository spaceRepository, UniqueIdService uniqueIdService,
+                        IDemandQueryRepository demandRepository, IBugQueryRepository bugRepository,
+                        IterationQueryRepository iterationRepository, IAuthService authService) {
         this.spaceRepository = spaceRepository;
         this.uniqueIdService = uniqueIdService;
         this.demandRepository = demandRepository;

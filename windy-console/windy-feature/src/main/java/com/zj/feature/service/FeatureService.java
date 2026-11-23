@@ -1,26 +1,26 @@
 package com.zj.feature.service;
 
-import com.alibaba.fastjson.JSON;
+import com.zj.contract.json.ContractJson;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.zj.common.entity.feature.CompareDefine;
+import com.zj.contract.feature.CompareDefine;
 import com.zj.common.enums.CompareType;
 import com.zj.common.enums.ExecuteType;
 import com.zj.common.enums.InvokerType;
-import com.zj.common.enums.LogType;
+import com.zj.contract.enums.LogType;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.rpc.PageSize;
+import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
 import com.zj.domain.entity.bo.feature.TestCaseBO;
-import com.zj.domain.repository.feature.IExecutePointRepository;
-import com.zj.domain.repository.feature.IFeatureRepository;
+import com.zj.domain.repository.feature.IExecutePointCommandRepository;
+import com.zj.domain.repository.feature.IFeatureCommandRepository;
 import com.zj.feature.entity.BatchDeleteDto;
 import com.zj.feature.entity.BatchUpdateFeatures;
 import com.zj.feature.entity.CopyCaseFeatureDto;
@@ -62,12 +62,12 @@ public class FeatureService {
     private final TestCaseConfigService testCaseConfigService;
     private final FeatureTagService featureTagService;
     private final UniqueIdService uniqueIdService;
-    private final IFeatureRepository featureRepository;
-    private final IMasterInvoker masterInvoker;
+    private final IFeatureCommandRepository featureRepository;
+    private final IMasterApi masterInvoker;
 
     public FeatureService(ExecutePointService executePointService, TestCaseService testCaseService,
                           TestCaseConfigService testCaseConfigService, FeatureTagService featureTagService,
-                          UniqueIdService uniqueIdService, IFeatureRepository featureRepository, IMasterInvoker masterInvoker) {
+                          UniqueIdService uniqueIdService, IFeatureCommandRepository featureRepository, IMasterApi masterInvoker) {
         this.executePointService = executePointService;
         this.testCaseService = testCaseService;
         this.testCaseConfigService = testCaseConfigService;
@@ -196,7 +196,7 @@ public class FeatureService {
         }
 
         List<FeatureInfoBO> featureList = featureRepository.queryFeatureList(copyCaseFeature.getFeatureIds());
-        log.info("get feature list ={}", JSON.toJSONString(featureList));
+        log.info("get feature list ={}", ContractJson.write(featureList));
 
         //1 先复制用例
         Long currentTime = System.currentTimeMillis();
@@ -225,7 +225,7 @@ public class FeatureService {
         Map<String, List<ExecutePointBO>> pointGroupMap =
                 executePointList.stream().collect(Collectors.groupingBy(ExecutePointBO::getFeatureId,
                         Collectors.toList()));
-        log.info("get groupBy points={}", JSON.toJSONString(pointGroupMap));
+        log.info("get groupBy points={}", ContractJson.write(pointGroupMap));
 
         //将获取到的执行点根据featureId映射关系重新设置一次
         List<ExecutePointBO> newExecutePoints = pointGroupMap.keySet().stream().map(oldId -> {
@@ -249,7 +249,7 @@ public class FeatureService {
             config.setId(null);
         });
         Integer addConfigCount = testCaseConfigService.addCaseConfigs(caseConfigs);
-        log.info("copy global count={} configs={}",addConfigCount, JSON.toJSONString(caseConfigs));
+        log.info("copy global count={} configs={}",addConfigCount, ContractJson.write(caseConfigs));
         return addConfigCount > 0;
     }
 
@@ -322,7 +322,7 @@ public class FeatureService {
 
         DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
         dispatchTaskModel.setType(LogType.FEATURE.getType());
-        dispatchTaskModel.setSourceId(JSON.toJSONString(Collections.singletonList(featureId)));
+        dispatchTaskModel.setSourceIds(Collections.singletonList(featureId));
         dispatchTaskModel.setSourceName(feature.getFeatureName());
         String recordId = masterInvoker.runFeatureTask(dispatchTaskModel);
         if (StringUtils.isBlank(recordId)) {
@@ -371,6 +371,7 @@ public class FeatureService {
         return featureRepository.saveBatch(featureInfos);
     }
 
+    @Transactional
     public Boolean batchUpdateFeatures(BatchUpdateFeatures batchUpdateFeatures) {
         List<String> featureIds =
                 batchUpdateFeatures.getFeatureOrders().stream().map(FeatureOrder::getFeatureId).collect(Collectors.toList());

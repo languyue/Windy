@@ -1,11 +1,13 @@
 package com.zj.pipeline.service;
 
-import com.zj.common.enums.ProcessStatus;
+import com.zj.common.adapter.auth.IAuthService;
+import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.common.entity.command.ApproveCommand;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
-import java.util.Collections;
+import com.zj.domain.repository.pipeline.INodeRecordQueryRepository;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,16 +23,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class NodeRecordService {
 
-  private final INodeRecordRepository nodeRecordRepository;
+  private final INodeRecordQueryRepository nodeRecordRepository;
+  private final IMasterCommand masterCommand;
+  private final IAuthService authService;
 
-  public NodeRecordService(INodeRecordRepository nodeRecordRepository) {
+  public NodeRecordService(INodeRecordQueryRepository nodeRecordRepository, IMasterCommand masterCommand,
+      IAuthService authService) {
     this.nodeRecordRepository = nodeRecordRepository;
+    this.masterCommand = masterCommand;
+    this.authService = authService;
   }
 
-  public boolean updateNodeRecordStatus(String recordId, Integer type, List<String> messageList) {
-    return nodeRecordRepository.updateNodeRecordStatus(recordId, type, messageList);
-  }
-
+  /**
+   * 审批结论下发给 master，由它落审批工单并推进 node_record，console 不再直接写运行态表
+   */
   public Boolean approval(ApprovalInfo approvalInfo) {
     ProcessStatus processStatus = ProcessStatus.exchange(approvalInfo.getType());
     if (Objects.isNull(processStatus)) {
@@ -43,8 +49,15 @@ public class NodeRecordService {
       log.info("can not find node record historyId={} nodeId={}",approvalInfo.getHistoryId(), approvalInfo.getNodeId());
       return false;
     }
-    return updateNodeRecordStatus(nodeRecord.getRecordId(), processStatus.getType(),
-            Collections.singletonList(approvalInfo.getMessage()));
+
+    ApproveCommand command = new ApproveCommand();
+    command.setRecordId(nodeRecord.getRecordId());
+    command.setHistoryId(approvalInfo.getHistoryId());
+    command.setNodeId(approvalInfo.getNodeId());
+    command.setStatus(processStatus.getType());
+    command.setComment(approvalInfo.getMessage());
+    command.setApprover(authService.getCurrentUserId());
+    return masterCommand.approveNode(command);
   }
 
   public List<NodeRecordBO> getNodeRecordsByHistory(String historyId) {

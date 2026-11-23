@@ -2,19 +2,20 @@ package com.zj.feature.service;
 
 import com.zj.common.enums.CompareType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
-import com.zj.domain.repository.feature.IExecutePointRepository;
-import com.zj.domain.repository.feature.IExecuteTemplateRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
+import com.zj.domain.repository.feature.IExecutePointCommandRepository;
+import com.zj.domain.repository.feature.IExecuteTemplateQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
 import com.zj.feature.entity.CompareOperator;
 import com.zj.feature.entity.ExecutePointTemplate;
 import com.zj.feature.entity.ExecutePointDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
@@ -28,11 +29,11 @@ import java.util.stream.Collectors;
 public class ExecutePointService {
 
     private final UniqueIdService uniqueIdService;
-    private final IExecutePointRepository executePointRepository;
-    private final IExecuteTemplateRepository templateRepository;
-    private final IMicroServiceRepository microServiceRepository;
+    private final IExecutePointCommandRepository executePointRepository;
+    private final IExecuteTemplateQueryRepository templateRepository;
+    private final IMicroServiceQueryRepository microServiceRepository;
 
-    public ExecutePointService(UniqueIdService uniqueIdService, IExecutePointRepository executePointRepository, IExecuteTemplateRepository templateRepository, IMicroServiceRepository microServiceRepository) {
+    public ExecutePointService(UniqueIdService uniqueIdService, IExecutePointCommandRepository executePointRepository, IExecuteTemplateQueryRepository templateRepository, IMicroServiceQueryRepository microServiceRepository) {
         this.uniqueIdService = uniqueIdService;
         this.executePointRepository = executePointRepository;
         this.templateRepository = templateRepository;
@@ -128,6 +129,7 @@ public class ExecutePointService {
         }).collect(Collectors.toList());
     }
 
+    @Transactional
     public boolean saveBatch(List<ExecutePointBO> newExecutePoints) {
         return executePointRepository.batchSavePoints(newExecutePoints);
     }

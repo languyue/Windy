@@ -3,9 +3,9 @@ package com.zj.demand.service;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.adapter.auth.UserDetail;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.BusinessDictionaryDto;
 import com.zj.demand.entity.DemandDetailDto;
@@ -17,10 +17,10 @@ import com.zj.domain.entity.bo.demand.DemandQueryBO;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.enums.BusinessStatusType;
 import com.zj.domain.entity.enums.RelationType;
-import com.zj.domain.repository.auth.IUserRepository;
-import com.zj.domain.repository.demand.IBusinessStatusRepository;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeRepository;
+import com.zj.domain.repository.auth.IUserQueryRepository;
+import com.zj.domain.repository.demand.IBusinessStatusQueryRepository;
+import com.zj.domain.repository.demand.IDemandCommandRepository;
+import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -34,16 +34,16 @@ import java.util.Optional;
 public class DemandService {
 
     private final IAuthService authService;
-    private final IDemandRepository demandRepository;
+    private final IDemandCommandRepository demandRepository;
     private final UniqueIdService uniqueIdService;
-    private final IUserRepository userRepository;
-    private final IBusinessStatusRepository businessStatusRepository;
-    private final ICodeChangeRepository codeChangeRepository;
+    private final IUserQueryRepository userRepository;
+    private final IBusinessStatusQueryRepository businessStatusRepository;
+    private final ICodeChangeQueryRepository codeChangeRepository;
     private final IterationService iterationService;
 
-    public DemandService(IAuthService authService, IDemandRepository demandRepository,
-                         UniqueIdService uniqueIdService, IUserRepository userRepository,
-                         IBusinessStatusRepository businessStatusRepository, ICodeChangeRepository codeChangeRepository,
+    public DemandService(IAuthService authService, IDemandCommandRepository demandRepository,
+                         UniqueIdService uniqueIdService, IUserQueryRepository userRepository,
+                         IBusinessStatusQueryRepository businessStatusRepository, ICodeChangeQueryRepository codeChangeRepository,
                          IterationService iterationService) {
         this.authService = authService;
         this.demandRepository = demandRepository;

@@ -1,7 +1,7 @@
 package com.zj.pipeline.service;
 
 import com.zj.domain.entity.bo.pipeline.PipelineStageBO;
-import com.zj.domain.repository.pipeline.IPipelineStageRepository;
+import com.zj.domain.repository.pipeline.IPipelineStageCommandRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class PipelineStageService{
 
-  private final IPipelineStageRepository pipelineStageRepository;
+  private final IPipelineStageCommandRepository pipelineStageRepository;
 
-  public PipelineStageService(IPipelineStageRepository pipelineStageRepository) {
+  public PipelineStageService(IPipelineStageCommandRepository pipelineStageRepository) {
     this.pipelineStageRepository = pipelineStageRepository;
   }
 

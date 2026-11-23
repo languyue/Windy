@@ -1,28 +1,28 @@
 package com.zj.service.service;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.entity.WindyConstants;
-import com.zj.common.entity.dto.DispatchTaskModel;
+import com.zj.contract.dispatch.DispatchTaskModel;
 import com.zj.common.entity.generate.GenerateRecordBO;
-import com.zj.common.entity.service.ApiParamModel;
-import com.zj.common.enums.LogType;
+import com.zj.contract.service.ApiParamModel;
+import com.zj.contract.enums.LogType;
 import com.zj.common.enums.Position;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ApiException;
 import com.zj.common.exception.CommonException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
 import com.zj.domain.entity.bo.service.ServiceGenerateBO;
 import com.zj.domain.entity.vo.GenerateMavenConfigDto;
-import com.zj.domain.repository.feature.IExecuteTemplateRepository;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IGenerateRecordRepository;
-import com.zj.domain.repository.service.IGenerateRepository;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.feature.IExecuteTemplateQueryRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IGenerateRecordQueryRepository;
+import com.zj.domain.repository.service.IGenerateCommandRepository;
+import com.zj.domain.repository.service.IServiceApiCommandRepository;
 import com.zj.plugin.loader.InitData;
 import com.zj.plugin.loader.ParamValueType;
 import com.zj.plugin.loader.ParameterDefine;
@@ -56,18 +56,18 @@ public class ApiService {
     public static final String HOST_VARIABLE_LABEL = "${host}";
     public static final String HOST_KEY = "host";
     private final UniqueIdService uniqueIdService;
-    private final IServiceApiRepository apiRepository;
-    private final IMasterInvoker masterInvoker;
-    private final ISystemConfigRepository systemConfigRepository;
-    private final IGenerateRepository generateRepository;
-    private final IGenerateRecordRepository generateRecordRepository;
+    private final IServiceApiCommandRepository apiRepository;
+    private final IMasterApi masterInvoker;
+    private final ISystemConfigQueryRepository systemConfigRepository;
+    private final IGenerateCommandRepository generateRepository;
+    private final IGenerateRecordQueryRepository generateRecordRepository;
     private final ApiImportFactory apiImportFactory;
-    private final IExecuteTemplateRepository executeTemplateRepository;
+    private final IExecuteTemplateQueryRepository executeTemplateRepository;
 
-    public ApiService(UniqueIdService uniqueIdService, IServiceApiRepository apiRepository, IMasterInvoker masterInvoker
-            , ISystemConfigRepository systemConfigRepository, IGenerateRepository generateRepository,
-                      IGenerateRecordRepository generateRecordRepository, ApiImportFactory apiImportFactory,
-                      IExecuteTemplateRepository executeTemplateRepository) {
+    public ApiService(UniqueIdService uniqueIdService, IServiceApiCommandRepository apiRepository, IMasterApi masterInvoker
+            , ISystemConfigQueryRepository systemConfigRepository, IGenerateCommandRepository generateRepository,
+                      IGenerateRecordQueryRepository generateRecordRepository, ApiImportFactory apiImportFactory,
+                      IExecuteTemplateQueryRepository executeTemplateRepository) {
         this.uniqueIdService = uniqueIdService;
         this.apiRepository = apiRepository;
         this.masterInvoker = masterInvoker;
@@ -120,9 +120,8 @@ public class ApiService {
         saveOrUpdateParams(generate);
 
         DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
-        dispatchTaskModel.setSourceId(generate.getServiceId());
-        String apiIdsString = String.join(",", generate.getApiIds());
-        dispatchTaskModel.setTriggerId(apiIdsString);
+        dispatchTaskModel.setSourceIds(Collections.singletonList(generate.getServiceId()));
+        dispatchTaskModel.setTriggerIds(generate.getApiIds());
         dispatchTaskModel.setSourceName("generate service=[] package");
         dispatchTaskModel.setType(LogType.GENERATE.getType());
         return masterInvoker.runGenerateTask(dispatchTaskModel);
@@ -295,7 +294,7 @@ public class ApiService {
         }).filter(Objects::nonNull).collect(Collectors.toList());
         parameterDefines.add(createHostParam());
         executeTemplateBO.setParameterDefines(parameterDefines);
-        executeTemplateBO.setHeader(JSON.toJSONString(header));
+        executeTemplateBO.setHeaders(header);
 
         String assembledUrl = assembledApiUrl(serviceApi.getResource(), apiVariables);
         executeTemplateBO.setService(assembledUrl);
@@ -381,7 +380,7 @@ public class ApiService {
     public ExecuteTemplateDto toExecuteTemplateDTO(ExecuteTemplateBO executeTemplate) {
         ExecuteTemplateDto templateVo = OrikaUtil.convert(executeTemplate, ExecuteTemplateDto.class);
         templateVo.setParams(executeTemplate.getParameterDefines());
-        templateVo.setHeaders((Map<String, String>) JSON.parse(executeTemplate.getHeader()));
+        templateVo.setHeaders(executeTemplate.getHeaders());
         return templateVo;
     }
 }

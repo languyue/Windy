@@ -1,12 +1,12 @@
 package com.zj.pipeline.git;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 import com.zj.common.enums.GitType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.git.GitAccessInfo;
+import com.zj.contract.json.ContractJson;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.pipeline.entity.vo.GithubBranchVo;
 import com.zj.pipeline.entity.vo.GithubRepositoryVo;
@@ -22,7 +22,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -69,7 +71,7 @@ public class GithubGitRepositoryHandler implements IGitRepositoryHandler {
         String uri = String.format("/repos/%s/%s/branches", accessInfo.getOwner(), accessInfo.getGitServiceName());
         HashMap<String, String> hashMap = exchangeHeaders(accessInfo);
         String result = gitRequestProxy.get(accessInfo.getGitDomain() + uri, hashMap);
-        List<GithubBranchVo> githubBranchVos = JSON.parseArray(result, GithubBranchVo.class);
+        List<GithubBranchVo> githubBranchVos = ContractJson.readList(result, GithubBranchVo.class);
         return Optional.ofNullable(githubBranchVos).map(branch ->
                         branch.stream().map(GithubBranchVo::getName).collect(Collectors.toList()))
                 .orElseGet(ArrayList::new);
@@ -88,7 +90,7 @@ public class GithubGitRepositoryHandler implements IGitRepositoryHandler {
         String uri = String.format("/repos/%s/%s", accessInfo.getOwner(), accessInfo.getGitServiceName());
         HashMap<String, String> hashMap = exchangeHeaders(accessInfo);
         String result = gitRequestProxy.get(accessInfo.getGitDomain() + uri, hashMap);
-        GithubRepositoryVo githubRepositoryVo = JSON.parseObject(result, GithubRepositoryVo.class);
+        GithubRepositoryVo githubRepositoryVo = ContractJson.read(result, GithubRepositoryVo.class);
         if (Objects.isNull(githubRepositoryVo)) {
             throw new ApiException(ErrorCode.REPO_NOT_EXIST);
         }
@@ -113,9 +115,8 @@ public class GithubGitRepositoryHandler implements IGitRepositoryHandler {
             }
             String responseBody = response.body().string();
             log.info("get github sha result = {}", responseBody);
-            JSONObject json = JSON.parseObject(responseBody, JSONObject.class);
-            JSONObject commit = json.getJSONObject("object");
-            return commit.getString("sha");
+            JsonNode json = ContractJson.readTree(responseBody);
+            return json.path("object").path("sha").asText();
         }catch (Exception e){
             log.info("get github sha error", e);
             throw e;
@@ -129,10 +130,10 @@ public class GithubGitRepositoryHandler implements IGitRepositoryHandler {
         String url = String.format("%s/repos/%s/%s/git/refs", gitAccessInfo.getGitDomain(), gitAccessInfo.getOwner(),
                 gitAccessInfo.getGitServiceName());
         log.info("request create branch url = {}", url);
-        JSONObject jsonBody = new JSONObject();
+        Map<String, String> jsonBody = new LinkedHashMap<>();
         jsonBody.put("ref", "refs/heads/" + branch);
         jsonBody.put("sha", sha);
-        RequestBody body = RequestBody.create(MediaType.parse("application/json"), JSON.toJSONString(jsonBody));
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), ContractJson.write(jsonBody));
 
         Request request = new Request.Builder()
                 .url(url)

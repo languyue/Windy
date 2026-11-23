@@ -1,14 +1,14 @@
 package com.zj.service.service.imports.strategy;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.service.ApiParamModel;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.service.ApiParamModel;
 import com.zj.common.enums.ApiType;
 import com.zj.common.enums.Position;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.service.IServiceApiCommandRepository;
 import com.zj.plugin.loader.ParamValueType;
 import com.zj.service.entity.ApiRequestVariable;
 import com.zj.service.entity.ApiResponse;
@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,11 +39,11 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
     public static final String SPLIT_PREFIX = "_";
     public static final String HTTP_API_TYPE = "http";
     public static final String REQUIRED_KEY = "required";
-    private final IServiceApiRepository serviceApiRepository;
+    private final IServiceApiCommandRepository serviceApiRepository;
     private final UniqueIdService uniqueIdService;
     private final Map<String, String> variableMap = new HashMap<>();
 
-    public YapiApiImportStrategy(IServiceApiRepository serviceApiRepository, UniqueIdService uniqueIdService) {
+    public YapiApiImportStrategy(IServiceApiCommandRepository serviceApiRepository, UniqueIdService uniqueIdService) {
         this.serviceApiRepository = serviceApiRepository;
         this.uniqueIdService = uniqueIdService;
         variableMap.put("string", ParamValueType.String.name());
@@ -62,7 +62,7 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
     @Override
     @Transactional
     public List<ServiceApiBO> importContent(String serviceId, String fileContent) {
-        List<YapiImportApi> yapiImportApis = JSON.parseArray(fileContent, YapiImportApi.class);
+        List<YapiImportApi> yapiImportApis = ContractJson.readList(fileContent, YapiImportApi.class);
         Map<String, ServiceApiBO> serviceExistApi = getServiceExistApi(serviceId);
         return yapiImportApis.stream().map(yapiImportApi -> {
             ServiceApiBO serviceApiBO = new ServiceApiBO();
@@ -143,10 +143,8 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
                 }).collect(Collectors.toList());
             }
 
-            JSONObject jsonObject = JSON.parseObject(apiModel.getRequestBody());
-            List<String> requirdList =
-                    Optional.ofNullable(jsonObject).map(json -> JSON.parseArray(JSON.toJSONString(json.getJSONArray(
-                            REQUIRED_KEY)), String.class)).orElseGet(Collections::emptyList);
+            JsonNode jsonObject = ContractJson.readTree(apiModel.getRequestBody());
+            List<String> requirdList = readRequiredList(jsonObject);
             if (CollectionUtils.isNotEmpty(apiModel.getQueryParams())) {
                 apiRequestVariables = apiModel.getQueryParams().stream().map(queryParam -> {
                     ApiRequestVariable apiRequestVariable = new ApiRequestVariable();
@@ -160,21 +158,19 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
             }
 
             log.info("api name={}", apiModel.getTitle());
-            if (Objects.nonNull(jsonObject) && Objects.nonNull(jsonObject.getJSONObject(PROPERTIES_KEY))) {
-                JSONObject properties = jsonObject.getJSONObject(PROPERTIES_KEY);
+            if (Objects.nonNull(jsonObject) && jsonObject.path(PROPERTIES_KEY).isObject()) {
+                JsonNode properties = jsonObject.path(PROPERTIES_KEY);
                 List<ApiRequestVariable> bodyRequests = convertProperties(properties, requirdList);
                 apiRequestVariables.addAll(bodyRequests);
             }
             serviceApi.setRequestParams(OrikaUtil.convertList(apiRequestVariables, ApiParamModel.class));
 
-            JSONObject responseObject = JSON.parseObject(apiModel.getResBody());
-            if (Objects.nonNull(responseObject) && Objects.nonNull(responseObject.getJSONObject(PROPERTIES_KEY))) {
-                JSONObject resProperties = responseObject.getJSONObject(PROPERTIES_KEY);
-                List<ApiResponse> apiResponses = resProperties.entrySet().stream().map(entry -> {
+            JsonNode responseObject = ContractJson.readTree(apiModel.getResBody());
+            if (Objects.nonNull(responseObject) && responseObject.path(PROPERTIES_KEY).isObject()) {
+                List<ApiResponse> apiResponses = fieldEntries(responseObject.path(PROPERTIES_KEY)).stream().map(entry -> {
                     ApiResponse apiResponse = new ApiResponse();
                     apiResponse.setParamKey(entry.getKey());
-                    JSONObject typeJSON = JSON.parseObject(JSON.toJSONString(entry.getValue()), JSONObject.class);
-                    apiResponse.setType(convertVariableType(typeJSON.getString("type")));
+                    apiResponse.setType(convertVariableType(text(entry.getValue(), "type")));
                     return apiResponse;
                 }).collect(Collectors.toList());
 
@@ -187,29 +183,27 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
         return null;
     }
 
-    private List<ApiRequestVariable> convertProperties(JSONObject properties, List<String> requirdList) {
-        return properties.entrySet().stream().map(entry -> {
+    private List<ApiRequestVariable> convertProperties(JsonNode properties, List<String> requirdList) {
+        return fieldEntries(properties).stream().map(entry -> {
             ApiRequestVariable apiRequestVariable = new ApiRequestVariable();
             apiRequestVariable.setParamKey(entry.getKey());
-            JSONObject typeJSON = JSON.parseObject(JSON.toJSONString(entry.getValue()),
-                    JSONObject.class);
+            JsonNode typeJSON = entry.getValue();
             apiRequestVariable.setRequired(requirdList.contains(entry.getKey()));
-            String type = convertVariableType(typeJSON.getString("type"));
+            String type = convertVariableType(text(typeJSON, "type"));
             apiRequestVariable.setType(type);
-            apiRequestVariable.setDescription(typeJSON.getString("description"));
+            apiRequestVariable.setDescription(text(typeJSON, "description"));
             apiRequestVariable.setPosition(Position.Body.name());
 
             if (Objects.equals(type, ParamValueType.Object.name())) {
-                JSONObject subProperties = typeJSON.getJSONObject(PROPERTIES_KEY);
-                List<String> subRequirdList =
-                        Optional.of(typeJSON).map(json -> JSON.parseArray(JSON.toJSONString(json.getJSONArray(REQUIRED_KEY)), String.class)).orElseGet(Collections::emptyList);
+                JsonNode subProperties = typeJSON.path(PROPERTIES_KEY);
+                List<String> subRequirdList = readRequiredList(typeJSON);
                 List<ApiRequestVariable> apiRequestVariables = convertProperties(subProperties, subRequirdList);
                 apiRequestVariable.setChildren(apiRequestVariables);
             }
 
             if (Objects.equals(type, ParamValueType.Array.name())) {
-                JSONObject item = typeJSON.getJSONObject("items");
-                String itemType = convertVariableType(item.getString("type"));
+                JsonNode item = typeJSON.path("items");
+                String itemType = convertVariableType(text(item, "type"));
                 if (Objects.equals(itemType, ParamValueType.Object.name())) {
                     ApiRequestVariable objectParam = new ApiRequestVariable();
                     objectParam.setParamKey("");
@@ -217,10 +211,8 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
                     objectParam.setType(ParamValueType.Object.name());
                     objectParam.setRequired(apiRequestVariable.isRequired());
 
-                    List<String> subRequirdList =
-                            Optional.of(item).map(json -> JSON.parseArray(JSON.toJSONString(json.getJSONArray(
-                                    REQUIRED_KEY)), String.class)).orElseGet(Collections::emptyList);
-                    JSONObject subProperties = item.getJSONObject(PROPERTIES_KEY);
+                    List<String> subRequirdList = readRequiredList(item);
+                    JsonNode subProperties = item.path(PROPERTIES_KEY);
                     List<ApiRequestVariable> apiRequestVariables = convertProperties(subProperties, subRequirdList);
                     objectParam.setChildren(apiRequestVariables);
                     apiRequestVariable.setChildren(Collections.singletonList(objectParam));
@@ -228,6 +220,42 @@ public class YapiApiImportStrategy implements IApiImportStrategy {
             }
             return apiRequestVariable;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 遍历对象节点的字段，保持报文里的顺序
+     */
+    private List<Map.Entry<String, JsonNode>> fieldEntries(JsonNode node) {
+        List<Map.Entry<String, JsonNode>> entries = new ArrayList<>();
+        if (Objects.isNull(node) || !node.isObject()) {
+            return entries;
+        }
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        while (iterator.hasNext()) {
+            entries.add(iterator.next());
+        }
+        return entries;
+    }
+
+    private List<String> readRequiredList(JsonNode node) {
+        if (Objects.isNull(node)) {
+            return Collections.emptyList();
+        }
+        JsonNode requiredNode = node.path(REQUIRED_KEY);
+        if (!requiredNode.isArray()) {
+            return Collections.emptyList();
+        }
+        List<String> requiredList = new ArrayList<>();
+        requiredNode.forEach(value -> requiredList.add(value.asText()));
+        return requiredList;
+    }
+
+    private String text(JsonNode node, String field) {
+        if (Objects.isNull(node)) {
+            return null;
+        }
+        JsonNode value = node.path(field);
+        return value.isMissingNode() || value.isNull() ? null : value.asText();
     }
 
     private String convertVariableType(String type) {

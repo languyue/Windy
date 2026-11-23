@@ -1,8 +1,8 @@
 package com.zj.pipeline.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.adapter.git.GitAccessInfo;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.git.GitAccessInfo;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.domain.entity.bo.pipeline.SystemConfigBO;
 import com.zj.domain.entity.vo.DefaultPipelineVo;
 import com.zj.domain.entity.vo.ImageRepositoryVo;

@@ -1774,6 +1774,45 @@ LOCK TABLES `work_task` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `approval_request`
+-- 新增表：审批工单从 node_record 拆出，node_record.status 只由 master 推进
+--
+
+DROP TABLE IF EXISTS `approval_request`;
+CREATE TABLE `approval_request` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `request_id` varchar(64) NOT NULL COMMENT '审批工单Id',
+  `record_id` varchar(64) NOT NULL COMMENT '被审批的节点执行记录Id',
+  `node_id` varchar(64) DEFAULT NULL COMMENT '流水线节点Id',
+  `history_id` varchar(64) DEFAULT NULL COMMENT '所属流水线记录Id',
+  `approver` varchar(64) DEFAULT NULL COMMENT '审批人',
+  `approve_status` int(2) DEFAULT NULL COMMENT '审批结论，取ProcessStatus',
+  `comment` varchar(512) DEFAULT NULL COMMENT '审批意见',
+  `create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
+  `update_time` bigint(20) DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_approval_record_id` (`record_id`),
+  KEY `idx_approval_history_id` (`history_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Table structure for table `case_global_context`
+-- 新增表：用例运行期全局上下文从 test_case_config 拆出，写 owner 是 master
+--
+
+DROP TABLE IF EXISTS `case_global_context`;
+CREATE TABLE `case_global_context` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `union_id` varchar(64) NOT NULL COMMENT '测试集Id',
+  `param_key` varchar(128) NOT NULL COMMENT '全局上下文参数Key',
+  `param_value` varchar(1024) DEFAULT NULL COMMENT '全局上下文参数值',
+  `create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
+  `update_time` bigint(20) DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_case_global_param` (`union_id`, `param_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
 -- Dumping routines for database 'windy'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

@@ -1,6 +1,6 @@
 package com.zj.pipeline.entity.vo;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -9,7 +9,7 @@ public class GitlabBaseEventVo {
     /**
      * 事件类型
      */
-    @JSONField(name = "object_kind")
+    @JsonProperty("object_kind")
     private String eventType;
 
     /**
@@ -28,7 +28,7 @@ public class GitlabBaseEventVo {
         /**
          * git的http地址
          */
-        @JSONField(name = "git_http_url")
+        @JsonProperty("git_http_url")
         private String gitUrl;
     }
 }

@@ -2,11 +2,11 @@ package com.zj.auth.service;
 
 import com.zj.auth.entity.RoleBind;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.auth.RoleBO;
-import com.zj.domain.repository.auth.IRoleRepository;
+import com.zj.domain.repository.auth.IRoleCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +17,11 @@ import java.util.List;
 @Service
 public class RoleService {
 
-    private final IRoleRepository roleRepository;
+    private final IRoleCommandRepository roleRepository;
     private final UniqueIdService uniqueIdService;
     private final PermissionService permissionService;
 
-    public RoleService(IRoleRepository roleRepository, UniqueIdService uniqueIdService, PermissionService permissionService) {
+    public RoleService(IRoleCommandRepository roleRepository, UniqueIdService uniqueIdService, PermissionService permissionService) {
         this.roleRepository = roleRepository;
         this.uniqueIdService = uniqueIdService;
         this.permissionService = permissionService;

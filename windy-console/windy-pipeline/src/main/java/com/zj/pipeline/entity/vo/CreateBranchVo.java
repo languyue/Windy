@@ -1,6 +1,6 @@
 package com.zj.pipeline.entity.vo;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -13,6 +13,6 @@ public class CreateBranchVo {
   /**
    * 新分支名称
    * */
-  @JSONField(name = "new_branch_name")
+  @JsonProperty("new_branch_name")
   private String branchName;
 }

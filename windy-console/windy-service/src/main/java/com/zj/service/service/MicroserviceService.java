@@ -2,21 +2,21 @@ package com.zj.service.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.common.adapter.invoker.IClientInvoker;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.entity.WindyConstants;
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.entity.pipeline.ServiceConfig;
-import com.zj.common.entity.service.ToolLoadResult;
-import com.zj.common.entity.service.ToolVersionDto;
+import com.zj.contract.rpc.PageSize;
+import com.zj.contract.pipeline.ServiceConfig;
+import com.zj.contract.service.ToolLoadResult;
+import com.zj.contract.service.ToolVersionDto;
 import com.zj.common.enums.ApiType;
 import com.zj.common.enums.InvokerType;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ApiException;
 import com.zj.common.exception.CommonException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.auth.UserBO;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
@@ -30,16 +30,16 @@ import com.zj.domain.entity.bo.service.ResourceMemberBO;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
 import com.zj.domain.entity.enums.FeatureType;
 import com.zj.domain.entity.enums.MemberType;
-import com.zj.domain.repository.demand.IMemberRepository;
-import com.zj.domain.repository.feature.IExecutePointRepository;
-import com.zj.domain.repository.feature.IExecuteTemplateRepository;
-import com.zj.domain.repository.feature.IFeatureRepository;
-import com.zj.domain.repository.feature.ITestCaseRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IBuildToolRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.demand.IMemberCommandRepository;
+import com.zj.domain.repository.feature.IExecutePointQueryRepository;
+import com.zj.domain.repository.feature.IExecuteTemplateQueryRepository;
+import com.zj.domain.repository.feature.IFeatureQueryRepository;
+import com.zj.domain.repository.feature.ITestCaseQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineQueryRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IBuildToolCommandRepository;
+import com.zj.domain.repository.service.IMicroServiceCommandRepository;
+import com.zj.domain.repository.service.IServiceApiQueryRepository;
 import com.zj.service.entity.ServiceDto;
 import com.zj.service.entity.ServiceMemberDto;
 import com.zj.service.entity.ServiceStaticsDto;
@@ -50,6 +50,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,29 +68,29 @@ public class MicroserviceService {
     @Value("${windy.console.version}")
     private String consoleVersion;
 
-    private final IMicroServiceRepository microServiceRepository;
+    private final IMicroServiceCommandRepository microServiceRepository;
     private final UniqueIdService uniqueIdService;
-    private final IPipelineRepository pipelineRepository;
+    private final IPipelineQueryRepository pipelineRepository;
     private final IAuthService authService;
-    private final ITestCaseRepository testCaseRepository;
+    private final ITestCaseQueryRepository testCaseRepository;
     private final List<IGitRepositoryHandler> repositoryBranches;
-    private final ISystemConfigRepository systemConfig;
-    private final IMemberRepository memberRepository;
+    private final ISystemConfigQueryRepository systemConfig;
+    private final IMemberCommandRepository memberRepository;
     private final IClientInvoker clientInvoker;
-    private final IServiceApiRepository serviceApiRepository;
-    private final IFeatureRepository featureRepository;
-    private final IExecutePointRepository executePointRepository;
-    private final IExecuteTemplateRepository executeTemplateRepository;
-    private final IBuildToolRepository buildToolRepository;
+    private final IServiceApiQueryRepository serviceApiRepository;
+    private final IFeatureQueryRepository featureRepository;
+    private final IExecutePointQueryRepository executePointRepository;
+    private final IExecuteTemplateQueryRepository executeTemplateRepository;
+    private final IBuildToolCommandRepository buildToolRepository;
 
-    public MicroserviceService(IMicroServiceRepository microServiceRepository, UniqueIdService uniqueIdService,
+    public MicroserviceService(IMicroServiceCommandRepository microServiceRepository, UniqueIdService uniqueIdService,
                                IAuthService authService, List<IGitRepositoryHandler> gitRepositories,
-                               ISystemConfigRepository systemConfig, IPipelineRepository pipelineRepository,
-                               ITestCaseRepository testCaseRepository, IMemberRepository memberRepository,
-                               IClientInvoker clientInvoker, IServiceApiRepository serviceApiRepository,
-                               IFeatureRepository featureRepository, IExecutePointRepository executePointRepository,
-                               IExecuteTemplateRepository executeTemplateRepository,
-                               IBuildToolRepository buildToolRepository) {
+                               ISystemConfigQueryRepository systemConfig, IPipelineQueryRepository pipelineRepository,
+                               ITestCaseQueryRepository testCaseRepository, IMemberCommandRepository memberRepository,
+                               IClientInvoker clientInvoker, IServiceApiQueryRepository serviceApiRepository,
+                               IFeatureQueryRepository featureRepository, IExecutePointQueryRepository executePointRepository,
+                               IExecuteTemplateQueryRepository executeTemplateRepository,
+                               IBuildToolCommandRepository buildToolRepository) {
         this.microServiceRepository = microServiceRepository;
         this.uniqueIdService = uniqueIdService;
         this.authService = authService;
@@ -138,6 +139,7 @@ public class MicroserviceService {
         return pageSize;
     }
 
+    @Transactional
     public String createService(ServiceDto serviceDto) {
         IGitRepositoryHandler repositoryBranch = getRepositoryBranch(chooseGitType(serviceDto));
         if (Objects.isNull(repositoryBranch)) {

@@ -1,17 +1,17 @@
 package com.zj.pipeline.service;
 
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
 import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.domain.entity.enums.PipelineType;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
-import com.zj.domain.repository.pipeline.IPublishBindRepository;
+import com.zj.domain.repository.pipeline.IBindBranchQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryQueryRepository;
+import com.zj.domain.repository.pipeline.IPublishBindCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,14 +26,14 @@ import java.util.Objects;
 @Component
 public class PublishService {
 
-    private final IPublishBindRepository publishBindRepository;
-    private final IBindBranchRepository bindBranchRepository;
-    private final IPipelineHistoryRepository pipelineHistoryRepository;
+    private final IPublishBindCommandRepository publishBindRepository;
+    private final IBindBranchQueryRepository bindBranchRepository;
+    private final IPipelineHistoryQueryRepository pipelineHistoryRepository;
     private final UniqueIdService uniqueIdService;
     private final PipelineService pipelineService;
 
-    public PublishService(IPublishBindRepository publishBindRepository, IBindBranchRepository bindBranchRepository,
-                          IPipelineHistoryRepository pipelineHistoryRepository, UniqueIdService uniqueIdService, PipelineService pipelineService) {
+    public PublishService(IPublishBindCommandRepository publishBindRepository, IBindBranchQueryRepository bindBranchRepository,
+                          IPipelineHistoryQueryRepository pipelineHistoryRepository, UniqueIdService uniqueIdService, PipelineService pipelineService) {
         this.publishBindRepository = publishBindRepository;
         this.bindBranchRepository = bindBranchRepository;
         this.pipelineHistoryRepository = pipelineHistoryRepository;

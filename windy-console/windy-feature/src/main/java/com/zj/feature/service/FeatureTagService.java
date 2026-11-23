@@ -1,7 +1,7 @@
 package com.zj.feature.service;
 
 import com.zj.domain.entity.bo.feature.FeatureTagBO;
-import com.zj.domain.repository.feature.IFeatureTagRepository;
+import com.zj.domain.repository.feature.IFeatureTagCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,12 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class FeatureTagService{
 
-  private final IFeatureTagRepository featureTagRepository;
+  private final IFeatureTagCommandRepository featureTagRepository;
 
-  public FeatureTagService(IFeatureTagRepository featureTagRepository) {
+  public FeatureTagService(IFeatureTagCommandRepository featureTagRepository) {
     this.featureTagRepository = featureTagRepository;
   }
 
+  @Transactional
   public boolean batchAddTag(String featureId, List<String> tags) {
     long currentTime = System.currentTimeMillis();
     List<FeatureTagBO> tagList = tags.stream().distinct().map(tag -> {

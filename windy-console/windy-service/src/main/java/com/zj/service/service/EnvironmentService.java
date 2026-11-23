@@ -1,19 +1,19 @@
 package com.zj.service.service;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.pipeline.K8SAccessParams;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.pipeline.K8SAccessParams;
+import com.zj.contract.pipeline.SSHParams;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.service.DeployEnvironmentBO;
 import com.zj.domain.entity.enums.EnvType;
-import com.zj.domain.repository.service.IEnvironmentRepository;
+import com.zj.domain.repository.service.IEnvironmentCommandRepository;
 import com.zj.service.entity.ResourceList;
 import com.zj.service.entity.NodeInfo;
-import com.zj.service.entity.SSHParams;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -45,10 +45,10 @@ public class EnvironmentService {
                     SSLSocketClient.getSSLSocketFactory(), SSLSocketClient.getX509TrustManager())
             .hostnameVerifier(SSLSocketClient.getHostnameVerifier()).connectTimeout(10, TimeUnit.SECONDS).build();
     private final Map<Integer, Function<String, Boolean>> checkFuncMap = new ConcurrentHashMap<>();
-    private final IEnvironmentRepository repository;
+    private final IEnvironmentCommandRepository repository;
     private final UniqueIdService uniqueIdService;
 
-    public EnvironmentService(IEnvironmentRepository repository, UniqueIdService uniqueIdService) {
+    public EnvironmentService(IEnvironmentCommandRepository repository, UniqueIdService uniqueIdService) {
         this.repository = repository;
         this.uniqueIdService = uniqueIdService;
         checkFuncMap.put(EnvType.SSH.getType(), this::checkSSH);
@@ -94,12 +94,12 @@ public class EnvironmentService {
 
     public boolean checkK8S(String data) {
         try {
-            K8SAccessParams k8SParams = JSON.parseObject(data, K8SAccessParams.class);
+            K8SAccessParams k8SParams = ContractJson.read(data, K8SAccessParams.class);
             Headers headers = getHeaders(k8SParams);
             String url = k8SParams.getApiService() + NAMESPACE_LIST_URI;
             Request request = new Request.Builder().url(url).get().headers(headers).build();
             Response response = okHttpClient.newCall(request).execute();
-            ResourceList resourceList = JSON.parseObject(response.body().string(), ResourceList.class);
+            ResourceList resourceList = ContractJson.read(response.body().string(), ResourceList.class);
             return resourceList.getItems().stream().anyMatch(meta -> Objects.equals(k8SParams.getNamespace(), meta.getMetadata().getName()));
         } catch (Exception e) {
             log.info("test k8s connect error", e);
@@ -108,7 +108,7 @@ public class EnvironmentService {
     }
 
     public boolean checkSSH(String data) {
-        SSHParams sshParams = JSON.parseObject(data, SSHParams.class);
+        SSHParams sshParams = ContractJson.read(data, SSHParams.class);
         JSch jsch = new JSch();
         Session session = null;
         try {
@@ -133,12 +133,12 @@ public class EnvironmentService {
     public List<NodeInfo> getNodeList(String envId) {
         try {
             DeployEnvironmentBO environment = repository.getEnvironment(envId);
-            K8SAccessParams k8SParams = JSON.parseObject(environment.getEnvParams(), K8SAccessParams.class);
+            K8SAccessParams k8SParams = (K8SAccessParams) environment.getAccessParams();
             Headers headers = getHeaders(k8SParams);
             String url = k8SParams.getApiService() + NODE_LIST_URI;
             Request request = new Request.Builder().url(url).get().headers(headers).build();
             Response response = okHttpClient.newCall(request).execute();
-            ResourceList resourceList = JSON.parseObject(response.body().string(), ResourceList.class);
+            ResourceList resourceList = ContractJson.read(response.body().string(), ResourceList.class);
 
             return resourceList.getItems().stream().map(resource -> {
                 String nodeName = resource.getMetadata().getName();

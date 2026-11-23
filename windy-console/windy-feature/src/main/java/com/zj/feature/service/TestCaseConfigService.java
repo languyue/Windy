@@ -2,7 +2,7 @@ package com.zj.feature.service;
 
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
-import com.zj.domain.repository.feature.ITestCaseConfigRepository;
+import com.zj.domain.repository.feature.ITestCaseConfigCommandRepository;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -17,10 +17,10 @@ import org.springframework.util.CollectionUtils;
 public class TestCaseConfigService {
 
   private final UniqueIdService uniqueIdService;
-  private final ITestCaseConfigRepository testCaseConfigRepository;
+  private final ITestCaseConfigCommandRepository testCaseConfigRepository;
 
   public TestCaseConfigService(UniqueIdService uniqueIdService,
-      ITestCaseConfigRepository testCaseConfigRepository) {
+      ITestCaseConfigCommandRepository testCaseConfigRepository) {
     this.uniqueIdService = uniqueIdService;
     this.testCaseConfigRepository = testCaseConfigRepository;
   }

@@ -3,7 +3,7 @@ package com.zj.demand.service;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.IterationDto;
 import com.zj.demand.entity.IterationMemberDto;
@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,20 +33,20 @@ import java.util.stream.Collectors;
 @Service
 public class IterationService {
 
-    private final IDemandRepository demandRepository;
-    private final IBugRepository bugRepository;
-    private final IterationRepository iterationRepository;
+    private final IDemandQueryRepository demandRepository;
+    private final IBugQueryRepository bugRepository;
+    private final IterationCommandRepository iterationRepository;
     private final UniqueIdService uniqueIdService;
     private final IAuthService authService;
-    private final IMemberRepository memberRepository;
-    private final IBusinessStatusRepository businessStatusRepository;
-    private final ICommentRepository commentRepository;
+    private final IMemberCommandRepository memberRepository;
+    private final IBusinessStatusQueryRepository businessStatusRepository;
+    private final ICommentCommandRepository commentRepository;
 
-    public IterationService(IDemandRepository demandRepository, IBugRepository bugRepository,
-                            IterationRepository iterationRepository,
+    public IterationService(IDemandQueryRepository demandRepository, IBugQueryRepository bugRepository,
+                            IterationCommandRepository iterationRepository,
                             UniqueIdService uniqueIdService, IAuthService authService,
-                            IMemberRepository memberRepository, IBusinessStatusRepository businessStatusRepository,
-                            ICommentRepository commentRepository) {
+                            IMemberCommandRepository memberRepository, IBusinessStatusQueryRepository businessStatusRepository,
+                            ICommentCommandRepository commentRepository) {
         this.demandRepository = demandRepository;
         this.bugRepository = bugRepository;
         this.iterationRepository = iterationRepository;
@@ -68,6 +69,7 @@ public class IterationService {
         return iterationRepository.getIterationList(spaceId, iterationIds);
     }
 
+    @Transactional
     public IterationBO createIteration(IterationDto iterationDto) {
         IterationBO iterationBO = OrikaUtil.convert(iterationDto, IterationBO.class);
         iterationBO.setIterationId(uniqueIdService.getUniqueId());

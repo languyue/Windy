@@ -1,7 +1,7 @@
 package com.zj.demand.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.demand.entity.SpaceDto;
 import com.zj.demand.service.SpaceService;
 import com.zj.domain.entity.bo.demand.SpaceBO;

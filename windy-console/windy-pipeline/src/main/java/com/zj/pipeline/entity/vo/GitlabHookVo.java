@@ -1,6 +1,6 @@
 package com.zj.pipeline.entity.vo;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -16,9 +16,9 @@ public class GitlabHookVo {
 
   private String message;
 
-  @JSONField(name = "commit_id")
+  @JsonProperty("commit_id")
   private String commitId;
 
-  @JSONField(name = "event_type")
+  @JsonProperty("event_type")
   private String eventType;
 }

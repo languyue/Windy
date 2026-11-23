@@ -1,7 +1,7 @@
 package com.zj.demand.rest;
 
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.demand.entity.IterationDto;
 import com.zj.demand.entity.IterationMemberDto;
 import com.zj.demand.entity.IterationStatisticDto;

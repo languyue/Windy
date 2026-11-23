@@ -1,14 +1,15 @@
 package com.zj.pipeline.service;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Assert;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
@@ -17,9 +18,8 @@ import com.zj.domain.entity.bo.pipeline.PipelineNodeBO;
 import com.zj.domain.entity.bo.pipeline.PipelineStageBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.enums.PipelineType;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.INodeRecordRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
+import com.zj.domain.repository.pipeline.IBindBranchCommandRepository;
+import com.zj.domain.repository.pipeline.IPipelineCommandRepository;
 import com.zj.domain.repository.service.impl.MicroServiceRepository;
 import com.zj.pipeline.entity.dto.PipelineDto;
 import com.zj.pipeline.entity.dto.PipelineStatusDto;
@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,17 +51,17 @@ public class PipelineService {
     private final PipelineStageService pipelineStageService;
     private final PipelineHistoryService pipelineHistoryService;
     private final UniqueIdService uniqueIdService;
-    private final IPipelineRepository pipelineRepository;
-    private final IBindBranchRepository bindBranchRepository;
+    private final IPipelineCommandRepository pipelineRepository;
+    private final IBindBranchCommandRepository bindBranchRepository;
     private final MicroServiceRepository microServiceRepository;
-    private final INodeRecordRepository nodeRecordRepository;
-    private final IMasterInvoker masterInvoker;
+    private final IMasterCommand masterCommand;
+    private final IMasterApi masterInvoker;
 
     public PipelineService(PipelineNodeService pipelineNodeService,
                            PipelineStageService pipelineStageService, PipelineHistoryService pipelineHistoryService,
-                           UniqueIdService uniqueIdService, IPipelineRepository pipelineRepository,
-                           IBindBranchRepository bindBranchRepository, MicroServiceRepository microServiceRepository,
-                           INodeRecordRepository nodeRecordRepository, IMasterInvoker masterInvoker) {
+                           UniqueIdService uniqueIdService, IPipelineCommandRepository pipelineRepository,
+                           IBindBranchCommandRepository bindBranchRepository, MicroServiceRepository microServiceRepository,
+                           IMasterCommand masterCommand, IMasterApi masterInvoker) {
         this.pipelineNodeService = pipelineNodeService;
         this.pipelineStageService = pipelineStageService;
         this.pipelineHistoryService = pipelineHistoryService;
@@ -68,7 +69,7 @@ public class PipelineService {
         this.pipelineRepository = pipelineRepository;
         this.bindBranchRepository = bindBranchRepository;
         this.microServiceRepository = microServiceRepository;
-        this.nodeRecordRepository = nodeRecordRepository;
+        this.masterCommand = masterCommand;
         this.masterInvoker = masterInvoker;
     }
 
@@ -87,7 +88,8 @@ public class PipelineService {
         }
 
         List<PipelineStageBO> stageList = pipelineBO.getStageList();
-        List<PipelineStageBO> temp = JSON.parseArray(JSON.toJSONString(stageList), PipelineStageBO.class);
+        //保留写入前的阶段快照，供后续比对哪些节点已被删除
+        List<PipelineStageBO> temp = OrikaUtil.convertList(stageList, PipelineStageBO.class);
         addOrUpdateNode(pipelineId, stageList);
 
         //删除不存在的节点
@@ -165,7 +167,7 @@ public class PipelineService {
             checkPipelineAndService(serviceId, pipelineId);
             boolean deleteHistory = pipelineHistoryService.deleteByPipelineId(pipelineId);
             List<String> nodeIds = pipelineNodeService.getPipelineNodes(pipelineId).stream().map(PipelineNodeBO::getNodeId).collect(Collectors.toList());
-            boolean deleteRecord = nodeRecordRepository.deleteRecordByNodeId(nodeIds);
+            boolean deleteRecord = masterCommand.deleteNodeRecords(nodeIds);
             boolean deleteBind = bindBranchRepository.deleteByPipelineId(pipelineId);
             boolean deleteStage = pipelineStageService.deleteStagesByPipelineId(pipelineId);
             boolean deleteNode = pipelineNodeService.deleteByPipeline(pipelineId);
@@ -295,7 +297,7 @@ public class PipelineService {
         }
 
         DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
-        dispatchTaskModel.setSourceId(pipelineId);
+        dispatchTaskModel.setSourceIds(Collections.singletonList(pipelineId));
         dispatchTaskModel.setSourceName(pipeline.getPipelineName());
         dispatchTaskModel.setType(LogType.PIPELINE.getType());
         String taskId = masterInvoker.startPipelineTask(dispatchTaskModel);
@@ -331,10 +333,10 @@ public class PipelineService {
             return false;
         }
 
-        DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
-        dispatchTaskModel.setSourceId(historyId);
-        dispatchTaskModel.setType(LogType.PIPELINE.getType());
-        return masterInvoker.stopDispatchTask(dispatchTaskModel);
+        StopDispatch stopDispatch = new StopDispatch();
+        stopDispatch.setTargetId(historyId);
+        stopDispatch.setLogType(LogType.PIPELINE);
+        return masterInvoker.stopDispatch(stopDispatch);
     }
 
     public List<PipelineBO> getServicePipelines(String serviceId) {

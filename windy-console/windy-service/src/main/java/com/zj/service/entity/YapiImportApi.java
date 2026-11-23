@@ -1,6 +1,6 @@
 package com.zj.service.entity;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -18,16 +18,16 @@ public class YapiImportApi {
         private String title;
         private String path;
         private String method;
-        @JSONField(name = "req_headers")
+        @JsonProperty("req_headers")
         private List<HeaderParam> headers;
-        @JSONField(name = "req_body_other")
+        @JsonProperty("req_body_other")
         private String requestBody;
-        @JSONField(name = "res_body")
+        @JsonProperty("res_body")
         private String resBody;
-        @JSONField(name = "req_params")
+        @JsonProperty("req_params")
         private List<PathParam> pathParams;
 
-        @JSONField(name = "req_query")
+        @JsonProperty("req_query")
         private List<QueryParam> queryParams;
     }
 

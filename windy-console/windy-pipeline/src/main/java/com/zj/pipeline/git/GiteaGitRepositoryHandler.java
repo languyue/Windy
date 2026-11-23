@@ -1,10 +1,10 @@
 package com.zj.pipeline.git;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.common.enums.GitType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.git.GitAccessInfo;
+import com.zj.contract.json.ContractJson;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.pipeline.entity.vo.BranchInfo;
 import com.zj.pipeline.entity.vo.CreateBranchVo;
@@ -53,9 +53,9 @@ public class GiteaGitRepositoryHandler implements IGitRepositoryHandler {
     String gitPath = String.format("/api/v1/repos/%s/%s/branches", owner, accessInfo.getGitServiceName());
     CreateBranchVo createBranchVO = new CreateBranchVo();
     createBranchVO.setBranchName(branchName);
-    String result = gitRequestProxy.post(gitPath, JSON.toJSONString(createBranchVO), getTokenHeader(accessInfo));
+    String result = gitRequestProxy.post(gitPath, ContractJson.write(createBranchVO), getTokenHeader(accessInfo));
     log.info("gitea create branch result = {}", result);
-    BranchInfo branchInfo = JSON.parseObject(result, BranchInfo.class);
+    BranchInfo branchInfo = ContractJson.read(result, BranchInfo.class);
     if (Objects.isNull(branchInfo) || !Objects.equals(branchInfo.getName(), branchName)){
       throw new ApiException(ErrorCode.CREATE_BRANCH_ERROR);
     }
@@ -74,7 +74,7 @@ public class GiteaGitRepositoryHandler implements IGitRepositoryHandler {
   public void checkRepository(GitAccessInfo accessInfo) {
     String result = gitRequestProxy.get("/api/v1/user/repos", getTokenHeader(accessInfo));
     log.info("query repository result ={}", result);
-    List<GiteaRepositoryVo> repositories = JSON.parseArray(result, GiteaRepositoryVo.class);
+    List<GiteaRepositoryVo> repositories = ContractJson.readList(result, GiteaRepositoryVo.class);
     if (CollectionUtils.isEmpty(repositories)) {
       throw new ApiException(ErrorCode.REPO_NOT_EXIST);
     }
@@ -96,7 +96,7 @@ public class GiteaGitRepositoryHandler implements IGitRepositoryHandler {
     String owner = accessInfo.getOwner();
     String gitPath = String.format("/api/v1/repos/%s/%s/branches", owner, accessInfo.getGitServiceName());
     String result = gitRequestProxy.get(gitPath, getTokenHeader(accessInfo));
-    List<BranchInfo> branches = JSON.parseArray(result, BranchInfo.class);
+    List<BranchInfo> branches = ContractJson.readList(result, BranchInfo.class);
     if (CollectionUtils.isEmpty(branches)) {
       return Collections.emptyList();
     }

@@ -1,19 +1,19 @@
 package com.zj.pipeline.service;
 
 import com.zj.common.adapter.git.CommitMessage;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.enums.RelationType;
-import com.zj.domain.repository.demand.IBugRepository;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeRepository;
+import com.zj.domain.repository.demand.IBugCommandRepository;
+import com.zj.domain.repository.demand.IDemandCommandRepository;
+import com.zj.domain.repository.pipeline.IBindBranchCommandRepository;
+import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import com.zj.pipeline.entity.enums.GitEventType;
 import com.zj.pipeline.entity.vo.GitPushResultVo;
 import com.zj.pipeline.git.RepositoryFactory;
@@ -45,17 +45,17 @@ public class GitBindService {
     private final PipelineService pipelineService;
     private final RepositoryFactory repositoryFactory;
     private final UniqueIdService uniqueIdService;
-    private final IBindBranchRepository gitBindRepository;
-    private final ICodeChangeRepository codeChangeRepository;
+    private final IBindBranchCommandRepository gitBindRepository;
+    private final ICodeChangeQueryRepository codeChangeRepository;
     private final Map<String, IGitWebhook> webhookMap;
-    private final IDemandRepository demandRepository;
-    private final IBugRepository bugRepository;
+    private final IDemandCommandRepository demandRepository;
+    private final IBugCommandRepository bugRepository;
     private final Executor executorService;
 
     public GitBindService(PipelineService pipelineService, RepositoryFactory repositoryFactory,
-                          UniqueIdService uniqueIdService, IBindBranchRepository gitBindRepository,
-                          ICodeChangeRepository codeChangeRepository, List<IGitWebhook> webhooks,
-                          IDemandRepository demandRepository, IBugRepository bugRepository,
+                          UniqueIdService uniqueIdService, IBindBranchCommandRepository gitBindRepository,
+                          ICodeChangeQueryRepository codeChangeRepository, List<IGitWebhook> webhooks,
+                          IDemandCommandRepository demandRepository, IBugCommandRepository bugRepository,
                           @Qualifier("webHookExecutorPool") Executor executorService) {
         this.pipelineService = pipelineService;
         this.repositoryFactory = repositoryFactory;

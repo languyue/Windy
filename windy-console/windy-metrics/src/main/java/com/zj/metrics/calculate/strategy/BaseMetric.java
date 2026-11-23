@@ -3,7 +3,7 @@ package com.zj.metrics.calculate.strategy;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.metric.MetricResultBO;
 import com.zj.domain.entity.enums.DimensionType;
-import com.zj.domain.repository.metric.IMetricResultRepository;
+import com.zj.domain.repository.metric.IMetricResultCommandRepository;
 import com.zj.metrics.calculate.IMetric;
 
 import java.util.List;
@@ -11,9 +11,9 @@ import java.util.List;
 public abstract class BaseMetric implements IMetric {
 
     private final UniqueIdService uniqueIdService;
-    private final IMetricResultRepository metricResultRepository;
+    private final IMetricResultCommandRepository metricResultRepository;
 
-    protected BaseMetric(UniqueIdService uniqueIdService, IMetricResultRepository metricResultRepository) {
+    protected BaseMetric(UniqueIdService uniqueIdService, IMetricResultCommandRepository metricResultRepository) {
         this.uniqueIdService = uniqueIdService;
         this.metricResultRepository = metricResultRepository;
     }

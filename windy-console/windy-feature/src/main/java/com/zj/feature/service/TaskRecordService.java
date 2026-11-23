@@ -1,12 +1,13 @@
 package com.zj.feature.service;
 
 import com.zj.common.adapter.auth.IAuthService;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.enums.FeatureStatus;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
+import com.zj.domain.repository.feature.ITaskRecordQueryRepository;
 import com.zj.feature.entity.HistoryNodeDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -25,14 +26,17 @@ public class TaskRecordService {
 
     private final FeatureHistoryService featureHistoryService;
     private final FeatureService featureService;
-    private final ITaskRecordRepository taskRecordRepository;
+    private final ITaskRecordQueryRepository taskRecordRepository;
+    private final IMasterCommand masterCommand;
     private final IAuthService authService;
 
     public TaskRecordService(FeatureHistoryService featureHistoryService,
-                             FeatureService featureService, ITaskRecordRepository taskRecordRepository, IAuthService authService) {
+                             FeatureService featureService, ITaskRecordQueryRepository taskRecordRepository,
+                             IMasterCommand masterCommand, IAuthService authService) {
         this.featureHistoryService = featureHistoryService;
         this.featureService = featureService;
         this.taskRecordRepository = taskRecordRepository;
+        this.masterCommand = masterCommand;
         this.authService = authService;
     }
 
@@ -41,17 +45,15 @@ public class TaskRecordService {
         return taskRecordRepository.getTaskRecordPage(pageNum, size, currentUserId);
     }
 
+    /**
+     * task_record 与 feature_history 的写权在 master，这里只下发删除命令
+     */
     public boolean deleteTaskRecord(String recordId) {
         TaskRecordBO taskRecord = taskRecordRepository.getTaskRecord(recordId);
         if (Objects.isNull(taskRecord)) {
             return true;
         }
-        List<FeatureHistoryBO> histories = featureHistoryService.getHistories(recordId);
-        if (CollectionUtils.isNotEmpty(histories)) {
-            boolean executeHistory = featureHistoryService.deleteByRecordId(recordId);
-            log.info("delete record history result = {}", executeHistory);
-        }
-        return taskRecordRepository.deleteTaskRecord(recordId);
+        return masterCommand.deleteTaskRecord(recordId);
     }
 
     public List<FeatureHistoryBO> getTaskFeatureHistories(String recordId) {
@@ -114,8 +116,8 @@ public class TaskRecordService {
     }
 
     public Boolean stopTaskRecord(String recordId) {
-        //todo notify master to stop dispatch task
-        return taskRecordRepository.deleteTaskRecord(recordId);
+        //todo 真正的停止应该是让 master 中断正在执行的 dispatch 任务，现在沿用原有的删除记录语义
+        return masterCommand.deleteTaskRecord(recordId);
     }
 
     public TaskRecordBO getTaskRecordByTrigger(String triggerId) {

@@ -8,9 +8,9 @@ import com.zj.domain.entity.bo.metric.MetricResultBO;
 import com.zj.domain.entity.bo.metric.MetricSourceBO;
 import com.zj.domain.entity.enums.BugStatus;
 import com.zj.domain.entity.enums.DemandStatus;
-import com.zj.domain.repository.demand.IBugRepository;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.metric.IMetricResultRepository;
+import com.zj.domain.repository.demand.IBugQueryRepository;
+import com.zj.domain.repository.demand.IDemandQueryRepository;
+import com.zj.domain.repository.metric.IMetricResultCommandRepository;
 import com.zj.metrics.utils.MetricUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -25,11 +25,11 @@ import java.util.stream.Collectors;
 @Component
 public class SystemHealthyMetric extends BaseMetric {
 
-    private final IDemandRepository demandRepository;
-    private final IBugRepository bugRepository;
+    private final IDemandQueryRepository demandRepository;
+    private final IBugQueryRepository bugRepository;
 
-    protected SystemHealthyMetric(UniqueIdService uniqueIdService, IMetricResultRepository metricResultRepository,
-                                  IDemandRepository demandRepository, IBugRepository bugRepository) {
+    protected SystemHealthyMetric(UniqueIdService uniqueIdService, IMetricResultCommandRepository metricResultRepository,
+                                  IDemandQueryRepository demandRepository, IBugQueryRepository bugRepository) {
         super(uniqueIdService, metricResultRepository);
         this.demandRepository = demandRepository;
         this.bugRepository = bugRepository;

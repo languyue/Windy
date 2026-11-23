@@ -3,8 +3,8 @@ package com.zj.metrics.service;
 import com.zj.domain.entity.bo.demand.DemandBO;
 import com.zj.domain.entity.bo.metric.MetricResultBO;
 import com.zj.domain.entity.enums.DemandStatus;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.metric.IMetricResultRepository;
+import com.zj.domain.repository.demand.IDemandQueryRepository;
+import com.zj.domain.repository.metric.IMetricResultQueryRepository;
 import com.zj.metrics.calculate.strategy.MetricNameType;
 import com.zj.metrics.entity.*;
 import com.zj.metrics.utils.MetricUtils;
@@ -21,10 +21,10 @@ import java.util.stream.Collectors;
 @Service
 public class MetricsService {
 
-    private final IDemandRepository demandRepository;
-    private final IMetricResultRepository metricResultRepository;
+    private final IDemandQueryRepository demandRepository;
+    private final IMetricResultQueryRepository metricResultRepository;
 
-    public MetricsService(IDemandRepository demandRepository, IMetricResultRepository metricResultRepository) {
+    public MetricsService(IDemandQueryRepository demandRepository, IMetricResultQueryRepository metricResultRepository) {
         this.demandRepository = demandRepository;
         this.metricResultRepository = metricResultRepository;
     }

@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.zj.auth.entity.Constants;
 import com.zj.auth.entity.UserSession;
 import com.zj.domain.entity.bo.auth.ResourceBO;
-import com.zj.domain.repository.auth.IResourceRepository;
+import com.zj.domain.repository.auth.IResourceQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -36,9 +36,9 @@ public class PermissionService {
 
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-    private final IResourceRepository resourceRepository;
+    private final IResourceQueryRepository resourceRepository;
 
-    public PermissionService(IResourceRepository resourceRepository) {
+    public PermissionService(IResourceQueryRepository resourceRepository) {
         this.resourceRepository = resourceRepository;
         whiteList.add(Constants.USER_LOGIN_URL);
         whiteList.add(Constants.USER_LOGOUT_URL);

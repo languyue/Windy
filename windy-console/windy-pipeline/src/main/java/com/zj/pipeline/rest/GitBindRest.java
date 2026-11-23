@@ -1,8 +1,8 @@
 package com.zj.pipeline.rest;
 
 import com.zj.common.adapter.git.CommitMessage;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.pipeline.service.GitBindService;
 import lombok.extern.slf4j.Slf4j;

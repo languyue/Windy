@@ -2,7 +2,7 @@ package com.zj.auth.handler;
 
 import com.zj.auth.entity.UserSession;
 import com.zj.auth.service.PermissionService;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDeniedException;

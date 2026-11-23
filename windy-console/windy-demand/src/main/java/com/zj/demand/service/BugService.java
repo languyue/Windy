@@ -3,9 +3,9 @@ package com.zj.demand.service;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.adapter.auth.UserDetail;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.BugDetailDto;
 import com.zj.demand.entity.BugDto;
@@ -16,10 +16,10 @@ import com.zj.domain.entity.bo.demand.BusinessStatusBO;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.enums.BusinessStatusType;
 import com.zj.domain.entity.enums.RelationType;
-import com.zj.domain.repository.auth.IUserRepository;
-import com.zj.domain.repository.demand.IBugRepository;
-import com.zj.domain.repository.demand.IBusinessStatusRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeRepository;
+import com.zj.domain.repository.auth.IUserQueryRepository;
+import com.zj.domain.repository.demand.IBugCommandRepository;
+import com.zj.domain.repository.demand.IBusinessStatusQueryRepository;
+import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -32,16 +32,16 @@ import java.util.Optional;
 @Service
 public class BugService {
 
-    private final IBugRepository bugRepository;
+    private final IBugCommandRepository bugRepository;
     private final UniqueIdService uniqueIdService;
     private final IAuthService authService;
-    private final IUserRepository userRepository;
-    private final ICodeChangeRepository codeChangeRepository;
-    private final IBusinessStatusRepository businessStatusRepository;
+    private final IUserQueryRepository userRepository;
+    private final ICodeChangeQueryRepository codeChangeRepository;
+    private final IBusinessStatusQueryRepository businessStatusRepository;
     private final IterationService iterationService;
 
-    public BugService(IBugRepository bugRepository, UniqueIdService uniqueIdService, IAuthService authService,
-                      IUserRepository userRepository, ICodeChangeRepository codeChangeRepository, IBusinessStatusRepository businessStatusRepository, IterationService iterationService) {
+    public BugService(IBugCommandRepository bugRepository, UniqueIdService uniqueIdService, IAuthService authService,
+                      IUserQueryRepository userRepository, ICodeChangeQueryRepository codeChangeRepository, IBusinessStatusQueryRepository businessStatusRepository, IterationService iterationService) {
         this.bugRepository = bugRepository;
         this.uniqueIdService = uniqueIdService;
         this.authService = authService;

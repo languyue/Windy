@@ -1,7 +1,7 @@
 package com.zj.feature.rest;
 
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.feature.service.FeatureHistoryService;
 import java.util.List;

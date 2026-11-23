@@ -1,8 +1,8 @@
 package com.zj.feature.rest;
 
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.rpc.PageSize;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.feature.entity.BatchTemplates;
 import com.zj.feature.entity.ExecuteTemplateDto;
 import com.zj.feature.entity.RelatedTemplateDto;

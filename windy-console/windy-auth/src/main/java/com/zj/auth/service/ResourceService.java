@@ -3,13 +3,14 @@ package com.zj.auth.service;
 import com.zj.auth.entity.ResourceBind;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.auth.ResourceBO;
-import com.zj.domain.repository.auth.IResourceRepository;
+import com.zj.domain.repository.auth.IResourceCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,12 +18,12 @@ import java.util.List;
 @Service
 public class ResourceService {
 
-    private final IResourceRepository resourceRepository;
+    private final IResourceCommandRepository resourceRepository;
     private final UniqueIdService uniqueIdService;
     private final PermissionService permissionService;
     private final IAuthService authService;
 
-    public ResourceService(IResourceRepository resourceRepository, UniqueIdService uniqueIdService,
+    public ResourceService(IResourceCommandRepository resourceRepository, UniqueIdService uniqueIdService,
                            PermissionService permissionService, IAuthService authService) {
         this.resourceRepository = resourceRepository;
         this.uniqueIdService = uniqueIdService;
@@ -61,6 +62,7 @@ public class ResourceService {
         return resourceRepository.getResource(resourceId);
     }
 
+    @Transactional
     public Boolean resourceBind(ResourceBind resourceBind) {
         boolean unbindResource = resourceRepository.unbindResource(resourceBind.getRelationId());
         log.info("unbind resource result={}", unbindResource);

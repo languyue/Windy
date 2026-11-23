@@ -1,29 +1,31 @@
 package com.zj.feature.service;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.feature.exec.BatchFeatureVo;
+import com.zj.contract.rpc.PageSize;
+import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
+import com.zj.common.entity.command.TaskRecordCommand;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
-import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.bo.feature.TestCaseBO;
 import com.zj.domain.entity.enums.TaskRecordType;
-import com.zj.domain.repository.feature.IFeatureRepository;
-import com.zj.domain.repository.feature.ITaskRecordRepository;
-import com.zj.domain.repository.feature.ITestCaseConfigRepository;
-import com.zj.domain.repository.feature.ITestCaseRepository;
+import com.zj.domain.repository.feature.IFeatureQueryRepository;
+import com.zj.domain.repository.feature.ITestCaseConfigCommandRepository;
+import com.zj.domain.repository.feature.ITestCaseCommandRepository;
 import com.zj.feature.entity.BatchExecuteFeature;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,21 +37,21 @@ import java.util.Objects;
 @Service
 public class TestCaseService {
     private final UniqueIdService uniqueIdService;
-    private final ITestCaseRepository testCaseRepository;
-    private final ITestCaseConfigRepository testCaseConfigRepository;
-    private final IFeatureRepository featureRepository;
-    private final ITaskRecordRepository taskRecordRepository;
+    private final ITestCaseCommandRepository testCaseRepository;
+    private final ITestCaseConfigCommandRepository testCaseConfigRepository;
+    private final IFeatureQueryRepository featureRepository;
+    private final IMasterCommand masterCommand;
     private final IAuthService authService;
-    private final IMasterInvoker masterInvoker;
+    private final IMasterApi masterInvoker;
 
-    public TestCaseService(UniqueIdService uniqueIdService, ITestCaseRepository testCaseRepository,
-                           ITestCaseConfigRepository testCaseConfigRepository, IFeatureRepository featureRepository, 
-                           ITaskRecordRepository taskRecordRepository,IAuthService authService, IMasterInvoker masterInvoker) {
+    public TestCaseService(UniqueIdService uniqueIdService, ITestCaseCommandRepository testCaseRepository,
+                           ITestCaseConfigCommandRepository testCaseConfigRepository, IFeatureQueryRepository featureRepository, 
+                           IMasterCommand masterCommand,IAuthService authService, IMasterApi masterInvoker) {
         this.uniqueIdService = uniqueIdService;
         this.testCaseRepository = testCaseRepository;
         this.testCaseConfigRepository = testCaseConfigRepository;
         this.featureRepository = featureRepository;
-        this.taskRecordRepository = taskRecordRepository;
+        this.masterCommand = masterCommand;
         this.authService = authService;
         this.masterInvoker = masterInvoker;
     }
@@ -110,33 +112,42 @@ public class TestCaseService {
         return testCaseRepository.getE2ECases();
     }
 
+    /**
+     * 临时批量执行也需要一条 task_record 作为执行容器，但它的写权在 master，
+     * 这里只下发命令拿回 recordId 作为本次执行的触发标识。
+     */
     public boolean executeFeature(String caseId, BatchExecuteFeature batchExecute) {
         String taskName = "批量执行 " + authService.getUserDetail().getNickName();
-        TaskRecordBO taskRecord = createTempTaskRecord(caseId, taskName, batchExecute);
-        boolean createRecord = taskRecordRepository.save(taskRecord);
-        if (!createRecord) {
+        String recordId = masterCommand.createTaskRecord(buildTempTaskRecord(caseId, taskName, batchExecute));
+        if (StringUtils.isBlank(recordId)) {
             log.info("create record error, can not execute batch features caseId={}", caseId);
             return false;
         }
 
         DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
         dispatchTaskModel.setType(LogType.FEATURE.getType());
-        dispatchTaskModel.setSourceId(JSON.toJSONString(batchExecute.getFeatureIds()));
+        dispatchTaskModel.setSourceIds(batchExecute.getFeatureIds());
         dispatchTaskModel.setSourceName(taskName);
-        dispatchTaskModel.setTriggerId(taskRecord.getRecordId());
-        String recordId = masterInvoker.runFeatureTask(dispatchTaskModel);
-        return Objects.nonNull(recordId);
+        dispatchTaskModel.setTriggerIds(Collections.singletonList(recordId));
+        String executeRecordId = masterInvoker.runFeatureTask(dispatchTaskModel);
+        return Objects.nonNull(executeRecordId);
     }
 
-    private TaskRecordBO createTempTaskRecord(String caseId, String taskName, BatchExecuteFeature batchExecute) {
-        TaskRecordBO taskRecord = new TaskRecordBO();
-        taskRecord.setRecordId(uniqueIdService.getUniqueId());
+    private TaskRecordCommand buildTempTaskRecord(String caseId, String taskName, BatchExecuteFeature batchExecute) {
+        TaskRecordCommand taskRecord = new TaskRecordCommand();
         taskRecord.setTriggerId(caseId);
         taskRecord.setType(TaskRecordType.TEMP_TASK.getType());
-        taskRecord.setTaskConfig(JSON.toJSONString(batchExecute));
+        taskRecord.setTaskConfig(buildTaskConfig(batchExecute));
         taskRecord.setTestCaseId(caseId);
         taskRecord.setStatus(ProcessStatus.RUNNING.getType());
         taskRecord.setTaskName(taskName);
+        taskRecord.setUserId(authService.getCurrentUserId());
         return taskRecord;
+    }
+
+    private BatchFeatureVo buildTaskConfig(BatchExecuteFeature batchExecute) {
+        BatchFeatureVo taskConfig = new BatchFeatureVo();
+        taskConfig.setFeatureIds(batchExecute.getFeatureIds());
+        return taskConfig;
     }
 }

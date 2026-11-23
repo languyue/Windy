@@ -6,8 +6,8 @@ import com.zj.domain.entity.bo.metric.MetricDefinitionBO;
 import com.zj.domain.entity.bo.metric.MetricResultBO;
 import com.zj.domain.entity.bo.metric.MetricSourceBO;
 import com.zj.domain.entity.enums.BugStatus;
-import com.zj.domain.repository.demand.IBugRepository;
-import com.zj.domain.repository.metric.IMetricResultRepository;
+import com.zj.domain.repository.demand.IBugQueryRepository;
+import com.zj.domain.repository.metric.IMetricResultCommandRepository;
 import com.zj.metrics.utils.MetricUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 @Component
 public class BugStatisticsMetric extends BaseMetric{
 
-    private final IBugRepository bugRepository;
+    private final IBugQueryRepository bugRepository;
 
-    protected BugStatisticsMetric(UniqueIdService uniqueIdService, IMetricResultRepository metricResultRepository,
-                                  IBugRepository bugRepository) {
+    protected BugStatisticsMetric(UniqueIdService uniqueIdService, IMetricResultCommandRepository metricResultRepository,
+                                  IBugQueryRepository bugRepository) {
         super(uniqueIdService, metricResultRepository);
         this.bugRepository = bugRepository;
     }

@@ -6,11 +6,11 @@ import com.zj.auth.entity.UpdatePassword;
 import com.zj.auth.entity.UserSession;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.auth.UserBO;
-import com.zj.domain.repository.auth.IUserRepository;
+import com.zj.domain.repository.auth.IUserCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,10 +30,10 @@ public class UserService {
     private final TokenHolder tokenHolder;
     private final AuthenticationManager authenticationManager;
     private final IAuthService authService;
-    private final IUserRepository userRepository;
+    private final IUserCommandRepository userRepository;
     private final UniqueIdService uniqueIdService;
 
-    public UserService(TokenHolder tokenHolder, AuthenticationManager authenticationManager, IAuthService authService, IUserRepository userRepository, UniqueIdService uniqueIdService) {
+    public UserService(TokenHolder tokenHolder, AuthenticationManager authenticationManager, IAuthService authService, IUserCommandRepository userRepository, UniqueIdService uniqueIdService) {
         this.tokenHolder = tokenHolder;
         this.authenticationManager = authenticationManager;
         this.authService = authService;

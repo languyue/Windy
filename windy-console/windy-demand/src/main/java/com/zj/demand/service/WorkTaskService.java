@@ -2,17 +2,17 @@ package com.zj.demand.service;
 
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.WorkTaskDto;
 import com.zj.domain.entity.bo.demand.BusinessStatusBO;
 import com.zj.domain.entity.bo.demand.TaskQueryBO;
 import com.zj.domain.entity.bo.demand.WorkTaskBO;
 import com.zj.domain.entity.enums.BusinessStatusType;
-import com.zj.domain.repository.demand.IBusinessStatusRepository;
-import com.zj.domain.repository.demand.IWorkTaskRepository;
+import com.zj.domain.repository.demand.IBusinessStatusQueryRepository;
+import com.zj.domain.repository.demand.IWorkTaskCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +24,12 @@ import java.util.Objects;
 public class WorkTaskService {
 
     private final UniqueIdService uniqueIdService;
-    private final IWorkTaskRepository workTaskRepository;
-    private final IBusinessStatusRepository businessStatusRepository;
+    private final IWorkTaskCommandRepository workTaskRepository;
+    private final IBusinessStatusQueryRepository businessStatusRepository;
     private final IAuthService authService;
 
-    public WorkTaskService(UniqueIdService uniqueIdService, IWorkTaskRepository workTaskRepository,
-                           IBusinessStatusRepository businessStatusRepository, IAuthService authService) {
+    public WorkTaskService(UniqueIdService uniqueIdService, IWorkTaskCommandRepository workTaskRepository,
+                           IBusinessStatusQueryRepository businessStatusRepository, IAuthService authService) {
         this.uniqueIdService = uniqueIdService;
         this.workTaskRepository = workTaskRepository;
         this.businessStatusRepository = businessStatusRepository;

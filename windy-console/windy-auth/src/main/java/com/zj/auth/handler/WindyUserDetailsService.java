@@ -2,10 +2,10 @@ package com.zj.auth.handler;
 
 import com.zj.auth.entity.UserSession;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.auth.UserBO;
 import com.zj.domain.entity.enums.UserStatus;
-import com.zj.domain.repository.auth.IUserRepository;
+import com.zj.domain.repository.auth.IUserQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,9 +18,9 @@ import java.util.Objects;
 @Component
 public class WindyUserDetailsService implements UserDetailsService {
 
-    private final IUserRepository userRepository;
+    private final IUserQueryRepository userRepository;
 
-    public WindyUserDetailsService(IUserRepository userRepository) {
+    public WindyUserDetailsService(IUserQueryRepository userRepository) {
         this.userRepository = userRepository;
     }
 

@@ -4,7 +4,7 @@ import com.zj.auth.entity.UserSession;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.common.adapter.auth.UserDetail;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;

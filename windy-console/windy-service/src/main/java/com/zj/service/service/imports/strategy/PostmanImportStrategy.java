@@ -1,15 +1,14 @@
 package com.zj.service.service.imports.strategy;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.zj.common.entity.service.ApiParamModel;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.service.ApiParamModel;
 import com.zj.common.enums.ApiType;
 import com.zj.common.enums.Position;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.service.ServiceApiBO;
-import com.zj.domain.repository.service.IServiceApiRepository;
+import com.zj.domain.repository.service.IServiceApiCommandRepository;
 import com.zj.plugin.loader.ParamValueType;
 import com.zj.service.entity.ApiRequestVariable;
 import com.zj.service.entity.PostmanImport;
@@ -18,9 +17,11 @@ import com.zj.service.service.imports.ImportType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,10 +34,10 @@ import java.util.stream.Collectors;
 @Component
 public class PostmanImportStrategy implements IApiImportStrategy {
     private final UniqueIdService uniqueIdService;
-    private final IServiceApiRepository serviceApiRepository;
+    private final IServiceApiCommandRepository serviceApiRepository;
     private final String variableString = "\\{\\{([^\\}]+)\\}\\}";
 
-    public PostmanImportStrategy(UniqueIdService uniqueIdService, IServiceApiRepository serviceApiRepository) {
+    public PostmanImportStrategy(UniqueIdService uniqueIdService, IServiceApiCommandRepository serviceApiRepository) {
         this.uniqueIdService = uniqueIdService;
         this.serviceApiRepository = serviceApiRepository;
     }
@@ -47,8 +48,9 @@ public class PostmanImportStrategy implements IApiImportStrategy {
     }
 
     @Override
+    @Transactional
     public List<ServiceApiBO> importContent(String serviceId, String fileContent) {
-        PostmanImport postmanImport = JSON.parseObject(fileContent, PostmanImport.class);
+        PostmanImport postmanImport = ContractJson.read(fileContent, PostmanImport.class);
         if (Objects.isNull(postmanImport)) {
             return Collections.emptyList();
         }
@@ -140,43 +142,55 @@ public class PostmanImportStrategy implements IApiImportStrategy {
             return Collections.emptyList();
         }
 
-        JSONObject jsonObject = parseJsonString(request);
+        JsonNode jsonObject = parseJsonString(request);
         if (Objects.isNull(jsonObject)) {
             return Collections.emptyList();
         }
 
-        return jsonObject.entrySet().stream().map(e -> {
+        return fieldEntries(jsonObject).stream().map(e -> {
             ApiRequestVariable apiRequestVariable = new ApiRequestVariable();
             apiRequestVariable.setParamKey(e.getKey());
             apiRequestVariable.setPosition(Position.Body.name());
-            apiRequestVariable.setType(convertVariableType(e));
+            apiRequestVariable.setType(convertVariableType(e.getValue()));
             return apiRequestVariable;
         }).collect(Collectors.toList());
     }
 
-    private JSONObject parseJsonString(PostmanImport.PostmanApiRequest request) {
+    private JsonNode parseJsonString(PostmanImport.PostmanApiRequest request) {
         try {
-            return JSON.parseObject(request.getBody().getRaw(), JSONObject.class);
-        }catch (Exception e){
+            return ContractJson.readTree(request.getBody().getRaw());
+        } catch (Exception e) {
             log.info("convert json error", e);
         }
         return null;
     }
 
-    private String convertVariableType(Map.Entry<String, Object> e) {
-        if (e.getValue() instanceof String) {
+    private List<Map.Entry<String, JsonNode>> fieldEntries(JsonNode node) {
+        List<Map.Entry<String, JsonNode>> entries = new ArrayList<>();
+        if (Objects.isNull(node) || !node.isObject()) {
+            return entries;
+        }
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        while (iterator.hasNext()) {
+            entries.add(iterator.next());
+        }
+        return entries;
+    }
+
+    private String convertVariableType(JsonNode value) {
+        if (value.isTextual()) {
             return ParamValueType.String.name();
-        } else if (e.getValue() instanceof Integer) {
+        } else if (value.isInt()) {
             return ParamValueType.Integer.name();
-        } else if (e.getValue() instanceof Boolean) {
+        } else if (value.isBoolean()) {
             return ParamValueType.Boolean.name();
-        } else if (e.getValue() instanceof Long) {
+        } else if (value.isLong()) {
             return ParamValueType.Long.name();
-        } else if (e.getValue() instanceof Double || e.getValue() instanceof Float) {
+        } else if (value.isDouble() || value.isFloat()) {
             return ParamValueType.Float.name();
-        } else if (e.getValue() instanceof JSONArray) {
+        } else if (value.isArray()) {
             return ParamValueType.Array.name();
-        } else if (e.getValue() instanceof JSONObject) {
+        } else if (value.isObject()) {
             return ParamValueType.Object.name();
         } else {
             return null;

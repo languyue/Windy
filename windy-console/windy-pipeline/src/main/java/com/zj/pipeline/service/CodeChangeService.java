@@ -1,10 +1,10 @@
 package com.zj.pipeline.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Assert;
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.utils.OrikaUtil;
@@ -14,11 +14,11 @@ import com.zj.domain.entity.bo.demand.WorkTaskBO;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.RelationDemandBug;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
-import com.zj.domain.repository.demand.IBugRepository;
-import com.zj.domain.repository.demand.IDemandRepository;
-import com.zj.domain.repository.demand.IWorkTaskRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
+import com.zj.domain.repository.demand.IBugQueryRepository;
+import com.zj.domain.repository.demand.IDemandQueryRepository;
+import com.zj.domain.repository.demand.IWorkTaskQueryRepository;
+import com.zj.domain.repository.pipeline.ICodeChangeCommandRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
 import com.zj.domain.entity.enums.RelationType;
 import com.zj.pipeline.entity.dto.CodeChangeDto;
 import com.zj.pipeline.git.RepositoryFactory;
@@ -39,17 +39,17 @@ import java.util.stream.Collectors;
 public class CodeChangeService {
 
     private final RepositoryFactory repositoryFactory;
-    private final IMicroServiceRepository serviceRepository;
+    private final IMicroServiceQueryRepository serviceRepository;
     private final UniqueIdService uniqueIdService;
-    private final ICodeChangeRepository codeChangeRepository;
-    private final IBugRepository bugRepository;
-    private final IDemandRepository demandRepository;
-    private final IWorkTaskRepository workTaskRepository;
+    private final ICodeChangeCommandRepository codeChangeRepository;
+    private final IBugQueryRepository bugRepository;
+    private final IDemandQueryRepository demandRepository;
+    private final IWorkTaskQueryRepository workTaskRepository;
 
-    public CodeChangeService(RepositoryFactory repositoryFactory, IMicroServiceRepository serviceRepository,
-                             UniqueIdService uniqueIdService, ICodeChangeRepository codeChangeRepository,
-                             IBugRepository bugRepository, IDemandRepository demandRepository,
-                             IWorkTaskRepository workTaskRepository) {
+    public CodeChangeService(RepositoryFactory repositoryFactory, IMicroServiceQueryRepository serviceRepository,
+                             UniqueIdService uniqueIdService, ICodeChangeCommandRepository codeChangeRepository,
+                             IBugQueryRepository bugRepository, IDemandQueryRepository demandRepository,
+                             IWorkTaskQueryRepository workTaskRepository) {
         this.repositoryFactory = repositoryFactory;
         this.serviceRepository = serviceRepository;
         this.uniqueIdService = uniqueIdService;

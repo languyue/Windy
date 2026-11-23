@@ -1,7 +1,7 @@
 package com.zj.pipeline.entity.dto;
 
-import com.zj.common.entity.dto.ClientCollectDto;
-import com.zj.common.entity.dto.MasterCollectDto;
+import com.zj.contract.rpc.ClientCollectDto;
+import com.zj.contract.rpc.MasterCollectDto;
 import lombok.Data;
 
 import java.util.List;

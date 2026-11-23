@@ -1,9 +1,9 @@
 package com.zj.pipeline.service;
 
-import com.zj.common.entity.dto.PageSize;
+import com.zj.contract.rpc.PageSize;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.pipeline.PipelineActionBO;
-import com.zj.domain.repository.pipeline.IPipelineActionRepository;
+import com.zj.domain.repository.pipeline.IPipelineActionCommandRepository;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -16,10 +16,10 @@ import org.springframework.stereotype.Service;
 public class PipelineActionService {
 
   private final UniqueIdService uniqueIdService;
-  private final IPipelineActionRepository pipelineActionRepository;
+  private final IPipelineActionCommandRepository pipelineActionRepository;
 
   public PipelineActionService(UniqueIdService uniqueIdService,
-      IPipelineActionRepository pipelineActionRepository) {
+      IPipelineActionCommandRepository pipelineActionRepository) {
     this.uniqueIdService = uniqueIdService;
     this.pipelineActionRepository = pipelineActionRepository;
   }

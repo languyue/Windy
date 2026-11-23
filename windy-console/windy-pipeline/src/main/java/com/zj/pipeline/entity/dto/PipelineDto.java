@@ -1,6 +1,6 @@
 package com.zj.pipeline.entity.dto;
 
-import com.zj.common.entity.pipeline.PipelineConfig;
+import com.zj.contract.pipeline.PipelineConfig;
 import com.zj.domain.entity.bo.pipeline.PipelineStageBO;
 import com.zj.domain.entity.vo.Create;
 import com.zj.domain.entity.vo.Update;

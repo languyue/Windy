@@ -1,8 +1,8 @@
 package com.zj.demand.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.PageSize;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.demand.entity.WorkTaskDto;
 import com.zj.demand.service.WorkTaskService;
 import com.zj.domain.entity.bo.demand.WorkTaskBO;

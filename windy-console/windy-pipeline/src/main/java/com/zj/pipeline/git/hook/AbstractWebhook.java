@@ -1,14 +1,14 @@
 package com.zj.pipeline.git.hook;
 
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
-import com.zj.domain.repository.pipeline.IBindBranchRepository;
-import com.zj.domain.repository.pipeline.ISystemConfigRepository;
-import com.zj.domain.repository.service.IMicroServiceRepository;
+import com.zj.domain.repository.pipeline.IBindBranchQueryRepository;
+import com.zj.domain.repository.pipeline.ISystemConfigQueryRepository;
+import com.zj.domain.repository.service.IMicroServiceQueryRepository;
 import com.zj.pipeline.entity.enums.PipelineExecuteType;
 import com.zj.pipeline.entity.vo.GitPushResultVo;
 import com.zj.pipeline.service.PipelineService;
@@ -31,14 +31,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class AbstractWebhook implements IGitWebhook {
 
-  private final IMicroServiceRepository serviceRepository;
+  private final IMicroServiceQueryRepository serviceRepository;
   private final PipelineService pipelineService;
-  private final IBindBranchRepository gitBindRepository;
+  private final IBindBranchQueryRepository gitBindRepository;
   private final Executor executorService;
-  private final ISystemConfigRepository systemConfigRepository;
+  private final ISystemConfigQueryRepository systemConfigRepository;
 
-  protected AbstractWebhook(IMicroServiceRepository serviceRepository, PipelineService pipelineService,
-                            Executor executorService, IBindBranchRepository gitBindRepository, ISystemConfigRepository systemConfigRepository) {
+  protected AbstractWebhook(IMicroServiceQueryRepository serviceRepository, PipelineService pipelineService,
+                            Executor executorService, IBindBranchQueryRepository gitBindRepository, ISystemConfigQueryRepository systemConfigRepository) {
     this.serviceRepository = serviceRepository;
     this.pipelineService = pipelineService;
     this.gitBindRepository = gitBindRepository;

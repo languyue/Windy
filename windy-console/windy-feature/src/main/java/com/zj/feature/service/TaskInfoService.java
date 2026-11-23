@@ -2,22 +2,22 @@ package com.zj.feature.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
-import com.zj.common.enums.LogType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.contract.enums.LogType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.DispatchTaskModel;
-import com.zj.common.entity.dto.PageSize;
-import com.zj.common.entity.dto.ResponseStatusModel;
-import com.zj.common.entity.dto.ResponseStatusModel.PercentStatics;
+import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.rpc.PageSize;
+import com.zj.contract.rpc.ResponseStatusModel;
+import com.zj.contract.rpc.ResponseStatusModel.PercentStatics;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
 import com.zj.domain.entity.po.feature.TaskInfo;
-import com.zj.domain.repository.feature.ITaskRepository;
+import com.zj.domain.repository.feature.ITaskCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -38,14 +38,14 @@ public class TaskInfoService {
   private final TaskRecordService taskRecordService;
   private final FeatureHistoryService featureHistoryService;
   private final UniqueIdService uniqueIdService;
-  private final ITaskRepository taskRepository;
-  private final IMasterInvoker masterInvoker;
+  private final ITaskCommandRepository taskRepository;
+  private final IMasterApi masterInvoker;
   private final IAuthService authService;
   public static final String FORMAT_TIPS = "任务执行状态: 总任务数:%s 成功数: %s 成功率百分比: %s %";
 
   public TaskInfoService(TaskRecordService taskRecordService,
                          FeatureHistoryService featureHistoryService, UniqueIdService uniqueIdService,
-                         ITaskRepository taskRepository, IMasterInvoker masterInvoker, IAuthService authService) {
+                         ITaskCommandRepository taskRepository, IMasterApi masterInvoker, IAuthService authService) {
     this.taskRecordService = taskRecordService;
     this.featureHistoryService = featureHistoryService;
     this.uniqueIdService = uniqueIdService;
@@ -114,7 +114,7 @@ public class TaskInfoService {
     DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
     dispatchTaskModel.setType(LogType.FEATURE_TASK.getType());
     dispatchTaskModel.setUser(authService.getCurrentUserId());
-    dispatchTaskModel.setSourceId(taskId);
+    dispatchTaskModel.setSourceIds(Collections.singletonList(taskId));
     dispatchTaskModel.setSourceName(taskDetail.getTaskName());
     String recordId = masterInvoker.runFeatureTask(dispatchTaskModel);
     if (StringUtils.isBlank(recordId)) {

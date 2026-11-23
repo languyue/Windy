@@ -1,13 +1,13 @@
 package com.zj.pipeline.git;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.zj.common.adapter.git.CommitMessage;
-import com.zj.common.adapter.git.GitAccessInfo;
+import com.zj.contract.git.GitAccessInfo;
+import com.zj.contract.json.ContractJson;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.common.enums.GitType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.pipeline.entity.vo.BranchInfo;
 import com.zj.pipeline.entity.vo.GitlabRepositoryVo;
 import lombok.extern.slf4j.Slf4j;
@@ -82,17 +82,26 @@ public class GitlabGitRepositoryHandler implements IGitRepositoryHandler {
         String path = String.format("/api/v4/projects/%s/repository/commits?ref_name=%s&per_page=%d", projectId,
                 branch, 20);
         String result = gitRequestProxy.get(accessInfo.getGitDomain() + path, getTokenHeader(accessInfo));
-        List<JSONObject> commitsJson = JSON.parseArray(result, JSONObject.class);
-        return commitsJson.stream()
-                .map(commitJson -> {
-                    CommitMessage commit = new CommitMessage();
-                    commit.setCommitId(commitJson.getString("id"));
-                    commit.setShortId(commitJson.getString("short_id"));
-                    commit.setMessage(commitJson.getString("message"));
-                    commit.setCommitUser(commitJson.getString("author_name"));
-                    commit.setCommitTime(convertIso8601ToTimestamp(commitJson.getString("created_at")));
-                    return commit;
-                }).collect(Collectors.toList());
+        JsonNode commitsJson = ContractJson.readTree(result);
+        if (Objects.isNull(commitsJson) || !commitsJson.isArray()) {
+            return Collections.emptyList();
+        }
+        List<CommitMessage> commits = new ArrayList<>();
+        commitsJson.forEach(commitJson -> {
+            CommitMessage commit = new CommitMessage();
+            commit.setCommitId(text(commitJson, "id"));
+            commit.setShortId(text(commitJson, "short_id"));
+            commit.setMessage(text(commitJson, "message"));
+            commit.setCommitUser(text(commitJson, "author_name"));
+            commit.setCommitTime(convertIso8601ToTimestamp(text(commitJson, "created_at")));
+            commits.add(commit);
+        });
+        return commits;
+    }
+
+    private String text(JsonNode node, String field) {
+        JsonNode value = node.path(field);
+        return value.isMissingNode() || value.isNull() ? null : value.asText();
     }
 
     /**
@@ -115,7 +124,7 @@ public class GitlabGitRepositoryHandler implements IGitRepositoryHandler {
                 projectId, branchName);
         String result = gitRequestProxy.post(accessInfo.getGitDomain() + path, "", getTokenHeader(accessInfo));
         log.info("gitlab create branch result = {}", result);
-        BranchInfo branchInfo = JSON.parseObject(result, BranchInfo.class);
+        BranchInfo branchInfo = ContractJson.read(result, BranchInfo.class);
         if (Objects.isNull(branchInfo) || !Objects.equals(branchInfo.getName(), branchName)) {
             throw new ApiException(ErrorCode.CREATE_BRANCH_ERROR);
         }
@@ -140,7 +149,7 @@ public class GitlabGitRepositoryHandler implements IGitRepositoryHandler {
 
         String path = String.format("/api/v4/projects/%s/repository/branches", projectId);
         String result = gitRequestProxy.get(accessInfo.getGitDomain() + path, getTokenHeader(accessInfo));
-        List<BranchInfo> branches = JSON.parseArray(result, BranchInfo.class);
+        List<BranchInfo> branches = ContractJson.readList(result, BranchInfo.class);
         if (CollectionUtils.isEmpty(branches)) {
             log.info("can not get project branches ={}", projectId);
             return Collections.emptyList();
@@ -190,7 +199,7 @@ public class GitlabGitRepositoryHandler implements IGitRepositoryHandler {
                 "=100&page=1", getTokenHeader(accessInfo));
         try {
             String result = response.body().string();
-            List<GitlabRepositoryVo> allRepositories = JSON.parseArray(result, GitlabRepositoryVo.class);
+            List<GitlabRepositoryVo> allRepositories = ContractJson.readList(result, GitlabRepositoryVo.class);
             String pageNum = response.header("x-total-pages");
             allRepositories.addAll(requestAllRepositories(pageNum, accessInfo));
             return allRepositories;
@@ -214,7 +223,7 @@ public class GitlabGitRepositoryHandler implements IGitRepositoryHandler {
                     getTokenHeader(accessInfo));
             try {
                 String result = response.body().string();
-                list.addAll(JSON.parseArray(result, GitlabRepositoryVo.class));
+                list.addAll(ContractJson.readList(result, GitlabRepositoryVo.class));
             } catch (Exception e) {
                 log.info("get gitlab repositories error", e);
             }
@@ -226,7 +235,7 @@ public class GitlabGitRepositoryHandler implements IGitRepositoryHandler {
         String result =
                 gitRequestProxy.get(accessInfo.getGitDomain() + "/api/v4/projects?search=" + accessInfo.getGitServiceName(),
                         getTokenHeader(accessInfo));
-        return JSON.parseArray(result, GitlabRepositoryVo.class);
+        return ContractJson.readList(result, GitlabRepositoryVo.class);
     }
 
 }

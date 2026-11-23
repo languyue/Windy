@@ -1,15 +1,16 @@
 package com.zj.pipeline.service;
 
-import com.zj.common.adapter.uuid.UniqueIdService;
+import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.common.entity.command.PipelineHistoryCommand;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.domain.entity.bo.pipeline.NodeStatus;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.bo.pipeline.PipelineExecuteInfo;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
-import com.zj.domain.repository.pipeline.IPipelineHistoryRepository;
-import com.zj.domain.repository.pipeline.IPipelineRepository;
+import com.zj.domain.repository.pipeline.IPipelineHistoryQueryRepository;
+import com.zj.domain.repository.pipeline.IPipelineQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,26 +26,36 @@ import java.util.stream.Collectors;
 @Service
 public class PipelineHistoryService {
   private final NodeRecordService recordService;
-  private final UniqueIdService uniqueIdService;
-  private final IPipelineRepository pipelineRepository;
-  private final IPipelineHistoryRepository pipelineHistoryRepository;
+  private final IPipelineQueryRepository pipelineRepository;
+  private final IPipelineHistoryQueryRepository pipelineHistoryRepository;
+  private final IMasterCommand masterCommand;
 
-  public PipelineHistoryService(NodeRecordService recordService, UniqueIdService uniqueIdService,
-                                IPipelineRepository pipelineRepository, IPipelineHistoryRepository pipelineHistoryRepository) {
+  public PipelineHistoryService(NodeRecordService recordService,
+                                IPipelineQueryRepository pipelineRepository,
+                                IPipelineHistoryQueryRepository pipelineHistoryRepository,
+                                IMasterCommand masterCommand) {
     this.recordService = recordService;
-    this.uniqueIdService = uniqueIdService;
     this.pipelineRepository = pipelineRepository;
     this.pipelineHistoryRepository = pipelineHistoryRepository;
+    this.masterCommand = masterCommand;
   }
 
   public PipelineHistoryBO getPipelineHistory(String historyId) {
     return pipelineHistoryRepository.getPipelineHistory(historyId);
   }
 
+  /**
+   * pipeline_history 的写权在 master，console 只下发命令
+   */
   public String createPipelineHistory(PipelineHistoryBO pipelineHistoryBO) {
-    String historyId = uniqueIdService.getUniqueId();
-    pipelineHistoryBO.setHistoryId(historyId);
-    return pipelineHistoryRepository.createPipelineHistory(pipelineHistoryBO) ? historyId : "";
+    PipelineHistoryCommand command = new PipelineHistoryCommand();
+    command.setPipelineId(pipelineHistoryBO.getPipelineId());
+    command.setPipelineName(pipelineHistoryBO.getPipelineName());
+    command.setBranch(pipelineHistoryBO.getBranch());
+    command.setPipelineConfig(pipelineHistoryBO.getPipelineConfig());
+    command.setPipelineStatus(pipelineHistoryBO.getPipelineStatus());
+    String historyId = masterCommand.createPipelineHistory(command);
+    return Objects.isNull(historyId) ? "" : historyId;
   }
 
   public List<PipelineHistoryBO> listPipelineHistories(String pipelineId) {
@@ -92,6 +103,6 @@ public class PipelineHistoryService {
 
   public boolean deleteByPipelineId(String pipelineId) {
     checkPipeline(pipelineId);
-    return pipelineHistoryRepository.deleteByPipelineId(pipelineId);
+    return masterCommand.deletePipelineHistory(pipelineId);
   }
 }

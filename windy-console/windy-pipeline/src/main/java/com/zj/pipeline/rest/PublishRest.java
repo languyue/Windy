@@ -1,7 +1,7 @@
 package com.zj.pipeline.rest;
 
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
 import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.pipeline.service.PublishService;
 import org.springframework.validation.annotation.Validated;
