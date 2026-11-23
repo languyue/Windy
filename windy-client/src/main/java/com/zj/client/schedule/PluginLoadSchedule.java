@@ -2,9 +2,9 @@ package com.zj.client.schedule;
 
 import com.zj.client.handler.feature.executor.invoker.invoke.MethodInvoke;
 import com.zj.client.handler.feature.executor.invoker.loader.PluginManager;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.common.adapter.invoker.IMasterCallback;
 import com.zj.common.adapter.monitor.InstanceMonitor;
-import com.zj.common.entity.dto.PluginInfo;
+import com.zj.contract.rpc.PluginInfo;
 import com.zj.common.utils.TraceUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -28,12 +28,12 @@ import java.util.stream.Collectors;
 @Component
 public class PluginLoadSchedule {
 
-  private final IMasterInvoker masterInvoker;
+  private final IMasterCallback masterInvoker;
   private final PluginManager pluginManager;
   private final InstanceMonitor instanceMonitor;
   private final MethodInvoke methodInvoke;
 
-  public PluginLoadSchedule(IMasterInvoker masterInvoker, PluginManager pluginManager,
+  public PluginLoadSchedule(IMasterCallback masterInvoker, PluginManager pluginManager,
       InstanceMonitor instanceMonitor, MethodInvoke methodInvoke) {
     this.masterInvoker = masterInvoker;
     this.pluginManager = pluginManager;

@@ -7,7 +7,7 @@ import lombok.Data;
  * @since 2023/6/14
  */
 @Data
-public class DeployContext {
+public class DeployModeContext {
 
   private String recordId;
 }

@@ -1,18 +1,18 @@
 package com.zj.client.handler.pipeline.executer.notify;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.client.config.GlobalEnvConfig;
 import com.zj.client.entity.bo.DelayQuery;
-import com.zj.common.entity.feature.CompareDefine;
+import com.zj.contract.feature.CompareDefine;
 import com.zj.client.handler.feature.executor.compare.CompareOperator;
-import com.zj.common.entity.feature.CompareResult;
+import com.zj.contract.feature.CompareResult;
 import com.zj.client.handler.feature.executor.compare.operator.CompareFactory;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
 import com.zj.client.handler.pipeline.executer.vo.CompareInfo;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.json.ContractJson;
 import com.zj.plugin.loader.ExecuteStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -48,7 +48,7 @@ public class NodeStatusQueryLooper implements Runnable {
   public static final String OPERATOR_FORMAT = "操作符:【%s】";
   public static final String QUERY_ERROR_TIPS = "loop query status error";
   public static final int QUERY_INTERVAL_SECONDS = 5;
-  private final Map<String, INodeTrigger> remoteInvokerMap;
+  private final Map<String, INodeTrigger<?>> remoteInvokerMap;
   private final Map<String, Long> stopPipelineHistoryMap = new ConcurrentHashMap<>();
   private final DelayQueue<DelayQuery> delayQueue = new DelayQueue<>();
   private final Executor executorService;
@@ -56,7 +56,7 @@ public class NodeStatusQueryLooper implements Runnable {
   private final GlobalEnvConfig globalEnvConfig;
 
 
-  public NodeStatusQueryLooper(List<INodeTrigger> remoteInvokers,
+  public NodeStatusQueryLooper(List<INodeTrigger<?>> remoteInvokers,
       @Qualifier("loopQueryPool") Executor executorService, CompareFactory compareFactory,
       GlobalEnvConfig globalEnvConfig) {
     remoteInvokerMap = remoteInvokers.stream()
@@ -78,9 +78,9 @@ public class NodeStatusQueryLooper implements Runnable {
   private void runNode(TaskNode node) {
     executorService.execute(() -> {
       try {
-        INodeTrigger remoteInvoker = remoteInvokerMap.get(node.getExecuteType());
+        INodeTrigger<?> remoteInvoker = remoteInvokerMap.get(node.getExecuteType());
         QueryResponseModel queryResponse = remoteInvoker.queryStatus(node.getRefreshContext(), node);
-        log.info("get query status result={}", JSON.toJSONString(queryResponse));
+        log.info("get query status result={}", ContractJson.write(queryResponse));
         if (Objects.isNull(queryResponse)) {
           handleDefaultError(node);
           return;
@@ -114,7 +114,7 @@ public class NodeStatusQueryLooper implements Runnable {
   private void handleDefaultError(TaskNode node) {
     QueryResponseModel queryResponse = new QueryResponseModel();
     queryResponse.setStatus(ProcessStatus.FAIL.getType());
-    queryResponse.setData(new Object());
+    queryResponse.setData(Collections.emptyMap());
     queryResponse.setMessage(Collections.singletonList(QUERY_ERROR_TIPS));
     handleRecordFinalStatus(node, queryResponse);
   }
@@ -135,7 +135,7 @@ public class NodeStatusQueryLooper implements Runnable {
       return;
     }
 
-    Map<String, Object> map = JSON.parseObject(JSON.toJSONString(responseModel.getData()));
+    Map<String, Object> map = responseModel.getData();
     boolean anyMatch = compareConfigs.stream().anyMatch(compareInfo -> {
       CompareResult compareResult = handleCompare(map, compareInfo);
       if (!compareResult.isCompareSuccess()) {

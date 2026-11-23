@@ -1,21 +1,21 @@
 package com.zj.client.handler.pipeline.executer.trigger.strategy;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.client.config.GlobalEnvConfig;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
-import com.zj.client.handler.pipeline.executer.vo.MergeRequest;
+import com.zj.client.handler.pipeline.executer.vo.GitMeta;
 import com.zj.client.handler.pipeline.executer.vo.MergeStatus;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel.ResponseStatus;
 import com.zj.client.handler.pipeline.executer.vo.RefreshContext;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.client.handler.pipeline.executer.vo.TriggerContext;
 import com.zj.client.handler.pipeline.git.IGitProcessor;
+import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.pipeline.node.MergeMasterContext;
 import com.zj.common.exception.ApiException;
 import com.zj.common.utils.GitUtils;
 import com.zj.common.enums.ExecuteType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.exception.ExecuteException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
@@ -50,11 +50,12 @@ import java.util.stream.StreamSupport;
  */
 @Slf4j
 @Component
-public class MergeMasterTrigger implements INodeTrigger {
+public class MergeMasterTrigger implements INodeTrigger<MergeMasterContext> {
 
     public static final String ORIGIN = "origin";
     public static final String MERGER_ERROR_TIPS = "merger error, find conflict files: ";
     public static final String REFS_HEADS = "refs/heads/";
+    public static final String DELETE_BRANCH_FLAG = "1";
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("-yyyy-MM-dd");
     private final IGitProcessor gitProcessor;
     private final GlobalEnvConfig globalEnvConfig;
@@ -71,35 +72,34 @@ public class MergeMasterTrigger implements INodeTrigger {
     }
 
     @Override
-    public void triggerRun(TriggerContext triggerContext, TaskNode taskNode) throws Exception {
-        log.info("start run merge code context = {}", JSON.toJSONString(triggerContext));
+    public void triggerRun(MergeMasterContext context, TaskNode taskNode) {
+        log.info("start run merge code context = {}", ContractJson.write(context));
         statusMap.put(taskNode.getRecordId(), new MergeStatus(ProcessStatus.RUNNING.getType()));
+        GitMeta gitMeta = OrikaUtil.convert(context, GitMeta.class);
         try {
             //1 拉取代码到本地
-            MergeRequest mergeRequest = JSON.parseObject(JSON.toJSONString(triggerContext.getData()),
-                    MergeRequest.class);
-            String serviceName = GitUtils.getServiceFromUrl(mergeRequest.getGitUrl());
-            Git git = gitProcessor.pullCodeFromGit(mergeRequest, mergeRequest.getMainBranch(),
-                    globalEnvConfig.getPipelineWorkspace(serviceName, mergeRequest.getPipelineId()));
+            String serviceName = GitUtils.getServiceFromUrl(context.getGitUrl());
+            Git git = gitProcessor.pullCodeFromGit(gitMeta, context.getMainBranch(),
+                    globalEnvConfig.getPipelineWorkspace(serviceName, context.getPipelineId()));
 
             //2 合并代码
             MergeCommand mergeCommand = git.merge();
-            List<Ref> branchesRef = gitProcessor.getBranchesRef(git, mergeRequest.getBranches());
+            List<Ref> branchesRef = gitProcessor.getBranchesRef(git, context.getBranches());
             branchesRef.forEach(mergeCommand::include);
             MergeResult mergeResult = mergeCommand.call();
 
             //合并成功推送至远端master分支
             if (mergeResult.getMergeStatus().isSuccessful()) {
-                log.info("merge success branches ={}", mergeRequest.getBranches());
-                push2Repository(mergeRequest, git);
-                createCodeTag(mergeRequest, git);
-                deleteBranch(mergeRequest, git);
+                log.info("merge success branches ={}", context.getBranches());
+                push2Repository(context, gitMeta, git);
+                createCodeTag(context, gitMeta, git);
+                deleteBranch(context, gitMeta, git);
                 statusMap.put(taskNode.getRecordId(), new MergeStatus(ProcessStatus.SUCCESS.getType()));
                 return;
             }
 
             //存在冲突则回退本地的merge状态
-            ObjectId objectId = git.getRepository().findRef(mergeRequest.getMainBranch()).getObjectId();
+            ObjectId objectId = git.getRepository().findRef(context.getMainBranch()).getObjectId();
             git.reset().setMode(ResetCommand.ResetType.HARD).setRef(objectId.getName()).call();
 
             List<String> fileNames = new ArrayList<>();
@@ -114,41 +114,41 @@ public class MergeMasterTrigger implements INodeTrigger {
         }
     }
 
-    private void createCodeTag(MergeRequest mergeRequest, Git git) {
-        log.info("start create tag ={}", mergeRequest.getTagName());
+    private void createCodeTag(MergeMasterContext context, GitMeta gitMeta, Git git) {
+        log.info("start create tag ={}", context.getTagName());
         try {
             String date = dateFormat.format(new Date());
-            git.tag().setName(mergeRequest.getTagName() + date).setMessage(mergeRequest.getMessage()).call();
-            git.push().setCredentialsProvider(getCredentialsProvider(mergeRequest.getTokenName(),
-                    mergeRequest.getToken())).setPushTags().call();
+            git.tag().setName(context.getTagName() + date).setMessage(context.getMessage()).call();
+            git.push().setCredentialsProvider(getCredentialsProvider(gitMeta.getTokenName(),
+                    gitMeta.getToken())).setPushTags().call();
         } catch (Exception e) {
             log.info("create code tag error", e);
         }
     }
 
-    private void deleteBranch(MergeRequest mergeRequest, Git git) throws GitAPIException {
-        if (!mergeRequest.isDeleteBranch()) {
+    private void deleteBranch(MergeMasterContext context, GitMeta gitMeta, Git git) throws GitAPIException {
+        if (!Objects.equals(context.getDeleteBranch(), DELETE_BRANCH_FLAG)) {
             return;
         }
-        List<String> remoteRefNames = mergeRequest.getBranches().stream()
+        List<String> remoteRefNames = context.getBranches().stream()
                 .map(branch -> REFS_HEADS + branch).collect(Collectors.toList());
         List<String> strings = git.branchDelete().setBranchNames(remoteRefNames.toArray(new String[]{}))
                 .setForce(true).call();
 
-        List<RefSpec> refSpecs = mergeRequest.getBranches().stream().map(
+        List<RefSpec> refSpecs = context.getBranches().stream().map(
                 branch -> new RefSpec().setSource(null).setForceUpdate(true)
                         .setDestination(REFS_HEADS + branch)).collect(Collectors.toList());
         git.push().setRefSpecs(refSpecs).setRemote(ORIGIN)
-                .setCredentialsProvider(getCredentialsProvider(mergeRequest.getTokenName(),
-                        mergeRequest.getToken())).call();
+                .setCredentialsProvider(getCredentialsProvider(gitMeta.getTokenName(),
+                        gitMeta.getToken())).call();
         log.info("delete branches remoteRefNames={} result={}", remoteRefNames, strings);
     }
 
-    private void push2Repository(MergeRequest mergeRequest, Git git) throws GitAPIException {
+    private void push2Repository(MergeMasterContext context, GitMeta gitMeta, Git git) throws GitAPIException {
         // 推送合并后的代码到远程仓库的目标分支
-        Iterable<PushResult> results = git.push().setRemote(ORIGIN).setRefSpecs(new RefSpec(mergeRequest.getMainBranch() + ":" + mergeRequest.getMainBranch()))
+        Iterable<PushResult> results = git.push().setRemote(ORIGIN).setRefSpecs(new RefSpec(context.getMainBranch() + ":" + context.getMainBranch()))
                 .setCredentialsProvider(
-                        getCredentialsProvider(mergeRequest.getTokenName(), mergeRequest.getToken())).call();
+                        getCredentialsProvider(gitMeta.getTokenName(), gitMeta.getToken())).call();
         Optional<RemoteRefUpdate> optional =
                 StreamSupport.stream(results.spliterator(), false).map(PushResult::getRemoteUpdates)
                 .flatMap(Collection::stream).filter(remoteRefUpdate -> {
@@ -175,7 +175,7 @@ public class MergeMasterTrigger implements INodeTrigger {
         MergeStatus mergeStatus = statusMap.get(taskNode.getRecordId());
         QueryResponseModel loopQueryResponse = new QueryResponseModel();
         loopQueryResponse.setStatus(mergeStatus.getStatus());
-        loopQueryResponse.setData(new ResponseStatus(loopQueryResponse.getStatus()));
+        loopQueryResponse.setData(Collections.singletonMap("status", loopQueryResponse.getStatus()));
         loopQueryResponse.setMessage(mergeStatus.getMessage());
         return loopQueryResponse;
     }

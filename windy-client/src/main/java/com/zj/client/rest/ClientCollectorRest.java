@@ -1,11 +1,11 @@
 package com.zj.client.rest;
 
-import com.zj.common.entity.service.ToolLoadResult;
-import com.zj.common.entity.service.ToolVersionDto;
+import com.zj.contract.service.ToolLoadResult;
+import com.zj.contract.service.ToolVersionDto;
 import com.zj.client.service.ClientCollector;
-import com.zj.common.exception.ErrorCode;
-import com.zj.common.entity.dto.ClientCollectDto;
-import com.zj.common.entity.dto.ResponseMeta;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.rpc.ClientCollectDto;
+import com.zj.contract.rpc.ResponseMeta;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

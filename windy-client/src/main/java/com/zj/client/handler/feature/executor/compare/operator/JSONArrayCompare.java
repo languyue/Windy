@@ -1,11 +1,12 @@
 package com.zj.client.handler.feature.executor.compare.operator;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.CompareResult;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.CompareResult;
 import com.zj.common.enums.CompareType;
 import com.zj.client.utils.CompareJsonUtils;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.json.ContractJson;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +32,9 @@ public class JSONArrayCompare extends BaseCompare {
   public CompareResult compare(CompareDefine compareDefine) {
     CompareResult compareResult = createSuccessResult();
     try {
-      List<Object> resList = JSON.parseArray(JSON.toJSONString(compareDefine.getResponseValue()), Object.class);
-      List<Object> expectList = JSON.parseArray(compareDefine.getExpectValue(), Object.class);
+      List<Object> resList = ContractJson.convert(compareDefine.getResponseValue(),
+              new TypeReference<List<Object>>() { });
+      List<Object> expectList = ContractJson.readList(compareDefine.getExpectValue(), Object.class);
       if (expectList.size() > resList.size()) {
         log.info("json array compare expect list size more than response list size");
         compareResult.setErrorType(ErrorCode.COMPARE_ERROR);
@@ -41,7 +43,7 @@ public class JSONArrayCompare extends BaseCompare {
       }
       for (int i = 0; i < expectList.size(); i++) {
         Map<String, Object> result = CompareJsonUtils.compareJsonObject(
-                JSON.toJSONString(resList.get(i)), JSON.toJSONString(expectList.get(i)));
+                ContractJson.write(resList.get(i)), ContractJson.write(expectList.get(i)));
         if (!result.isEmpty()) {
           compareResult.setErrorType(ErrorCode.COMPARE_ERROR);
           compareResult.setErrorMessage(COMPARE_ERROR_MSG);

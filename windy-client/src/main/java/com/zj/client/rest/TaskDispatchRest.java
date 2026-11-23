@@ -1,12 +1,12 @@
 package com.zj.client.rest;
 
-import com.zj.client.entity.dto.GenerateDto;
-import com.zj.client.handler.feature.executor.vo.FeatureParam;
+import com.zj.contract.feature.exec.GenerateParam;
+import com.zj.contract.feature.exec.FeatureExecuteParam;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
 import com.zj.client.service.TaskDispatchService;
-import com.zj.common.entity.dto.ResponseMeta;
-import com.zj.common.entity.dto.StopDispatch;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.rpc.ResponseMeta;
+import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.exception.ErrorCode;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,12 +28,12 @@ public class TaskDispatchRest {
   }
 
   @PostMapping("/dispatch/generate")
-  public ResponseMeta<Boolean> dispatchGenerate(@RequestBody GenerateDto generate) {
+  public ResponseMeta<Boolean> dispatchGenerate(@RequestBody GenerateParam generate) {
     return new ResponseMeta<>(ErrorCode.SUCCESS, taskDispatchService.runGenerate(generate));
   }
 
   @PostMapping("/dispatch/feature")
-  public ResponseMeta<Boolean> dispatchFeature(@RequestBody FeatureParam featureParam) {
+  public ResponseMeta<Boolean> dispatchFeature(@RequestBody FeatureExecuteParam featureParam) {
     return new ResponseMeta<>(ErrorCode.SUCCESS, taskDispatchService.runFeature(featureParam));
   }
 

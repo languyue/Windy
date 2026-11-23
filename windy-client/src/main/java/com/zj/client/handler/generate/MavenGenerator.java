@@ -1,21 +1,21 @@
 package com.zj.client.handler.generate;
 
 import com.zj.client.config.GlobalEnvConfig;
-import com.zj.client.entity.dto.GenerateDto;
+import com.zj.contract.feature.exec.GenerateParam;
 import com.zj.client.entity.bo.ApiItem;
 import com.zj.client.entity.bo.ApiItem.MethodParam;
-import com.zj.client.entity.bo.ApiModel;
-import com.zj.client.entity.bo.ApiParamModel;
+import com.zj.contract.service.ApiModel;
+import com.zj.contract.service.ApiParamModel;
 import com.zj.client.entity.bo.EntityItem.PropertyItem;
 import com.zj.client.entity.bo.FreemarkerContext;
 import com.zj.client.handler.notify.IResultEventNotify;
 import com.zj.client.utils.FreemarkerUtils;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.ResultEvent;
-import com.zj.common.entity.generate.GenerateDetail;
-import com.zj.common.entity.generate.GenerateRecordBO;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.generate.GenerateDetail;
+import com.zj.contract.event.payload.GenerateRecordPayload;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.plugin.loader.ParamValueType;
 import freemarker.template.Template;
@@ -114,14 +114,14 @@ public class MavenGenerator {
     }
   }
 
-  public void startGenerate(GenerateDto generateDto) {
+  public void startGenerate(GenerateParam generateDto) {
     String recordId = uniqueIdService.getUniqueId();
     saveGenerateRecord(generateDto, recordId);
     CompletableFuture.runAsync(() -> runGenerate(generateDto, recordId), generatePool);
   }
 
-  private void saveGenerateRecord(GenerateDto generateDto, String recordId) {
-    GenerateRecordBO generateRecordBO = new GenerateRecordBO();
+  private void saveGenerateRecord(GenerateParam generateDto, String recordId) {
+    GenerateRecordPayload generateRecordBO = new GenerateRecordPayload();
     generateRecordBO.setServiceId(generateDto.getServiceId());
     generateRecordBO.setRecordId(recordId);
     generateRecordBO.setCreateTime(System.currentTimeMillis());
@@ -137,7 +137,7 @@ public class MavenGenerator {
     resultEventNotify.notifyEvent(resultEvent);
   }
 
-  public void runGenerate(GenerateDto generateDto, String recordId) {
+  public void runGenerate(GenerateParam generateDto, String recordId) {
     try {
       //1 创建项目目录
       log.info("step1 create project dir");
@@ -202,7 +202,7 @@ public class MavenGenerator {
   public void updateMessage(String recordId, ProcessStatus status, String message) {
     List<String> messages = Optional.ofNullable(recordMap.get(recordId)).orElseGet(ArrayList::new);
     messages.add(message);
-    GenerateRecordBO generateParam = new GenerateRecordBO();
+    GenerateRecordPayload generateParam = new GenerateRecordPayload();
     generateParam.setRecordId(recordId);
     generateParam.setGenerateResult(messages);
     ResultEvent resultEvent = new ResultEvent().executeId(recordId)
@@ -274,7 +274,7 @@ public class MavenGenerator {
     transformer.transform(source, result);
   }
 
-  private boolean createProjectCode(GenerateDto generateDto, String projectPath) {
+  private boolean createProjectCode(GenerateParam generateDto, String projectPath) {
     //按照类名分组对应同一个类存在不同的方法
     Map<String, List<ApiModel>> apiMap = generateDto.getApiList().stream()
         .collect(Collectors.groupingBy(ApiModel::getClassName));
@@ -418,7 +418,7 @@ public class MavenGenerator {
     return str + input.substring(1);
   }
 
-  private boolean createPomFile(String pomPath, GenerateDto generateDto) throws IOException {
+  private boolean createPomFile(String pomPath, GenerateParam generateDto) throws IOException {
     Model model = getDefaultPom(generateDto);
     if (!initPomFile(pomPath)) {
       return false;
@@ -441,7 +441,7 @@ public class MavenGenerator {
     return true;
   }
 
-  private Model getDefaultPom(GenerateDto generateDto) {
+  private Model getDefaultPom(GenerateParam generateDto) {
     Model model = new Model();
     model.setModelVersion("4.0.0");
     model.setModelEncoding("utf-8");

@@ -1,7 +1,7 @@
 package com.zj.client.handler.feature.executor.vo;
 
-import com.zj.client.entity.bo.ExecuteRecord;
-import com.zj.client.entity.bo.FeatureHistory;
+import com.zj.contract.event.payload.ExecuteRecordPayload;
+import com.zj.contract.event.payload.FeatureHistoryPayload;
 import lombok.Data;
 
 import java.util.List;
@@ -13,11 +13,11 @@ import java.util.List;
 @Data
 public class ExecuteResult {
 
-  private FeatureHistory featureHistory;
+  private FeatureHistoryPayload featureHistory;
 
-  private List<ExecuteRecord> executeRecords;
+  private List<ExecuteRecordPayload> executeRecords;
 
-  public ExecuteResult(FeatureHistory featureHistory, List<ExecuteRecord> executeRecords) {
+  public ExecuteResult(FeatureHistoryPayload featureHistory, List<ExecuteRecordPayload> executeRecords) {
     this.featureHistory = featureHistory;
     this.executeRecords = executeRecords;
   }

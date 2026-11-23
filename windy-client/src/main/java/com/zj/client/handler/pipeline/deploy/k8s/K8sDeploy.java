@@ -1,14 +1,14 @@
 package com.zj.client.handler.pipeline.deploy.k8s;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.client.handler.pipeline.deploy.AbstractDeployMode;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
 import com.zj.client.utils.ExceptionUtils;
-import com.zj.common.enums.DeployType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.DeployType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ExecuteException;
-import com.zj.common.entity.pipeline.K8SAccessParams;
-import com.zj.common.entity.pipeline.ServiceConfig;
+import com.zj.contract.pipeline.K8SAccessParams;
+import com.zj.contract.pipeline.ServiceConfig;
+import com.zj.contract.json.ContractJson;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -91,9 +91,9 @@ public class K8sDeploy extends AbstractDeployMode<K8sDeployContext> {
         ServiceConfig serviceConfig = deployContext.getServiceConfig();
         messages.add("replicas: " + serviceConfig.getReplicas());
         messages.add("image address: " + serviceConfig.getImageName());
-        messages.add("service port: " + JSON.toJSONString(serviceConfig.getPorts()));
-        messages.add("app environment: " + JSON.toJSONString(serviceConfig.getEnvParams()));
-        messages.add("volumes: " + JSON.toJSONString(serviceConfig.getVolumes()));
+        messages.add("service port: " + ContractJson.write(serviceConfig.getPorts()));
+        messages.add("app environment: " + ContractJson.write(serviceConfig.getEnvParams()));
+        messages.add("volumes: " + ContractJson.write(serviceConfig.getVolumes()));
         return messages;
     }
 

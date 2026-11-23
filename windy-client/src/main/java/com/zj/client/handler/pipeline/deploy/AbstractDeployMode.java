@@ -1,13 +1,14 @@
 package com.zj.client.handler.pipeline.deploy;
 
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractDeployMode<T extends DeployContext> implements IDeployMode<T>{
+public abstract class AbstractDeployMode<T extends DeployModeContext> implements IDeployMode<T>{
 
     protected final Map<String, QueryResponseModel> statusMap = new HashMap<>();
 
@@ -26,7 +27,7 @@ public abstract class AbstractDeployMode<T extends DeployContext> implements IDe
         }
         queryResponseModel.setStatus(processStatus.getType());
         queryResponseModel.addMessage(processStatus.getDesc());
-        queryResponseModel.setData(new QueryResponseModel.ResponseStatus(processStatus.getType()));
+        queryResponseModel.setData(Collections.singletonMap("status", processStatus.getType()));
         return queryResponseModel;
     }
 
@@ -37,7 +38,7 @@ public abstract class AbstractDeployMode<T extends DeployContext> implements IDe
         }
         queryResponseModel.setStatus(processStatus.getType());
         queryResponseModel.addAllMessage(messages);
-        queryResponseModel.setData(new QueryResponseModel.ResponseStatus(processStatus.getType()));
+        queryResponseModel.setData(Collections.singletonMap("status", processStatus.getType()));
         return queryResponseModel;
     }
 }

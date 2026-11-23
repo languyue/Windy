@@ -1,18 +1,16 @@
 package com.zj.client.handler.pipeline.executer.trigger.strategy;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
 import com.zj.client.handler.pipeline.executer.vo.RefreshContext;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.client.handler.pipeline.executer.vo.TriggerContext;
-import com.zj.client.handler.pipeline.executer.vo.WaitRequestContext;
 import com.zj.common.enums.ExecuteType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.pipeline.node.WaitContext;
+import com.zj.contract.enums.ProcessStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class WaitTrigger implements INodeTrigger {
+public class WaitTrigger implements INodeTrigger<WaitContext> {
 
   public static final String MESSAGE_TIPS = "等待执行结果";
   private final ConcurrentHashMap<String, CountDownLatch> countDownMap = new ConcurrentHashMap<>();
@@ -37,15 +35,13 @@ public class WaitTrigger implements INodeTrigger {
   }
 
   @Override
-  public void triggerRun(TriggerContext triggerContext, TaskNode taskNode) throws IOException {
-    log.info("start run wait trigger context={}", JSON.toJSONString(triggerContext));
-    WaitRequestContext waitRequestContext = JSON.parseObject(
-        JSON.toJSONString(triggerContext.getData()), WaitRequestContext.class);
+  public void triggerRun(WaitContext context, TaskNode taskNode) {
+    log.info("start run wait trigger context={}", ContractJson.write(context));
     CompletableFuture.runAsync(() -> {
       try {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         countDownMap.put(taskNode.getRecordId(), countDownLatch);
-        countDownLatch.await(waitRequestContext.getWaitTime(), TimeUnit.SECONDS);
+        countDownLatch.await(context.getWaitTime(), TimeUnit.SECONDS);
       } catch (InterruptedException ignore) {
       }
     }).whenComplete((consumer,ex) ->{

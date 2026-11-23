@@ -1,23 +1,20 @@
 package com.zj.client.handler.pipeline.executer.trigger.strategy;
 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.zj.client.handler.feature.executor.compare.CompareOperator;
-import com.zj.common.entity.feature.CompareResult;
+import com.zj.contract.feature.CompareResult;
 import com.zj.client.handler.feature.executor.compare.operator.CompareFactory;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
 import com.zj.client.handler.pipeline.executer.vo.CompareInfo;
-import com.zj.client.handler.pipeline.executer.vo.HttpRequestContext;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
 import com.zj.client.handler.pipeline.executer.vo.RefreshContext;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.client.handler.pipeline.executer.vo.TriggerContext;
 import com.zj.common.enums.ExecuteType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ExecuteException;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.pipeline.node.HttpContext;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.FormBody;
 import okhttp3.Headers;
@@ -43,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class HttpTrigger implements INodeTrigger {
+public class HttpTrigger implements INodeTrigger<HttpContext> {
     public static final MediaType MEDIA_TYPE = MediaType.parse("application/json;charset=utf-8");
     public static final String RECORD_ID = "recordId";
     private final OkHttpClient okHttpClient =
@@ -59,11 +56,10 @@ public class HttpTrigger implements INodeTrigger {
         return ExecuteType.HTTP;
     }
 
-    public void triggerRun(TriggerContext triggerContext, TaskNode taskNode) throws IOException {
-        log.info("start run http executor context={}", JSON.toJSONString(triggerContext));
-        HttpRequestContext context = OrikaUtil.convert(triggerContext.getData(), HttpRequestContext.class);
-        Map<String, Object> param = JSON.parseObject(context.getBody(), new TypeReference<Map<String, Object>>() {
-        });
+    public void triggerRun(HttpContext context, TaskNode taskNode) throws IOException {
+        log.info("start run http executor context={}", ContractJson.write(context));
+        Map<String, Object> param = Optional.ofNullable(context.getBody())
+                .map(HashMap::new).orElseGet(HashMap::new);
         param.put(RECORD_ID, taskNode.getRecordId());
         RequestBody requestBody = createBody(context.getBodyType(), param);
         Map<String, String> headers = Optional.ofNullable(context.getHeaders()).orElseGet(HashMap::new);
@@ -88,7 +84,7 @@ public class HttpTrigger implements INodeTrigger {
             return builder.build();
         }
 
-        return RequestBody.create(MEDIA_TYPE, JSON.toJSONString(param));
+        return RequestBody.create(MEDIA_TYPE, ContractJson.write(param));
     }
 
     @Override
@@ -99,8 +95,7 @@ public class HttpTrigger implements INodeTrigger {
                     new Request.Builder().url(refreshContext.getUrl()).get().headers(Headers.of(headers)).build();
             Response response = okHttpClient.newCall(request).execute();
             String result = response.body().string();
-            Map<String, Object> resultMap = JSON.parseObject(result, new TypeReference<Map<String, Object>>() {
-            });
+            Map<String, Object> resultMap = ContractJson.readMap(result);
             CompareResult compareResult = handleCompare(resultMap, refreshContext.getLoopExpression());
             QueryResponseModel queryResponseModel = new QueryResponseModel();
             queryResponseModel.setData(resultMap);

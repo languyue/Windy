@@ -1,18 +1,18 @@
 package com.zj.client.handler.feature.executor;
 
-import com.zj.client.entity.bo.ExecutePoint;
-import com.zj.client.entity.bo.ExecuteRecord;
-import com.zj.client.entity.bo.FeatureHistory;
+import com.zj.contract.feature.exec.ExecutePointVo;
+import com.zj.contract.event.payload.ExecuteRecordPayload;
+import com.zj.contract.event.payload.FeatureHistoryPayload;
 import com.zj.client.handler.feature.executor.invoker.strategy.ExecuteStrategyFactory;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
-import com.zj.client.handler.feature.executor.vo.FeatureParam;
+import com.zj.contract.feature.exec.FeatureExecuteParam;
 import com.zj.client.handler.notify.IResultEventNotify;
 import com.zj.client.utils.ExceptionUtils;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.ResultEvent;
-import com.zj.common.entity.feature.FeatureResponse;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.feature.FeatureResponse;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.enums.TestStageType;
 import com.zj.common.utils.IpUtils;
@@ -62,15 +62,15 @@ public class FeatureExecutorImpl implements IFeatureExecutor {
     }
 
     @Override
-    public void execute(FeatureParam featureParam) {
+    public void execute(FeatureExecuteParam featureParam) {
         String historyId = uniqueIdService.getUniqueId();
-        FeatureHistory featureHistory = saveFeatureHistory(featureParam.getFeatureId(), historyId,
+        FeatureHistoryPayload featureHistory = saveFeatureHistory(featureParam.getFeatureId(), historyId,
                 featureParam.getTaskRecordId());
 
         CompletableFuture.runAsync(() -> {
             //1 根据用户的选择先排序执行点
-            List<ExecutePoint> executePoints = featureParam.getExecutePointList().stream()
-                    .sorted(Comparator.comparing(ExecutePoint::getSortOrder)).collect(Collectors.toList());
+            List<ExecutePointVo> executePoints = featureParam.getExecutePointList().stream()
+                    .sorted(Comparator.comparing(ExecutePointVo::getSortOrder)).collect(Collectors.toList());
 
             AtomicInteger status = new AtomicInteger(ProcessStatus.SUCCESS.getType());
             FeatureExecuteContext featureExecuteContext = new FeatureExecuteContext();
@@ -78,10 +78,10 @@ public class FeatureExecutorImpl implements IFeatureExecutor {
             featureExecuteContext.setHistoryId(historyId);
             Map<String, Object> globalContext = new HashMap<>();
             CountDownLatch countDownLatch = null;
-            for (ExecutePoint executePoint : executePoints) {
+            for (ExecutePointVo executePoint : executePoints) {
                 TraceUtils.startNextSpan();
                 waitIFExistAsyncPoint(countDownLatch);
-                ExecuteRecord executeRecord = new ExecuteRecord();
+                ExecuteRecordPayload executeRecord = new ExecuteRecordPayload();
                 String recordId = uniqueIdService.getUniqueId();
                 executeRecord.setExecuteRecordId(recordId);
                 executeRecord.setHistoryId(historyId);
@@ -146,9 +146,9 @@ public class FeatureExecutorImpl implements IFeatureExecutor {
     /**
      * 异步执行清理动作
      */
-    private void cleanFeatureDirtyDataAsync(List<ExecutePoint> executePoints,
+    private void cleanFeatureDirtyDataAsync(List<ExecutePointVo> executePoints,
                                             FeatureExecuteContext featureExecuteContext) {
-        List<ExecutePoint> cleanPoints =
+        List<ExecutePointVo> cleanPoints =
                 executePoints.stream().filter(executePoint -> Objects.equals(executePoint.getTestStage(),
                         TestStageType.CLEAN.getType())).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(cleanPoints)) {
@@ -190,8 +190,8 @@ public class FeatureExecutorImpl implements IFeatureExecutor {
         return allSuccess ? ProcessStatus.SUCCESS.getType() : ProcessStatus.FAIL.getType();
     }
 
-    private void saveRecord(FeatureParam featureParam, ExecutePoint executePoint,
-                            ExecuteRecord executeRecord) {
+    private void saveRecord(FeatureExecuteParam featureParam, ExecutePointVo executePoint,
+                            ExecuteRecordPayload executeRecord) {
         executeRecord.setExecutePointId(executePoint.getPointId());
         executeRecord.setExecutePointName(executePoint.getDescription());
         executeRecord.setExecuteType(executePoint.getExecuteType());
@@ -206,8 +206,8 @@ public class FeatureExecutorImpl implements IFeatureExecutor {
         resultEventNotify.notifyEvent(resultEvent);
     }
 
-    public FeatureHistory saveFeatureHistory(String featureId, String historyId, String taskId) {
-        FeatureHistory featureHistory = new FeatureHistory();
+    public FeatureHistoryPayload saveFeatureHistory(String featureId, String historyId, String taskId) {
+        FeatureHistoryPayload featureHistory = new FeatureHistoryPayload();
         featureHistory.setFeatureId(featureId);
         featureHistory.setExecuteStatus(ProcessStatus.RUNNING.getType());
         featureHistory.setHistoryId(historyId);
@@ -221,7 +221,7 @@ public class FeatureExecutorImpl implements IFeatureExecutor {
         return featureHistory;
     }
 
-    private FeatureResponse createFailResponse(ExecutePoint executePoint, Exception e) {
+    private FeatureResponse createFailResponse(ExecutePointVo executePoint, Exception e) {
         ExecuteDetailVo executeDetailVo = new ExecuteDetailVo();
         executeDetailVo.setErrorMessage(ExceptionUtils.getSimplifyError(e));
         executeDetailVo.setStatus(false);

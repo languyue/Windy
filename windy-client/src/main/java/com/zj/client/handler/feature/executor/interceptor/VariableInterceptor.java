@@ -1,7 +1,7 @@
 package com.zj.client.handler.feature.executor.interceptor;
 
 import com.alibaba.fastjson.JSON;
-import com.zj.client.entity.bo.ExecutePoint;
+import com.zj.contract.feature.exec.ExecutePointVo;
 import com.zj.client.handler.feature.executor.compare.ognl.OgnlDataParser;
 import com.zj.client.handler.feature.executor.invoker.invoke.MethodInvoke;
 import com.zj.client.handler.feature.executor.random.IRandomGenerator;
@@ -9,9 +9,9 @@ import com.zj.client.handler.feature.executor.random.entity.RandomEntity;
 import com.zj.client.handler.feature.executor.random.entity.RandomType;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
 import com.zj.common.entity.WindyConstants;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.VariableDefine;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.VariableDefine;
 import com.zj.common.enums.InvokerType;
 import com.zj.common.enums.Position;
 import com.zj.plugin.loader.ExecuteDetailVo;
@@ -49,7 +49,7 @@ public class VariableInterceptor implements IExecuteInterceptor {
     }
 
     @Override
-    public void afterExecute(ExecutePoint executePoint, ExecuteDetailVo executeDetailVo, FeatureExecuteContext context) {
+    public void afterExecute(ExecutePointVo executePoint, ExecuteDetailVo executeDetailVo, FeatureExecuteContext context) {
         //将执行完的结果转化为上下文变量的值
         Object responseBody = executeDetailVo.getResponseDetailVo().getResponseBody();
         exchangeVariableContext(context, executePoint, responseBody);
@@ -58,7 +58,7 @@ public class VariableInterceptor implements IExecuteInterceptor {
         exchangeCompareContext(context, executePoint);
     }
 
-    private void exchangeCompareContext(FeatureExecuteContext context, ExecutePoint executePoint) {
+    private void exchangeCompareContext(FeatureExecuteContext context, ExecutePointVo executePoint) {
         List<CompareDefine> compareDefines = executePoint.getCompareDefines();
         if (CollectionUtils.isEmpty(compareDefines)) {
             return;
@@ -78,7 +78,7 @@ public class VariableInterceptor implements IExecuteInterceptor {
         executePoint.setCompareDefines(compareDefines);
     }
 
-    private void exchangeVariableContext(FeatureExecuteContext context, ExecutePoint executePoint, Object responseBody) {
+    private void exchangeVariableContext(FeatureExecuteContext context, ExecutePointVo executePoint, Object responseBody) {
         List<VariableDefine> variableDefines = executePoint.getVariableDefines();
         if (CollectionUtils.isEmpty(variableDefines)) {
             return;

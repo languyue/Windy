@@ -1,8 +1,8 @@
 package com.zj.client.handler.pipeline.deploy.k8s;
 
-import com.zj.client.handler.pipeline.deploy.DeployContext;
-import com.zj.common.entity.pipeline.K8SAccessParams;
-import com.zj.common.entity.pipeline.ServiceConfig;
+import com.zj.client.handler.pipeline.deploy.DeployModeContext;
+import com.zj.contract.pipeline.K8SAccessParams;
+import com.zj.contract.pipeline.ServiceConfig;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,7 +12,7 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class K8sDeployContext extends DeployContext {
+public class K8sDeployContext extends DeployModeContext {
 
   private String serviceName;
 

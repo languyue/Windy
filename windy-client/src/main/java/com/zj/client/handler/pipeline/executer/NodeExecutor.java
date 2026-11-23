@@ -6,15 +6,15 @@ import com.zj.client.handler.pipeline.executer.notify.PipelineEventFactory;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.client.handler.pipeline.executer.vo.TaskNodeRecord;
-import com.zj.client.handler.pipeline.executer.vo.TriggerContext;
+import com.zj.contract.event.payload.NodeRecordPayload;
 import com.zj.client.utils.ExceptionUtils;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.exception.ExecuteException;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.pipeline.node.RequestContext;
 import com.zj.common.utils.IpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -36,11 +36,11 @@ public class NodeExecutor {
 
   public static final String TRIGGER_TASK_ERROR = "trigger task error";
   private final List<INodeExecuteInterceptor> interceptors;
-  private final Map<String, INodeTrigger> triggerMap;
+  private final Map<String, INodeTrigger<?>> triggerMap;
   private final UniqueIdService uniqueIdService;
   private final IResultEventNotify resultEventNotify;
 
-  public NodeExecutor(List<INodeExecuteInterceptor> interceptors, List<INodeTrigger> invokers,
+  public NodeExecutor(List<INodeExecuteInterceptor> interceptors, List<INodeTrigger<?>> invokers,
       UniqueIdService uniqueIdService, IResultEventNotify resultEventNotify) {
     this.interceptors = interceptors;
     triggerMap = invokers.stream()
@@ -63,14 +63,12 @@ public class NodeExecutor {
 
       saveNodeRecord(historyId, node, recordId, statusAtomic);
 
-      INodeTrigger nodeTrigger = triggerMap.get(node.getExecuteType());
+      INodeTrigger<?> nodeTrigger = triggerMap.get(node.getExecuteType());
       if (Objects.isNull(nodeTrigger)) {
         throw new ExecuteException(ErrorCode.UNKNOWN_EXECUTE_TYPE);
       }
 
-      Object context = node.getRequestContext();
-      TriggerContext triggerContext = new TriggerContext(context);
-      nodeTrigger.triggerRun(triggerContext, node);
+      runTrigger(nodeTrigger, node);
     } catch (ExecuteException executeException) {
       statusAtomic.set(ProcessStatus.FAIL);
       errorMsg = Collections.singletonList(executeException.getMessage());
@@ -86,12 +84,25 @@ public class NodeExecutor {
     interceptors.forEach(interceptor -> interceptor.after(node, statusAtomic.get()));
   }
 
+  /**
+   * 上下文的具体类型由请求报文里的判别符决定，接口层无法用通配符表达，转换集中在此一处
+   */
+  @SuppressWarnings("unchecked")
+  private static void runTrigger(INodeTrigger<?> trigger, TaskNode taskNode) throws Exception {
+    RequestContext context = taskNode.getRequestContext();
+    ((INodeTrigger<RequestContext>) trigger).triggerRun(context, taskNode);
+  }
+
   private void saveNodeRecord(String historyId, TaskNode node, String recordId,
       AtomicReference<ProcessStatus> statusAtomic) {
     long currentTimeMillis = System.currentTimeMillis();
-    TaskNodeRecord taskNodeRecord = TaskNodeRecord.builder().historyId(historyId).recordId(recordId)
-        .status(statusAtomic.get().getType()).nodeId(node.getNodeId()).createTime(currentTimeMillis)
-        .updateTime(currentTimeMillis).build();
+    NodeRecordPayload taskNodeRecord = new NodeRecordPayload();
+    taskNodeRecord.setHistoryId(historyId);
+    taskNodeRecord.setRecordId(recordId);
+    taskNodeRecord.setStatus(statusAtomic.get().getType());
+    taskNodeRecord.setNodeId(node.getNodeId());
+    taskNodeRecord.setCreateTime(currentTimeMillis);
+    taskNodeRecord.setUpdateTime(currentTimeMillis);
 
     ResultEvent resultEvent = new ResultEvent().executeId(recordId)
         .notifyType(NotifyType.CREATE_NODE_RECORD)

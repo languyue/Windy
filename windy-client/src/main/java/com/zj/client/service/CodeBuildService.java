@@ -17,12 +17,11 @@ import com.zj.client.handler.pipeline.build.ICodeBuilder;
 import com.zj.client.handler.pipeline.executer.notify.PipelineEventFactory;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel.ResponseStatus;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
 import com.zj.client.handler.pipeline.git.IGitProcessor;
 import com.zj.common.entity.WindyConstants;
-import com.zj.common.enums.DeployType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.DeployType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.utils.GitUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -192,7 +191,7 @@ public class CodeBuildService {
         model.setStatus(status.getType());
         model.setContext(context);
         model.addMessage(message);
-        model.setData(new ResponseStatus(status.getType()));
+        model.setData(Collections.singletonMap("status", status.getType()));
         statusMap.put(recordId, model);
     }
 

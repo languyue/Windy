@@ -1,6 +1,6 @@
 package com.zj.client.handler.pipeline.deploy.jar;
 
-import com.zj.client.handler.pipeline.deploy.DeployContext;
+import com.zj.client.handler.pipeline.deploy.DeployModeContext;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class JarDeployContext extends DeployContext {
+public class JarDeployContext extends DeployModeContext {
 
   private String localPath;
 

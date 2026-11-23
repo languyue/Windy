@@ -1,15 +1,15 @@
 package com.zj.client.handler.pipeline.build.maven;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.base.Preconditions;
 import com.zj.client.config.GlobalEnvConfig;
 import com.zj.client.handler.pipeline.build.CodeBuildContext;
 import com.zj.client.handler.pipeline.build.IBuildNotifyListener;
 import com.zj.client.handler.pipeline.build.ICodeBuilder;
 import com.zj.common.entity.WindyConstants;
-import com.zj.common.enums.ToolType;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.enums.ToolType;
 import com.zj.common.exception.ApiException;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -57,7 +57,7 @@ public class JavaMavenBuilder implements ICodeBuilder {
   @Override
   public Integer build(CodeBuildContext context, IBuildNotifyListener notifyListener) {
     try {
-      log.info("start build java code = {}", JSON.toJSONString(context));
+      log.info("start build java code = {}", ContractJson.write(context));
       return buildMaven(context, notifyListener::notifyMessage);
     } catch (Exception e) {
       log.info("execute maven error", e);

@@ -1,11 +1,11 @@
 package com.zj.client.handler.pipeline.build.go;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.client.handler.pipeline.build.CodeBuildContext;
 import com.zj.client.handler.pipeline.build.IBuildNotifyListener;
 import com.zj.client.handler.pipeline.build.ICodeBuilder;
 import com.zj.client.utils.ExceptionUtils;
-import com.zj.common.enums.ToolType;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.enums.ToolType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +32,7 @@ public class GoCodeBuilder implements ICodeBuilder {
 
     @Override
     public Integer build(CodeBuildContext context, IBuildNotifyListener notifyListener) {
-        log.info("start build go code = {}", JSON.toJSONString(context));
+        log.info("start build go code = {}", ContractJson.write(context));
         File targetFile = new File(context.getBuildFile());
         String buildFilePath = context.getTargetDir() + File.separator + "go_build.sh";
         notifyListener.notifyMessage("执行构建文件目录:" + buildFilePath);

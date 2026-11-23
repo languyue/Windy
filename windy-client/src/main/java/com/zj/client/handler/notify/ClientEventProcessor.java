@@ -1,8 +1,8 @@
 package com.zj.client.handler.notify;
 
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.event.ResultEvent;
 import com.zj.common.adapter.monitor.InstanceMonitor;
-import com.zj.common.adapter.invoker.IMasterInvoker;
+import com.zj.common.adapter.invoker.IMasterCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 public class ClientEventProcessor implements IResultEventNotify {
   private final InstanceMonitor instanceMonitor;
   private final OptimizePersistLocal optimizePersistLocal;
-  private final IMasterInvoker masterInvoker;
+  private final IMasterCallback masterInvoker;
 
   public ClientEventProcessor(InstanceMonitor instanceMonitor,
-                              OptimizePersistLocal optimizePersistLocal, IMasterInvoker masterInvoker) {
+                              OptimizePersistLocal optimizePersistLocal, IMasterCallback masterInvoker) {
     this.instanceMonitor = instanceMonitor;
     this.optimizePersistLocal = optimizePersistLocal;
     this.masterInvoker = masterInvoker;

@@ -1,6 +1,6 @@
 package com.zj.client.handler.pipeline.executer.vo;
 
-import com.alibaba.fastjson.JSONObject;
+import com.zj.contract.pipeline.node.RequestContext;
 import lombok.Data;
 
 /**
@@ -37,7 +37,7 @@ public class TaskNode {
   /**
    * 出发节点执行的第三方接口信息
    * */
-  private JSONObject requestContext;
+  private RequestContext requestContext;
 
   /**
    * 刷新节点任务状态的第三方接口信息

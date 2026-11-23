@@ -1,14 +1,14 @@
 package com.zj.client.handler.feature.executor.invoker.strategy;
 
-import com.zj.client.entity.bo.ExecutePoint;
-import com.zj.common.entity.feature.FeatureResponse;
+import com.zj.contract.feature.exec.ExecutePointVo;
+import com.zj.contract.feature.FeatureResponse;
 import com.zj.client.handler.feature.executor.compare.CompareHandler;
 import com.zj.client.handler.feature.executor.interceptor.InterceptorProxy;
 import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
 import com.zj.common.enums.TemplateType;
-import com.zj.common.entity.feature.ExecutePointDto;
-import com.zj.common.entity.feature.ExecutorUnit;
+import com.zj.contract.feature.ExecutePointDto;
+import com.zj.contract.feature.ExecutorUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +37,7 @@ public class ForExecuteStrategy extends BaseExecuteStrategy{
   }
 
   @Override
-  public List<FeatureResponse> execute(ExecutePoint executePoint, FeatureExecuteContext featureExecuteContext) {
+  public List<FeatureResponse> execute(ExecutePointVo executePoint, FeatureExecuteContext featureExecuteContext) {
     log.info("start execute ForExecuteStrategy");
     ExecutorUnit executorUnit = executePoint.getExecutorUnit();
     List<FeatureResponse> responses = new ArrayList<>();
@@ -46,7 +46,7 @@ public class ForExecuteStrategy extends BaseExecuteStrategy{
     for (int i = 0; i < size; i++) {
       featureExecuteContext.set("$index", i);
       List<FeatureResponse> responseList = executePoints.stream().map(executePointDto -> {
-        ExecutePoint point = toExecutePoint(executePointDto);
+        ExecutePointVo point = toExecutePoint(executePointDto);
         return executeFeature(featureExecuteContext, point);
       }).collect(Collectors.toList());
 

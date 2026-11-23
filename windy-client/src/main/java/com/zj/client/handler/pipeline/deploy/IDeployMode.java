@@ -6,7 +6,7 @@ import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
  * @author guyuelan
  * @since 2023/6/8
  */
-public interface IDeployMode<T extends DeployContext> {
+public interface IDeployMode<T extends DeployModeContext> {
 
   Integer deployType();
 

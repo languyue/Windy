@@ -1,7 +1,7 @@
 package com.zj.client.handler.pipeline.git;
 
 import com.zj.client.handler.pipeline.executer.vo.GitMeta;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.common.exception.ExecuteException;
 import java.io.PrintWriter;
 import lombok.extern.slf4j.Slf4j;

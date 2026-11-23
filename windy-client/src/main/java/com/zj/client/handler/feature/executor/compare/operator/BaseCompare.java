@@ -1,8 +1,8 @@
 package com.zj.client.handler.feature.executor.compare.operator;
 
 import com.zj.client.handler.feature.executor.compare.CompareOperator;
-import com.zj.common.entity.feature.CompareResult;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.feature.CompareResult;
+import com.zj.contract.exception.ErrorCode;
 
 public abstract class BaseCompare implements CompareOperator {
 

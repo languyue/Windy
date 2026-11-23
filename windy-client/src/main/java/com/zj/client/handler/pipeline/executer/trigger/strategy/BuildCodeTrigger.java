@@ -1,14 +1,15 @@
 package com.zj.client.handler.pipeline.executer.trigger.strategy;
 
-import com.alibaba.fastjson.JSON;
 import com.zj.client.entity.dto.CodeBuildParamDto;
 import com.zj.client.handler.pipeline.executer.trigger.INodeTrigger;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
 import com.zj.client.handler.pipeline.executer.vo.RefreshContext;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.client.handler.pipeline.executer.vo.TriggerContext;
 import com.zj.client.service.CodeBuildService;
 import com.zj.common.enums.ExecuteType;
+import com.zj.common.utils.OrikaUtil;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.pipeline.node.BuildCodeContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class BuildCodeTrigger implements INodeTrigger {
+public class BuildCodeTrigger implements INodeTrigger<BuildCodeContext> {
 
   private final CodeBuildService codeBuildService;
 
@@ -33,11 +34,19 @@ public class BuildCodeTrigger implements INodeTrigger {
   }
 
   @Override
-  public void triggerRun(TriggerContext triggerContext, TaskNode taskNode) throws Exception {
-    log.info("start build code context = {}", JSON.toJSONString(triggerContext));
-    CodeBuildParamDto codeBuildParamDto = JSON.parseObject(JSON.toJSONString(triggerContext.getData()), CodeBuildParamDto.class);
-    codeBuildParamDto.setRecordId(taskNode.getRecordId());
+  public void triggerRun(BuildCodeContext context, TaskNode taskNode) throws Exception {
+    log.info("start build code context = {}", ContractJson.write(context));
+    CodeBuildParamDto codeBuildParamDto = toBuildParam(context, taskNode.getRecordId());
     codeBuildService.buildCode(codeBuildParamDto, taskNode);
+  }
+
+  private static CodeBuildParamDto toBuildParam(BuildCodeContext context, String recordId) {
+    CodeBuildParamDto codeBuildParamDto = OrikaUtil.convert(context, CodeBuildParamDto.class);
+    codeBuildParamDto.setRecordId(recordId);
+    // 属性名不同（isPublish / publish），历史上靠 JSON 转换时从未生效过，
+    // 发布流水线一直走"拉取第一个绑定分支"的路径，这里保持原行为
+    codeBuildParamDto.setPublish(false);
+    return codeBuildParamDto;
   }
 
   @Override

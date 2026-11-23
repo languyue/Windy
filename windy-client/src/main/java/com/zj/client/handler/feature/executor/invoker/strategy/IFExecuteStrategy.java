@@ -1,7 +1,7 @@
 package com.zj.client.handler.feature.executor.invoker.strategy;
 
 import com.alibaba.fastjson2.JSON;
-import com.zj.client.entity.bo.ExecutePoint;
+import com.zj.contract.feature.exec.ExecutePointVo;
 import com.zj.client.handler.feature.executor.compare.CompareHandler;
 import com.zj.client.handler.feature.executor.compare.CompareOperator;
 import com.zj.client.handler.feature.executor.compare.ognl.OgnlDataParser;
@@ -9,11 +9,12 @@ import com.zj.client.handler.feature.executor.compare.operator.CompareFactory;
 import com.zj.client.handler.feature.executor.interceptor.InterceptorProxy;
 import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.CompareResult;
-import com.zj.common.entity.feature.ExecutePointDto;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.FeatureResponse;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.CompareResult;
+import com.zj.contract.feature.ExecutePointDto;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.FeatureResponse;
+import com.zj.contract.json.ContractJson;
 import com.zj.common.enums.CompareType;
 import com.zj.common.enums.TemplateType;
 import com.zj.plugin.loader.ExecuteDetailVo;
@@ -58,9 +59,9 @@ public class IFExecuteStrategy extends BaseExecuteStrategy {
     }
 
     @Override
-    public List<FeatureResponse> execute(ExecutePoint executePoint, FeatureExecuteContext featureExecuteContext) {
+    public List<FeatureResponse> execute(ExecutePointVo executePoint, FeatureExecuteContext featureExecuteContext) {
         Map<String, Object> contextMap = featureExecuteContext.toMap();
-        log.info("start execute IFExecuteStrategy context={}", JSON.toJSONString(contextMap));
+        log.info("start execute IFExecuteStrategy context={}", ContractJson.write(contextMap));
         ExecutorUnit executorUnit = executePoint.getExecutorUnit();
         boolean result;
         String ognl = executorUnit.getService();
@@ -84,7 +85,7 @@ public class IFExecuteStrategy extends BaseExecuteStrategy {
 
         List<ExecutePointDto> executePoints = executorUnit.getExecutePoints();
         return executePoints.stream().map(executePointDto -> {
-            ExecutePoint point = toExecutePoint(executePointDto);
+            ExecutePointVo point = toExecutePoint(executePointDto);
             return executeFeature(featureExecuteContext, point);
         }).collect(Collectors.toList());
     }

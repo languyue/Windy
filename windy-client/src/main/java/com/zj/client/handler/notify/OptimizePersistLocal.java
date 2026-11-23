@@ -1,11 +1,11 @@
 package com.zj.client.handler.notify;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharSink;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.json.ContractJson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.DisposableBean;
@@ -106,7 +106,7 @@ public class OptimizePersistLocal implements DisposableBean {
       if (CollectionUtils.isEmpty(list)) {
         return Collections.emptyList();
       }
-      return list.stream().map(str -> JSON.parseObject(str, ResultEvent.class))
+      return list.stream().map(str -> ContractJson.read(str, ResultEvent.class))
           .collect(Collectors.toList());
     } catch (IOException e) {
       log.error("read persist log error", e);
@@ -127,7 +127,7 @@ public class OptimizePersistLocal implements DisposableBean {
 
   private void saveEventFile() {
     StringBuilder stringBuilder = new StringBuilder();
-    unPersistEventList.forEach(event -> stringBuilder.append(JSON.toJSONString(event)).append("\r\n"));
+    unPersistEventList.forEach(event -> stringBuilder.append(ContractJson.write(event)).append("\r\n"));
 
     CharSink sink = Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND);
     try {

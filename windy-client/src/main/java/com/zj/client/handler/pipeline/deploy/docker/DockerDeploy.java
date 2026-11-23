@@ -2,7 +2,7 @@ package com.zj.client.handler.pipeline.deploy.docker;
 
 import com.zj.client.handler.pipeline.deploy.AbstractDeployMode;
 import com.zj.client.handler.pipeline.executer.vo.QueryResponseModel;
-import com.zj.common.enums.DeployType;
+import com.zj.contract.enums.DeployType;
 import org.springframework.stereotype.Component;
 
 /**

@@ -1,8 +1,8 @@
 package com.zj.client.handler.feature.executor.invoker.strategy;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.client.entity.bo.ExecutePoint;
-import com.zj.client.entity.bo.ExecuteRecord;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.feature.exec.ExecutePointVo;
+import com.zj.contract.event.payload.ExecuteRecordPayload;
 import com.zj.client.handler.feature.executor.FeatureExecutorImpl;
 import com.zj.client.handler.feature.executor.compare.CompareHandler;
 import com.zj.client.handler.feature.executor.interceptor.InterceptorProxy;
@@ -10,12 +10,12 @@ import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
 import com.zj.client.handler.notify.IResultEventNotify;
 import com.zj.client.utils.ExceptionUtils;
-import com.zj.common.entity.dto.ResultEvent;
-import com.zj.common.entity.feature.ExecutePointDto;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.FeatureResponse;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.feature.ExecutePointDto;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.FeatureResponse;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.utils.IpUtils;
 import com.zj.common.utils.OrikaUtil;
@@ -59,9 +59,9 @@ public class AsyncExecuteStrategy extends BaseExecuteStrategy{
     }
 
     @Override
-    public List<FeatureResponse> execute(ExecutePoint executePoint, FeatureExecuteContext featureExecuteContext) {
+    public List<FeatureResponse> execute(ExecutePointVo executePoint, FeatureExecuteContext featureExecuteContext) {
         Map<String, Object> currentContext = featureExecuteContext.toMap();
-        log.info("start execute AsyncExecuteStrategy context={}", JSON.toJSONString(currentContext));
+        log.info("start execute AsyncExecuteStrategy context={}", ContractJson.write(currentContext));
         ExecutorUnit executorUnit = executePoint.getExecutorUnit();
         String timeout = executorUnit.getMethod();
         List<ExecutePointDto> executePoints = executorUnit.getExecutePoints();
@@ -73,7 +73,7 @@ public class AsyncExecuteStrategy extends BaseExecuteStrategy{
                 if (CollectionUtils.isNotEmpty(executePoints)){
                     responses = executePoints.stream().map(executePointDto -> {
                         try {
-                            ExecutePoint point = toExecutePoint(executePointDto);
+                            ExecutePointVo point = toExecutePoint(executePointDto);
                             return executeFeature(newContext, point, () -> releaseWaitIfNeed(featureExecuteContext));
                         } catch (Exception e) {
                             log.info("thread execute error", e);
@@ -142,7 +142,7 @@ public class AsyncExecuteStrategy extends BaseExecuteStrategy{
     }
 
     private void notifyAsyncRecordResult(FeatureExecuteContext featureExecuteContext, List<FeatureResponse> responses) {
-        ExecuteRecord executeRecord = new ExecuteRecord();
+        ExecuteRecordPayload executeRecord = new ExecuteRecordPayload();
         executeRecord.setHistoryId(featureExecuteContext.getHistoryId());
         executeRecord.setExecuteType(TemplateType.THREAD.getType());
         executeRecord.setExecuteRecordId(featureExecuteContext.getRecordId());

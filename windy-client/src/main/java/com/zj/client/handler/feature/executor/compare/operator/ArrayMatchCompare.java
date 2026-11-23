@@ -1,12 +1,13 @@
 package com.zj.client.handler.feature.executor.compare.operator;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.zj.client.handler.feature.executor.compare.ognl.OgnlDataParser;
 import com.zj.common.entity.WindyConstants;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.CompareResult;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.CompareResult;
 import com.zj.common.enums.CompareType;
-import com.zj.common.exception.ErrorCode;
+import com.zj.contract.exception.ErrorCode;
+import com.zj.contract.json.ContractJson;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -34,8 +35,8 @@ public class ArrayMatchCompare extends BaseCompare {
     public CompareResult compare(CompareDefine compareDefine) {
         CompareResult compareResult = createSuccessResult();
         try {
-            List<Object> responseList = JSON.parseArray(JSON.toJSONString(compareDefine.getResponseValue()),
-                    Object.class);
+            List<Object> responseList = ContractJson.convert(compareDefine.getResponseValue(),
+                    new TypeReference<List<Object>>() { });
             if (CollectionUtils.isEmpty(responseList)) {
                 compareResult.setErrorType(ErrorCode.COMPARE_ERROR);
                 compareResult.setErrorMessage("compare array list is empty");
@@ -44,7 +45,7 @@ public class ArrayMatchCompare extends BaseCompare {
             }
             PattenEntry pattenEntry = convertEntry(compareDefine.getExpectValue());
             log.info("compare key = {} response value={}", pattenEntry.getPropertyKey(),
-                    JSON.toJSONString(compareDefine.getResponseValue()));
+                    ContractJson.write(compareDefine.getResponseValue()));
             boolean anyMatch = responseList.stream().anyMatch(obj -> {
                 if (StringUtils.isBlank(pattenEntry.propertyKey)) {
                     return Objects.equals(pattenEntry.getExpectValue(), String.valueOf(obj));

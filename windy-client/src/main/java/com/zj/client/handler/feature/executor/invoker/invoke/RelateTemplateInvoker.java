@@ -6,7 +6,8 @@ import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
 import com.zj.common.enums.InvokerType;
 import com.zj.common.enums.Position;
-import com.zj.common.entity.feature.ExecutorUnit;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.json.ContractJson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +34,7 @@ public class RelateTemplateInvoker implements IExecuteInvoker {
 
     @Override
     public Object invoke(ExecutorUnit executorUnit, FeatureExecuteContext featureExecuteContext) {
-        log.info("origin executorUnit = {}", JSON.toJSONString(executorUnit));
+        log.info("origin executorUnit = {}", ContractJson.write(executorUnit));
         Map<String, Object> bodyMap = new HashMap<>();
         executorUnit.getParams().stream().filter(parameterDefine -> Objects.equals(parameterDefine.getPosition(),
                 Position.Body.name())).forEach(param -> bodyMap.put(param.getParamKey(),

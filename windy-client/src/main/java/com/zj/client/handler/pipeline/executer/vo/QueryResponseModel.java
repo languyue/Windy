@@ -1,6 +1,5 @@
 package com.zj.client.handler.pipeline.executer.vo;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -20,7 +19,10 @@ public class QueryResponseModel {
 
   private List<String> message = new ArrayList<>();
 
-  private Object data;
+  /**
+   * 节点返回的附加数据，供刷新上下文的断言比较使用，结构由各节点自行决定
+   * */
+  private Map<String, Object> data;
 
   public void addMessage(String msg) {
     message.add(msg);
@@ -28,12 +30,5 @@ public class QueryResponseModel {
 
   public void addAllMessage(List<String> msgList) {
     message.addAll(msgList);
-  }
-
-  @Data
-  @AllArgsConstructor
-  public static class ResponseStatus{
-
-    private Integer status;
   }
 }

@@ -2,7 +2,7 @@ package com.zj.client.handler.pipeline.executer.intercept;
 
 
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.enums.ProcessStatus;
 
 /**
  * @author guyuelan

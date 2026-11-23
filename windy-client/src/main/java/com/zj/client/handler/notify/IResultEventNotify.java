@@ -1,7 +1,7 @@
 package com.zj.client.handler.notify;
 
 
-import com.zj.common.entity.dto.ResultEvent;
+import com.zj.contract.event.ResultEvent;
 
 public interface IResultEventNotify {
 

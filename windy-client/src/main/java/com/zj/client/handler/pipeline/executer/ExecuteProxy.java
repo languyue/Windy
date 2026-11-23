@@ -1,16 +1,16 @@
 package com.zj.client.handler.pipeline.executer;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import com.zj.client.entity.bo.NodeRecord;
+import com.zj.contract.event.payload.NodeRecordPayload;
 import com.zj.client.handler.notify.IResultEventNotify;
 import com.zj.client.handler.pipeline.executer.notify.IPipelineStatusListener;
 import com.zj.client.handler.pipeline.executer.vo.PipelineStatusEvent;
 import com.zj.client.handler.pipeline.executer.vo.TaskNode;
-import com.zj.common.entity.dto.ResultEvent;
-import com.zj.common.enums.NotifyType;
-import com.zj.common.enums.ProcessStatus;
+import com.zj.contract.event.ResultEvent;
+import com.zj.contract.enums.NotifyType;
+import com.zj.contract.enums.ProcessStatus;
+import com.zj.contract.json.ContractJson;
 import com.zj.common.utils.IpUtils;
 import com.zj.common.utils.TraceUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class ExecuteProxy implements IPipelineStatusListener {
             nodeExecutor.runNodeTask(taskNode.getHistoryId(), taskNode);
             return taskNode.getRecordId();
         }, executorService).whenComplete((node, e) -> log.info("complete trigger action recordId = {} traceId={}",
-                JSON.toJSONString(node), traceId));
+                ContractJson.write(node), traceId));
     }
 
     @Override
@@ -68,7 +68,7 @@ public class ExecuteProxy implements IPipelineStatusListener {
             processStatus = ProcessStatus.IGNORE_FAIL;
         }
 
-        NodeRecord nodeRecord = new NodeRecord();
+        NodeRecordPayload nodeRecord = new NodeRecordPayload();
         nodeRecord.setRecordId(taskNode.getRecordId());
         nodeRecord.setNodeId(taskNode.getNodeId());
         nodeRecord.setHistoryId(taskNode.getHistoryId());

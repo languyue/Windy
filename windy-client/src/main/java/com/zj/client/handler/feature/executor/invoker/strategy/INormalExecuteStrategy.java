@@ -1,7 +1,7 @@
 package com.zj.client.handler.feature.executor.invoker.strategy;
 
-import com.zj.client.entity.bo.ExecutePoint;
-import com.zj.common.entity.feature.FeatureResponse;
+import com.zj.contract.feature.exec.ExecutePointVo;
+import com.zj.contract.feature.FeatureResponse;
 import com.zj.client.handler.feature.executor.compare.CompareHandler;
 import com.zj.client.handler.feature.executor.interceptor.InterceptorProxy;
 import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
@@ -34,7 +34,7 @@ public class INormalExecuteStrategy extends BaseExecuteStrategy {
     }
 
     @Override
-    public List<FeatureResponse> execute(ExecutePoint executePoint, FeatureExecuteContext featureExecuteContext) {
+    public List<FeatureResponse> execute(ExecutePointVo executePoint, FeatureExecuteContext featureExecuteContext) {
         log.info("start execute INormalExecuteStrategy pointId={}", executePoint.getPointId());
         FeatureResponse featureResponse = executeFeature(featureExecuteContext, executePoint);
         return Collections.singletonList(featureResponse);

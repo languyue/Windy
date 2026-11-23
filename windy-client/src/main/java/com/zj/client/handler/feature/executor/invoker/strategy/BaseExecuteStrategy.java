@@ -1,18 +1,18 @@
 package com.zj.client.handler.feature.executor.invoker.strategy;
 
-import com.alibaba.fastjson.JSON;
-import com.zj.client.entity.bo.ExecutePoint;
+import com.zj.contract.json.ContractJson;
+import com.zj.contract.feature.exec.ExecutePointVo;
 import com.zj.client.handler.feature.executor.compare.CompareHandler;
 import com.zj.client.handler.feature.executor.interceptor.InterceptorProxy;
 import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.invoker.IExecuteStrategy;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
-import com.zj.common.entity.feature.CompareDefine;
-import com.zj.common.entity.feature.CompareResult;
-import com.zj.common.entity.feature.ExecutePointDto;
-import com.zj.common.entity.feature.ExecutorUnit;
-import com.zj.common.entity.feature.FeatureResponse;
-import com.zj.common.entity.feature.VariableDefine;
+import com.zj.contract.feature.CompareDefine;
+import com.zj.contract.feature.CompareResult;
+import com.zj.contract.feature.ExecutePointDto;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.feature.FeatureResponse;
+import com.zj.contract.feature.VariableDefine;
 import com.zj.common.enums.InvokerType;
 import com.zj.plugin.loader.ExecuteDetailVo;
 import com.zj.plugin.loader.IAsyncNotifyListener;
@@ -48,7 +48,7 @@ public abstract class BaseExecuteStrategy implements IExecuteStrategy {
     this.compareHandler = compareHandler;
   }
 
-  public FeatureResponse executeFeature(FeatureExecuteContext featureExecuteContext, ExecutePoint executePoint) {
+  public FeatureResponse executeFeature(FeatureExecuteContext featureExecuteContext, ExecutePointVo executePoint) {
     return executeFeature(featureExecuteContext, executePoint, null);
   }
 
@@ -62,7 +62,7 @@ public abstract class BaseExecuteStrategy implements IExecuteStrategy {
    * @param listener 执行点异步通知监听器
    * @return 返回执行结果
    */
-  public FeatureResponse executeFeature(FeatureExecuteContext executeContext, ExecutePoint executePoint,
+  public FeatureResponse executeFeature(FeatureExecuteContext executeContext, ExecutePointVo executePoint,
                                         IAsyncNotifyListener listener) {
     //1 执行用例，目前使用反射/http执行，后续考虑使用dubbo调用
     ExecutorUnit executorUnit = executePoint.getExecutorUnit();
@@ -70,7 +70,7 @@ public abstract class BaseExecuteStrategy implements IExecuteStrategy {
     //2 将全局变量配置给执行点
     interceptorProxy.beforeExecute(executorUnit, executeContext);
     log.info("step 1 execute before interceptor service={} context={}", executorUnit.getService(),
-            JSON.toJSONString(executeContext.toMap()));
+            ContractJson.write(executeContext.toMap()));
 
     //3 调用方法执行
     Integer invokeType = Optional.ofNullable(executorUnit.getRelatedTemplate())
@@ -84,7 +84,7 @@ public abstract class BaseExecuteStrategy implements IExecuteStrategy {
     //4 将执行之后的响应结果添加到context中，方便后面用例使用
     interceptorProxy.afterExecute(executePoint, executeDetailVo, executeContext);
     log.info("step 3 execute execute after interceptor service={} context={}", executorUnit.getService(),
-            JSON.toJSONString(executeContext.toMap()));
+            ContractJson.write(executeContext.toMap()));
 
     //5 下面开始对比
     List<CompareDefine> compareDefines = executePoint.getCompareDefines();
@@ -109,8 +109,8 @@ public abstract class BaseExecuteStrategy implements IExecuteStrategy {
     return response;
   }
 
-  public static ExecutePoint toExecutePoint(ExecutePointDto dto) {
-    ExecutePoint point = new ExecutePoint();
+  public static ExecutePointVo toExecutePoint(ExecutePointDto dto) {
+    ExecutePointVo point = new ExecutePointVo();
     point.setFeatureId(dto.getFeatureId());
     point.setPointId(dto.getPointId());
     point.setDescription(dto.getDescription());

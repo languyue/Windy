@@ -1,8 +1,8 @@
 package com.zj.client.handler.feature.executor;
 
-import com.zj.client.handler.feature.executor.vo.FeatureParam;
+import com.zj.contract.feature.exec.FeatureExecuteParam;
 
 public interface IFeatureExecutor {
 
-    void execute(FeatureParam featureParam);
+    void execute(FeatureExecuteParam featureParam);
 }

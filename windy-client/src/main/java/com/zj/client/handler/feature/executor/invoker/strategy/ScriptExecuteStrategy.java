@@ -1,16 +1,17 @@
 package com.zj.client.handler.feature.executor.invoker.strategy;
 
 import com.alibaba.fastjson.JSON;
-import com.zj.client.entity.bo.ExecutePoint;
+import com.zj.contract.feature.exec.ExecutePointVo;
 import com.zj.client.handler.feature.executor.vo.ScriptConfig;
-import com.zj.common.entity.feature.FeatureResponse;
+import com.zj.contract.feature.FeatureResponse;
 import com.zj.client.handler.feature.executor.compare.CompareHandler;
 import com.zj.client.handler.feature.executor.interceptor.InterceptorProxy;
 import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ExecuteException;
-import com.zj.common.entity.feature.ExecutorUnit;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.json.ContractJson;
 import com.zj.plugin.loader.ExecuteDetailVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -45,28 +46,29 @@ public class ScriptExecuteStrategy extends BaseExecuteStrategy {
     }
 
     @Override
-    public List<FeatureResponse> execute(ExecutePoint executePoint, FeatureExecuteContext featureExecuteContext) {
-        log.info("start handle script context={}", JSON.toJSONString(featureExecuteContext.toMap()));
+    public List<FeatureResponse> execute(ExecutePointVo executePoint, FeatureExecuteContext featureExecuteContext) {
+        log.info("start handle script context={}", ContractJson.write(featureExecuteContext.toMap()));
         FeatureResponse response;
         ExecutorUnit executorUnit = executePoint.getExecutorUnit();
         try {
             // 执行 JavaScript 代码
             String script = executorUnit.getService();
             Object result = executeJavaScript(featureExecuteContext, script);
-            log.info("handle script result={}", JSON.toJSONString(result));
+            log.info("handle script result={}", ContractJson.write(result));
 
             //脚本执行结果添加到当前用例的上下文中
             Map<String, Object> resultMap = (Map<String, Object>) result;
             featureExecuteContext.bindMap(resultMap);
             ExecuteDetailVo executeDetail = new ExecuteDetailVo();
-            executeDetail.setResBody(JSON.parseObject(JSON.toJSONString(result)));
+            //脚本返回值本身就是对象，直接作为响应体交给断言比较，不再转成 JSON 字符串
+            executeDetail.setResBody(result);
             executeDetail.setStatus(true);
             response = FeatureResponse.builder().name(executorUnit.getName()).pointId(executePoint.getPointId())
                     .executeDetailVo(executeDetail).build();
 
             //如果配置了全局覆盖则将返回变量添加context中
             ScriptConfig scriptConfig = JSON.parseObject(executorUnit.getMethod(), ScriptConfig.class);
-            log.info("log script config = {}", JSON.toJSONString(scriptConfig));
+            log.info("log script config = {}", ContractJson.write(scriptConfig));
             if (Objects.nonNull(scriptConfig) && scriptConfig.getGlobal()) {
                 log.info("script config cover global , then add result to response");
                 response.setContext(resultMap);

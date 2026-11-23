@@ -5,7 +5,8 @@ import com.zj.client.handler.feature.ability.http.HttpFeature;
 import com.zj.client.handler.feature.executor.invoker.IExecuteInvoker;
 import com.zj.client.handler.feature.executor.vo.FeatureExecuteContext;
 import com.zj.common.enums.Position;
-import com.zj.common.entity.feature.ExecutorUnit;
+import com.zj.contract.feature.ExecutorUnit;
+import com.zj.contract.json.ContractJson;
 import com.zj.client.utils.ExceptionUtils;
 import com.zj.common.enums.InvokerType;
 import com.zj.plugin.loader.ExecuteDetailVo;
@@ -39,7 +40,7 @@ public class HttpInvoker implements IExecuteInvoker {
 
   @Override
   public Object invoke(ExecutorUnit executorUnit, FeatureExecuteContext featureExecuteContext) {
-    log.info("get execute unit={}", JSON.toJSONString(executorUnit));
+    log.info("get execute unit={}", ContractJson.write(executorUnit));
     String url = executorUnit.getService();
     String method = executorUnit.getMethod();
     Map<String, Object> bodyMap = getParamsMap(executorUnit);
