@@ -23,6 +23,7 @@
     <module>windy-domain</module>
     <module>windy-plugin</module>
     <module>windy-console</module>
+    <module>windy-arch-test</module>
   </modules>
 
 
