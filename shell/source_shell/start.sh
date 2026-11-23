@@ -83,37 +83,6 @@ stop_existing_process_by_port 8070
 echo "[3/3] 启动 windy-client ..."
 sh ./client/start-client.sh $MAVEN_PATH $EUREKA_ZONE
 
-check_jq_installed() {
-  # 检查是否安装 jq 工具，如果未安装则自动安装
-  if ! command -v jq &> /dev/null; then
-    echo "jq 工具未安装，正在安装 jq..."
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      brew install jq
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      if command -v apt-get &> /dev/null; then
-        sudo apt-get update && sudo apt-get install -y jq
-      elif command -v yum &> /dev/null; then
-        sudo yum install -y jq
-      else
-        echo "无法识别的 Linux 发行版，无法安装 jq"
-      fi
-    else
-      echo "不支持的操作系统类型，无法安装 jq"
-    fi
-
-    # 如果安装 jq 失败，提示并继续执行
-    if [ $? -ne 0 ]; then
-      echo "jq 安装失败，无法自动探测，请等待 2 分钟后访问 Windy"
-      return 1
-    else
-      return 0
-    fi
-  else
-    return 0
-  fi
-}
-
 # 等待服务启动的函数
 wait_for_service() {
   local HOST=$1
@@ -125,11 +94,13 @@ wait_for_service() {
   echo "等待 Windy 服务启动..."
 
   while true; do
-    RESPONSE=$(curl -s http://$HOST:$PORT/v1/devops/system/version)
+    # -f: HTTP 错误码视为失败; -m 3: 单次请求最多 3 秒
+    RESPONSE=$(curl -sf -m 3 http://$HOST:$PORT/v1/devops/system/version)
 
     if [ $? -eq 0 ]; then
-      CONSOLE_VERSION=$(echo "$RESPONSE" | jq -r '.data.consoleVersion')
-      if [ "$CONSOLE_VERSION" != "null" ]; then
+      # 用 sed 提取 data.consoleVersion，macOS/Linux 均自带，无需安装 jq
+      CONSOLE_VERSION=$(printf '%s' "$RESPONSE" | sed -n 's/.*"consoleVersion"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+      if [ -n "$CONSOLE_VERSION" ]; then
         echo "=========================================="
         echo ""
         echo "Windy 服务启动成功，版本: $CONSOLE_VERSION"
@@ -149,10 +120,8 @@ wait_for_service() {
   done
 }
 
-# 如果 jq 安装成功，则等待 Windy 启动
-if check_jq_installed; then
-  wait_for_service $HOST_IP 9768
-fi
+# 等待 Windy 启动
+wait_for_service $HOST_IP 9768
 
 # 最后提示
 echo "Windy 已安装完成，请访问: http://localhost:9768"
