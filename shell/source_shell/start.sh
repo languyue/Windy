@@ -11,33 +11,44 @@ fi
 DB_HOST=$1
 DB_USERNAME=$2
 DB_PASSWORD=$3
-MAVEN_PATH=${4:-'/opt/windy-client/maven'}
+MAVEN_PATH=${4:-}
 EUREKA_ZONE=${5:-'http://localhost:9888/eureka'}  # 默认 Eureka 地址
 TOKEN_SECRET=${6:-$TOKEN_SECRET}  # 可选,第6个参数或同名环境变量,未提供则自动生成密钥
 SCRIPT_DIR=$(cd -P "$(dirname "$0")" && pwd)
 
-# 封装复制 maven 目录的逻辑
-copy_maven_directory() {
-  local SOURCE_MAVEN_DIR="$1"
-  local TARGET_MAVEN_DIR="$2"
+# 准备 client 流水线使用的 Maven 目录：
+# 优先 /opt/windy-client/maven，创建失败时回退到当前执行目录下，并打印最终使用的目录
+prepare_maven_directory() {
+  local SOURCE_MAVEN_DIR="$SCRIPT_DIR/client/maven"
+  local DEFAULT_MAVEN_DIR="/opt/windy-client/maven"
+  local FALLBACK_MAVEN_DIR="$PWD/windy-client/maven"
+  local TARGET_MAVEN_DIR="$DEFAULT_MAVEN_DIR"
 
-  if [ ! -d "$TARGET_MAVEN_DIR" ]; then
-    mkdir -p "$TARGET_MAVEN_DIR"   
-    # 检查目录是否成功创建
-    if [ $? -ne 0 ]; then
-      echo "创建目录 $TARGET_MAVEN_DIR 失败，请检查权限或路径问题。"
+  # 默认路径创建失败（如 macOS 无 /opt 写权限）时，改用当前执行目录
+  if ! mkdir -p "$TARGET_MAVEN_DIR" 2>/dev/null; then
+    TARGET_MAVEN_DIR="$FALLBACK_MAVEN_DIR"
+    echo "创建 $DEFAULT_MAVEN_DIR 失败，回退到 $TARGET_MAVEN_DIR" >&2
+    if ! mkdir -p "$TARGET_MAVEN_DIR"; then
+      echo "创建目录 $TARGET_MAVEN_DIR 失败，请检查权限或路径问题。" >&2
       return 1
     fi
-    cp -r "$SOURCE_MAVEN_DIR" "$TARGET_MAVEN_DIR"
   fi
+
+  # 目标目录为空且脚本自带 maven 时，把自带的一份复制过去
+  if [ -d "$SOURCE_MAVEN_DIR" ] && [ -z "$(ls -A "$TARGET_MAVEN_DIR" 2>/dev/null)" ]; then
+    cp -r "$SOURCE_MAVEN_DIR"/. "$TARGET_MAVEN_DIR"/
+  fi
+
+  echo "$TARGET_MAVEN_DIR"
 }
 
-# 使用 $SCRIPT_DIR 来拼接完整路径
-SOURCE_MAVEN_DIR="$SCRIPT_DIR/client/maven"
-TARGET_MAVEN_DIR="/opt/windy-client/maven"
-
-# 调用复制 maven 目录的函数
-copy_maven_directory "$SOURCE_MAVEN_DIR" "$TARGET_MAVEN_DIR"
+if [ -n "$MAVEN_PATH" ]; then
+  # 显式传入时以传入值为准，不做目录初始化
+  :
+else
+  MAVEN_PATH=$(prepare_maven_directory) || exit 1
+fi
+echo "client 流水线使用的 Maven 目录: $MAVEN_PATH"
 
 # 获取当前主机的 IP 地址（适配 macOS 和 Linux）
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -81,7 +92,7 @@ sh ./master/start-master.sh $DB_HOST $DB_USERNAME $DB_PASSWORD $EUREKA_ZONE
 # 启动 windy-client
 stop_existing_process_by_port 8070
 echo "[3/3] 启动 windy-client ..."
-sh ./client/start-client.sh $MAVEN_PATH $EUREKA_ZONE
+sh ./client/start-client.sh "$MAVEN_PATH" "$EUREKA_ZONE"
 
 # 等待服务启动的函数
 wait_for_service() {
