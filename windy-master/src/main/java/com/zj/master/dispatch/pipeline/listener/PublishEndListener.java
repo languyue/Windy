@@ -1,7 +1,7 @@
 package com.zj.master.dispatch.pipeline.listener;
 
-import com.zj.common.adapter.invoker.IConsoleInvoker;
-import com.zj.common.entity.event.PipelineFinishedEvent;
+import com.zj.contract.port.IConsoleInvoker;
+import com.zj.contract.event.PipelineFinishedEvent;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
 import com.zj.domain.entity.enums.PipelineType;
 import com.zj.domain.repository.pipeline.IPipelineQueryRepository;

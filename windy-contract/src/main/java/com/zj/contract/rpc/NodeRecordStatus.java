@@ -1,4 +1,4 @@
-package com.zj.common.entity.dto;
+package com.zj.contract.rpc;
 
 import lombok.Data;
 

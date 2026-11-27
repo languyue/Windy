@@ -1,11 +1,13 @@
 package com.zj.pipeline.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Assert;
-import com.zj.common.adapter.invoker.IMasterCommand;
-import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.contract.port.IMasterCommand;
+import com.zj.contract.port.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.PipelineDispatchResult;
 import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.dispatch.StopDispatchResult;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ApiException;
@@ -26,7 +28,6 @@ import com.zj.pipeline.entity.dto.PipelineStatusDto;
 import com.zj.pipeline.entity.enums.PipelineStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -299,13 +300,13 @@ public class PipelineService {
         DispatchTaskModel dispatchTaskModel = new DispatchTaskModel();
         dispatchTaskModel.setSourceIds(Collections.singletonList(pipelineId));
         dispatchTaskModel.setSourceName(pipeline.getPipelineName());
-        dispatchTaskModel.setType(LogType.PIPELINE.getType());
-        String taskId = masterInvoker.startPipelineTask(dispatchTaskModel);
-        if (StringUtils.isBlank(taskId)) {
-            log.info("execute pipeline error pipelineId={}", pipelineId);
+        PipelineDispatchResult dispatchResult = masterInvoker.startPipelineTask(dispatchTaskModel);
+        if (!dispatchResult.accepted()) {
+            log.info("execute pipeline error pipelineId={} message={}", pipelineId,
+                    dispatchResult.getMessage());
             throw new ApiException(ErrorCode.RUN_PIPELINE_ERROR);
         }
-        return taskId;
+        return dispatchResult.getHistoryId();
     }
 
     public PipelineBO getPipelineDetail(String pipelineId) {
@@ -336,7 +337,10 @@ public class PipelineService {
         StopDispatch stopDispatch = new StopDispatch();
         stopDispatch.setTargetId(historyId);
         stopDispatch.setLogType(LogType.PIPELINE);
-        return masterInvoker.stopDispatch(stopDispatch);
+        StopDispatchResult stopResult = masterInvoker.stopDispatch(stopDispatch);
+        log.info("stop pipeline historyId={} status={} message={}", historyId,
+                stopResult.getStatus(), stopResult.getMessage());
+        return stopResult.accepted();
     }
 
     public List<PipelineBO> getServicePipelines(String serviceId) {

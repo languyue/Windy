@@ -1,4 +1,4 @@
-package com.zj.common.entity.command;
+package com.zj.contract.rpc.command;
 
 import lombok.Data;
 

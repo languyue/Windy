@@ -1,11 +1,13 @@
-package com.zj.common.adapter.invoker;
+package com.zj.contract.port;
 
-import com.zj.common.entity.event.PipelineFinishedEvent;
+import com.zj.contract.event.PipelineFinishedEvent;
 
 /**
  * master 向 console 投递的事件通道。
  *
  * 运行态进程不再直接写配置域与业务域的表，跨域影响一律通过这里通知归属进程自己处理。
+ *
+ * <p>跨 JVM 协议：调用方是 master，实现方是 console 的 PipelineFinishedRest。</p>
  *
  * @author guyuelan
  */

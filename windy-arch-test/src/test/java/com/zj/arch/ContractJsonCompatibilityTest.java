@@ -1,5 +1,8 @@
 package com.zj.arch;
 
+import com.zj.contract.dispatch.FeatureDispatchResult;
+import com.zj.contract.dispatch.PipelineDispatchResult;
+import com.zj.contract.enums.DispatchStatus;
 import com.zj.contract.enums.NotifyType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.contract.event.ResultEvent;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -191,5 +195,27 @@ public class ContractJsonCompatibilityTest {
     RequestContext noType = ContractJson.read("{\"pipelineId\":\"p\"}", RequestContext.class);
     assertNotNull(noType);
     assertEquals("p", noType.getPipelineId());
+  }
+
+  /**
+   * 调度结果是基类+子类的继承结构，子类字段和基类状态必须在同一份报文里完整往返
+   */
+  @Test
+  void dispatchResultSubclassShouldRoundTrip() {
+    FeatureDispatchResult accepted = FeatureDispatchResult.accepted("r1");
+    FeatureDispatchResult readAccepted = ContractJson.read(ContractJson.write(accepted),
+        FeatureDispatchResult.class);
+    assertNotNull(readAccepted);
+    assertEquals(DispatchStatus.ACCEPTED, readAccepted.getStatus());
+    assertTrue(readAccepted.accepted());
+    assertEquals("r1", readAccepted.getRecordId());
+
+    PipelineDispatchResult rejected = PipelineDispatchResult.rejected("找不到流水线");
+    String rejectedJson = ContractJson.write(rejected);
+    assertTrue(rejectedJson.contains("\"status\":\"REJECTED\""), rejectedJson);
+    PipelineDispatchResult readRejected = ContractJson.read(rejectedJson, PipelineDispatchResult.class);
+    assertNotNull(readRejected);
+    assertFalse(readRejected.accepted());
+    assertEquals("找不到流水线", readRejected.getMessage());
   }
 }

@@ -2,8 +2,9 @@ package com.zj.master.dispatch.generate;
 
 import com.zj.contract.feature.exec.GenerateParam;
 import com.zj.contract.service.ApiModel;
-import com.zj.common.adapter.invoker.IClientInvoker;
+import com.zj.contract.port.IClientInvoker;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.GenerateDispatchResult;
 import com.zj.contract.pipeline.ServiceConfig;
 import com.zj.contract.service.ApiParamModel;
 import com.zj.common.enums.DispatchType;
@@ -57,11 +58,11 @@ public class GenerateDispatcher implements IDispatchExecutor {
   }
 
   @Override
-  public Boolean dispatch(DispatchTaskModel task, String logId) {
+  public GenerateDispatchResult dispatch(DispatchTaskModel task, String logId) {
     String serviceId = task.firstSourceId();
     ServiceGenerateBO serviceGenerate = generateRepository.getByService(serviceId);
     if (Objects.isNull(serviceGenerate)) {
-      return false;
+      return GenerateDispatchResult.rejected("找不到服务生成配置");
     }
 
     GenerateParam generateParam = OrikaUtil.convert(serviceGenerate, GenerateParam.class);
@@ -74,11 +75,11 @@ public class GenerateDispatcher implements IDispatchExecutor {
 
     List<String> apiIdList = task.getTriggerIds();
     if (CollectionUtils.isEmpty(apiIdList)) {
-      return false;
+      return GenerateDispatchResult.rejected("没有指定要生成的API");
     }
     List<ServiceApiBO> apiList = serviceApiRepository.getServiceApiList(apiIdList);
     if (CollectionUtils.isEmpty(apiList)) {
-      return false;
+      return GenerateDispatchResult.rejected("找不到可生成的API");
     }
     List<ApiModel> models = apiList.stream().filter(ServiceApiBO::isApi).map(api -> {
       ApiModel apiModel = OrikaUtil.convert(api, ApiModel.class);
@@ -89,11 +90,16 @@ public class GenerateDispatcher implements IDispatchExecutor {
     generateParam.setApiList(models);
 
     MicroserviceBO service = serviceRepository.queryServiceDetail(serviceId);
+    if (Objects.isNull(service)) {
+      return GenerateDispatchResult.rejected("找不到服务信息");
+    }
     ServiceConfig serviceConfig = service.getServiceConfig();
     Optional.ofNullable(serviceConfig.getServiceContext()).ifPresent(context ->
             generateParam.setBuildPath(context.getBuildVersion()));
     generateParam.setService(service.getServiceName());
-    return clientInvoker.runGenerateTask(generateParam);
+    boolean dispatchResult = clientInvoker.runGenerateTask(generateParam);
+    return dispatchResult ? GenerateDispatchResult.accepted("生成任务已下发")
+            : GenerateDispatchResult.rejected("生成任务下发失败");
   }
 
   @Override

@@ -1,9 +1,9 @@
 package com.zj.remote.invoker;
 
-import com.zj.common.adapter.invoker.IMasterCommand;
-import com.zj.common.entity.command.ApproveCommand;
-import com.zj.common.entity.command.PipelineHistoryCommand;
-import com.zj.common.entity.command.TaskRecordCommand;
+import com.zj.contract.port.IMasterCommand;
+import com.zj.contract.rpc.command.ApproveCommand;
+import com.zj.contract.rpc.command.PipelineHistoryCommand;
+import com.zj.contract.rpc.command.TaskRecordCommand;
 import com.zj.contract.rpc.ResponseMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;

@@ -1,7 +1,7 @@
 package com.zj.pipeline.service;
 
 import com.zj.common.entity.event.CodeChangePublishedEvent;
-import com.zj.common.entity.event.PipelineFinishedEvent;
+import com.zj.contract.event.PipelineFinishedEvent;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.domain.repository.pipeline.ICodeChangeCommandRepository;

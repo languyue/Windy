@@ -1,6 +1,8 @@
 package com.zj.master.dispatch;
 
+import com.zj.contract.dispatch.DispatchResult;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.enums.DispatchStatus;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,12 +27,12 @@ public class Dispatcher {
         .collect(Collectors.toMap(executor -> executor.type().getType(), dispatchExecutor -> dispatchExecutor));
   }
 
-  public Object dispatch(DispatchTaskModel task, String logId) {
+  public DispatchResult dispatch(DispatchTaskModel task, String logId) {
     log.info("go into dispatch name={}", task.getSourceName());
     IDispatchExecutor dispatchExecutor = dispatchExecutorMap.get(task.getType());
     if (Objects.isNull(dispatchExecutor)) {
       log.info("can not find dispatch executor");
-      return null;
+      return new DispatchResult(DispatchStatus.REJECTED, "不支持的调度任务类型");
     }
     log.info("start dispatch name={}", task.getSourceName());
     return dispatchExecutor.dispatch(task, logId);

@@ -6,7 +6,7 @@ import com.zj.common.enums.DispatchType;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.contract.dispatch.StopDispatch;
-import com.zj.common.adapter.invoker.IClientInvoker;
+import com.zj.contract.port.IClientInvoker;
 import com.zj.common.utils.IpUtils;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
@@ -161,11 +161,15 @@ public class PipelineExecuteProxy implements IStopEventListener {
     }
 
     @Override
+    public LogType supportType() {
+        return LogType.PIPELINE;
+    }
+
+    @Override
     @Subscribe
     @AllowConcurrentEvents
     public void stopEvent(InternalEvent event) {
-        if (Objects.isNull(event.getLogType()) || !Objects.equals(event.getLogType().getType(),
-                LogType.PIPELINE.getType())) {
+        if (!Objects.equals(supportType(), event.getLogType())) {
             return;
         }
 

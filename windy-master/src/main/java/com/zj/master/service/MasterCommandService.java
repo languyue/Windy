@@ -1,9 +1,9 @@
 package com.zj.master.service;
 
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.command.ApproveCommand;
-import com.zj.common.entity.command.PipelineHistoryCommand;
-import com.zj.common.entity.command.TaskRecordCommand;
+import com.zj.contract.rpc.command.ApproveCommand;
+import com.zj.contract.rpc.command.PipelineHistoryCommand;
+import com.zj.contract.rpc.command.TaskRecordCommand;
 import com.zj.domain.entity.bo.pipeline.ApprovalRequestBO;
 import com.zj.domain.entity.bo.pipeline.PipelineHistoryBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;

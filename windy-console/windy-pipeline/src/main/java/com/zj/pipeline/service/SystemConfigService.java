@@ -1,8 +1,8 @@
 package com.zj.pipeline.service;
 
 import com.zj.contract.git.GitAccessInfo;
-import com.zj.common.adapter.invoker.IClientInvoker;
-import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.contract.port.IClientInvoker;
+import com.zj.contract.port.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.rpc.ClientCollectDto;
 import com.zj.contract.rpc.MasterCollectDto;

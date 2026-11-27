@@ -4,12 +4,13 @@ import com.zj.common.adapter.auth.IAuthService;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.contract.feature.exec.BatchFeatureVo;
 import com.zj.contract.rpc.PageSize;
-import com.zj.common.adapter.invoker.IMasterCommand;
-import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.contract.port.IMasterCommand;
+import com.zj.contract.port.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
-import com.zj.common.entity.command.TaskRecordCommand;
+import com.zj.contract.rpc.command.TaskRecordCommand;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author guyuelan
@@ -113,8 +113,8 @@ public class TestCaseService {
         dispatchTaskModel.setSourceIds(batchExecute.getFeatureIds());
         dispatchTaskModel.setSourceName(taskName);
         dispatchTaskModel.setTriggerIds(Collections.singletonList(recordId));
-        String executeRecordId = masterInvoker.runFeatureTask(dispatchTaskModel);
-        return Objects.nonNull(executeRecordId);
+        FeatureDispatchResult dispatchResult = masterInvoker.runFeatureTask(dispatchTaskModel);
+        return dispatchResult.accepted();
     }
 
     private TaskRecordCommand buildTempTaskRecord(String caseId, String taskName, BatchExecuteFeature batchExecute) {

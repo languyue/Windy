@@ -1,8 +1,8 @@
 package com.zj.pipeline.service;
 
 import com.zj.common.adapter.auth.IAuthService;
-import com.zj.common.adapter.invoker.IMasterCommand;
-import com.zj.common.entity.command.ApproveCommand;
+import com.zj.contract.port.IMasterCommand;
+import com.zj.contract.rpc.command.ApproveCommand;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;

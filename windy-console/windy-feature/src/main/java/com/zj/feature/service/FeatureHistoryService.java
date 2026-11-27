@@ -1,6 +1,6 @@
 package com.zj.feature.service;
 
-import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.contract.port.IMasterCommand;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.repository.feature.IFeatureHistoryQueryRepository;
 import lombok.extern.slf4j.Slf4j;

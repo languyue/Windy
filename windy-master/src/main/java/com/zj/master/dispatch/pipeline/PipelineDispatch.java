@@ -5,6 +5,7 @@ import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.PipelineDispatchResult;
 import com.zj.contract.json.ContractJson;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
 import com.zj.domain.entity.bo.log.SubDispatchLogBO;
@@ -85,13 +86,13 @@ public class PipelineDispatch implements IDispatchExecutor {
   }
 
   @Override
-  public String dispatch(DispatchTaskModel task, String logId) {
+  public PipelineDispatchResult dispatch(DispatchTaskModel task, String logId) {
     String pipelineId = task.firstSourceId();
     PipelineBO pipeline = pipelineRepository.getPipeline(pipelineId);
     if (Objects.isNull(pipeline)) {
       log.info("can not find pipeline name={} pipelineId={}", task.getSourceName(),
           pipelineId);
-      return null;
+      return PipelineDispatchResult.rejected("找不到流水线");
     }
 
     List<PipelineNodeBO> pipelineNodes = pipelineNodeRepository.getPipelineNodes(
@@ -99,7 +100,7 @@ public class PipelineDispatch implements IDispatchExecutor {
     if (CollectionUtils.isEmpty(pipelineNodes)) {
       log.info("can not find pipeline nodes name={} pipelineId={}", task.getSourceName(),
           pipelineId);
-      return null;
+      return PipelineDispatchResult.rejected("流水线没有可执行的节点");
     }
 
     String historyId = uniqueIdService.getUniqueId();
@@ -125,14 +126,14 @@ public class PipelineDispatch implements IDispatchExecutor {
       log.warn("pipeline has no executable node, pipelineId={} historyId={}",
           pipeline.getPipelineId(), historyId);
       closeFinishedPipeline(logId, historyId, Collections.emptyList());
-      return historyId;
+      return PipelineDispatchResult.accepted(historyId);
     }
 
     pipelineTask.addAll(taskNodeList);
     //子任务日志只记真正参与执行的节点，action已丢失的节点不能建成永久RUNNING
     createSubTaskLog(taskNodeList, pipelineTask.getLogId());
     pipelineExecuteProxy.runTask(pipelineTask);
-    return historyId;
+    return PipelineDispatchResult.accepted(historyId);
   }
 
   private void createSubTaskLog(List<TaskNode> taskNodeList, String logId) {

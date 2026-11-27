@@ -1,8 +1,12 @@
 package com.zj.master.rest;
 
-import com.zj.contract.exception.ErrorCode;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
+import com.zj.contract.dispatch.GenerateDispatchResult;
+import com.zj.contract.dispatch.PipelineDispatchResult;
 import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.dispatch.StopDispatchResult;
+import com.zj.contract.exception.ErrorCode;
 import com.zj.contract.rpc.ResponseMeta;
 import com.zj.master.service.TaskLogService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,13 +28,32 @@ public class DispatchTaskRest {
     this.taskLogService = taskLogService;
   }
 
-  @PostMapping("/task")
-  public ResponseMeta<Object> createTask(@RequestBody DispatchTaskModel task) {
-    return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.createTask(task));
+  /**
+   * 用例任务(FEATURE_TASK)与批量执行用例(FEATURE)共用入口，两种流程由请求体的type区分
+   */
+  @PostMapping("/task/feature")
+  public ResponseMeta<FeatureDispatchResult> createFeatureTask(@RequestBody DispatchTaskModel task) {
+    return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.createFeatureTask(task));
+  }
+
+  /**
+   * 流水线任务类型由接口决定，请求体中的type会被覆盖
+   */
+  @PostMapping("/task/pipeline")
+  public ResponseMeta<PipelineDispatchResult> createPipelineTask(@RequestBody DispatchTaskModel task) {
+    return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.createPipelineTask(task));
+  }
+
+  /**
+   * 生成二方包任务类型由接口决定，请求体中的type会被覆盖
+   */
+  @PostMapping("/task/generate")
+  public ResponseMeta<GenerateDispatchResult> createGenerateTask(@RequestBody DispatchTaskModel task) {
+    return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.createGenerateTask(task));
   }
 
   @PostMapping("/stop")
-  public ResponseMeta<Boolean> stopTask(@RequestBody StopDispatch stopDispatch) {
+  public ResponseMeta<StopDispatchResult> stopTask(@RequestBody StopDispatch stopDispatch) {
     return new ResponseMeta<>(ErrorCode.SUCCESS, taskLogService.pauseTask(stopDispatch));
   }
 }

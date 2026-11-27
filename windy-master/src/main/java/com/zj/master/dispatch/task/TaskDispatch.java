@@ -2,6 +2,7 @@ package com.zj.master.dispatch.task;
 
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.common.enums.FeatureStatus;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
@@ -73,19 +74,19 @@ public class TaskDispatch implements IDispatchExecutor {
     }
 
     @Override
-    public String dispatch(DispatchTaskModel task, String logId) {
+    public FeatureDispatchResult dispatch(DispatchTaskModel task, String logId) {
         String taskId = task.firstSourceId();
         TaskInfoBO taskDetail = taskRepository.getTaskDetail(taskId);
         if (Objects.isNull(taskDetail)) {
             log.info("can not find task={}", taskId);
-            return null;
+            return FeatureDispatchResult.rejected("找不到任务信息");
         }
 
         String testCaseId = taskDetail.getTestCaseId();
         List<FeatureInfoBO> featureList = featureRepository.queryNotContainFolder(testCaseId);
         if (CollectionUtils.isEmpty(featureList)) {
             log.info("can not find feature list by testCaseId={}", testCaseId);
-            return "";
+            return FeatureDispatchResult.rejected("任务下没有可执行的用例");
         }
 
         TaskRecordBO taskRecordBO = buildTaskRecord(taskDetail, task.firstTriggerId(), task.getUser());
@@ -101,7 +102,7 @@ public class TaskDispatch implements IDispatchExecutor {
         FeatureTask featureTask = buildFeatureTask(task, logId, featureIds, taskRecordBO);
         saveSubTaskLog(featureIds, featureTask.getLogId());
         featureExecuteProxy.execute(featureTask);
-        return taskRecordBO.getRecordId();
+        return FeatureDispatchResult.accepted(taskRecordBO.getRecordId());
     }
 
     private List<SubDispatchLogBO> saveSubTaskLog(List<String> featureIds, String logId) {

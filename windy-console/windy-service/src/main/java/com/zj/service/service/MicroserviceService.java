@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
-import com.zj.common.adapter.invoker.IClientInvoker;
+import com.zj.contract.port.IClientInvoker;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.entity.WindyConstants;
 import com.zj.contract.rpc.PageSize;

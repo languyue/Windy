@@ -12,6 +12,10 @@
   <artifactId>windy-feature</artifactId>
 
   <dependencies>
+    <dependency>
+      <groupId>com.zj</groupId>
+      <artifactId>windy-contract</artifactId>
+    </dependency>
     <!--    内部引用开始-->
     <dependency>
       <groupId>io.github.languyue</groupId>

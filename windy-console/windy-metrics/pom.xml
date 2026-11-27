@@ -12,6 +12,10 @@
     <artifactId>windy-metrics</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>com.zj</groupId>
+            <artifactId>windy-contract</artifactId>
+        </dependency>
         <!-- 内部依赖开始-->
         <dependency>
             <groupId>com.zj</groupId>

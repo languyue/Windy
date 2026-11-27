@@ -2,8 +2,8 @@ package com.zj.remote.invoker;
 
 import com.zj.remote.discover.DiscoverService;
 import com.zj.common.adapter.discover.ServiceInstance;
-import com.zj.common.adapter.invoker.IConsoleInvoker;
-import com.zj.common.entity.event.PipelineFinishedEvent;
+import com.zj.contract.port.IConsoleInvoker;
+import com.zj.contract.event.PipelineFinishedEvent;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import org.springframework.web.client.RestTemplate;

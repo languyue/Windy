@@ -12,6 +12,10 @@
   <artifactId>windy-pipeline</artifactId>
 
   <dependencies>
+    <dependency>
+      <groupId>com.zj</groupId>
+      <artifactId>windy-contract</artifactId>
+    </dependency>
     <!--    内部模块依赖-->
     <dependency>
       <groupId>com.zj</groupId>

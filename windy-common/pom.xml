@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>windy-common</artifactId>
-  <description>共享端口层：跨进程调用接口、仓储适配接口与通用注解，不引入 Web/Eureka/OkHttp</description>
+  <description>进程内共享内核：跨域读取端口、通用实体/枚举/异常/工具，不承载跨 JVM 协议，不引入 Web/Eureka/OkHttp</description>
 
   <dependencies>
     <dependency>

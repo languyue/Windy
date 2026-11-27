@@ -15,6 +15,10 @@
     <!--    内部引用开始-->
     <dependency>
       <groupId>com.zj</groupId>
+      <artifactId>windy-contract</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zj</groupId>
       <artifactId>windy-common</artifactId>
     </dependency>
     <dependency>

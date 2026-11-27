@@ -1,8 +1,8 @@
 package com.zj.remote.invoker;
 
-import com.zj.common.adapter.invoker.IClientInvoker;
-import com.zj.common.adapter.invoker.IConsoleInvoker;
-import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.contract.port.IClientInvoker;
+import com.zj.contract.port.IConsoleInvoker;
+import com.zj.contract.port.IMasterCommand;
 import com.zj.remote.discover.DiscoverService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

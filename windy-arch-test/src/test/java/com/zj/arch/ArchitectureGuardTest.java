@@ -59,6 +59,8 @@ public class ArchitectureGuardTest {
   private static final List<String> REQUIRED_CLASSES = Arrays.asList(
       "com.zj.contract.json.ContractJson",
       "com.zj.contract.rpc.ResponseMeta",
+      "com.zj.contract.port.IMasterApi",
+      "com.zj.contract.rpc.NodeRecordStatus",
       "com.zj.common.entity.event.CodeChangePublishedEvent",
       "com.zj.common.exception.ApiException",
       "com.zj.remote.invoker.BaseEurekaAdapter",
@@ -169,6 +171,19 @@ public class ArchitectureGuardTest {
             "com.zj.contract..", "java..", "javax..", "com.fasterxml.jackson..",
             "lombok..", "com.zj.plugin..", "org.apache.commons.lang..", "org.apache.commons.lang3..")
         .because("windy-contract 必须自包含，否则 client/master/console 会重新共享业务代码");
+    rule.check(importedClasses);
+  }
+
+  /**
+   * 端口与它的签名类型必须同层：com.zj.contract.port 里一旦出现 common/domain 的类型，
+   * 就说明又有一个方法签名横跨两个模块，端口边界会退化成假的
+   */
+  @Test
+  void contractPortsMustOnlyReferenceContractTypes() {
+    ArchRule rule = classes().that().resideInAPackage("com.zj.contract.port..")
+        .should().onlyDependOnClassesThat()
+        .resideInAnyPackage("com.zj.contract..", "java..", "javax..")
+        .because("跨进程端口的方法签名类型必须全部位于 windy-contract 内");
     rule.check(importedClasses);
   }
 
@@ -289,7 +304,7 @@ public class ArchitectureGuardTest {
         .should().dependOnClassesThat().resideInAnyPackage(
             "org.springframework.web..", "org.springframework.boot..", "org.springframework.cloud..",
             "com.netflix..", "okhttp3..", "javax.servlet..")
-        .because("HTTP 客户端、服务发现与 Servlet 能力都属于 windy-remote，common 只保留端口与 DTO");
+        .because("HTTP 客户端、服务发现与 Servlet 能力都属于 windy-remote，common 只保留进程内共享内核；跨进程协议接口已迁至 com.zj.contract.port");
     rule.check(importedClasses);
   }
 

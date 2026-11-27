@@ -10,11 +10,12 @@ import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.common.exception.ExecuteException;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.contract.json.ContractJson;
 import com.zj.contract.pipeline.node.FeatureContext;
 import com.zj.contract.rpc.ResponseStatusModel;
 import com.zj.contract.rpc.ResponseStatusModel.PercentStatics;
-import com.zj.common.adapter.invoker.IMasterCallback;
+import com.zj.contract.port.IMasterCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
@@ -54,14 +55,14 @@ public class FeatureTrigger implements INodeTrigger<FeatureContext> {
     task.setSourceName(TASK_TIPS);
     task.setType(LogType.FEATURE_TASK.getType());
     task.setTriggerIds(Collections.singletonList(taskNode.getRecordId()));
-    String recordId = masterInvoker.runFeatureTask(task);
-    log.info("get TestFeatureInvoker triggerRun recordId= {}",recordId);
+    FeatureDispatchResult dispatchResult = masterInvoker.runFeatureTask(task);
+    log.info("get TestFeatureInvoker triggerRun recordId= {}", dispatchResult.getRecordId());
 
     //触发任务执行，将任务的记录Id传递给刷新动作
-    if (StringUtils.isBlank(recordId)) {
+    if (!dispatchResult.accepted() || StringUtils.isBlank(dispatchResult.getRecordId())) {
       throw new ExecuteException("pipeline trigger feature task error");
     }
-    taskNode.getRefreshContext().setRecordId(recordId);
+    taskNode.getRefreshContext().setRecordId(dispatchResult.getRecordId());
   }
 
   @Override

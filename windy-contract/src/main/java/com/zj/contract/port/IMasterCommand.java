@@ -1,8 +1,8 @@
-package com.zj.common.adapter.invoker;
+package com.zj.contract.port;
 
-import com.zj.common.entity.command.ApproveCommand;
-import com.zj.common.entity.command.PipelineHistoryCommand;
-import com.zj.common.entity.command.TaskRecordCommand;
+import com.zj.contract.rpc.command.ApproveCommand;
+import com.zj.contract.rpc.command.PipelineHistoryCommand;
+import com.zj.contract.rpc.command.TaskRecordCommand;
 
 import java.util.List;
 
@@ -11,6 +11,8 @@ import java.util.List;
  *
  * 运行态域（node_record、approval_request、pipeline_history、task_record、feature_history）只允许
  * master 写，console 需要改变这些表时必须走这里的命令，不能直接注入运行态的 CommandRepository。
+ *
+ * <p>跨 JVM 协议：调用方是 console，实现方是 master 的 MasterCommandRest。</p>
  *
  * @author guyuelan
  */

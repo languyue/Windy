@@ -3,9 +3,10 @@ package com.zj.feature.service;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
-import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.contract.port.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.contract.rpc.PageSize;
 import com.zj.contract.rpc.ResponseStatusModel;
 import com.zj.contract.rpc.ResponseStatusModel.PercentStatics;
@@ -19,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -106,9 +106,9 @@ public class TaskInfoService {
     dispatchTaskModel.setUser(authService.getCurrentUserId());
     dispatchTaskModel.setSourceIds(Collections.singletonList(taskId));
     dispatchTaskModel.setSourceName(taskDetail.getTaskName());
-    String recordId = masterInvoker.runFeatureTask(dispatchTaskModel);
-    if (StringUtils.isBlank(recordId)) {
-      log.info("run task failed taskId={}", taskId);
+    FeatureDispatchResult dispatchResult = masterInvoker.runFeatureTask(dispatchTaskModel);
+    if (!dispatchResult.accepted()) {
+      log.info("run task failed taskId={} message={}", taskId, dispatchResult.getMessage());
       throw new ApiException(ErrorCode.TASK_RUN_FAILED);
     }
     return true;

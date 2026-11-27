@@ -16,6 +16,10 @@
     <!--    内部模块应用开始-->
     <dependency>
       <groupId>com.zj</groupId>
+      <artifactId>windy-contract</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zj</groupId>
       <artifactId>windy-common</artifactId>
     </dependency>
     <!--    内部模块应用结束-->

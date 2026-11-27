@@ -1,8 +1,9 @@
-package com.zj.common.adapter.invoker;
+package com.zj.contract.port;
 
-import com.zj.common.entity.dto.NodeRecordStatus;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.contract.event.ResultEvent;
+import com.zj.contract.rpc.NodeRecordStatus;
 import com.zj.contract.rpc.PluginInfo;
 import com.zj.contract.rpc.ResponseStatusModel;
 
@@ -11,13 +12,15 @@ import java.util.List;
 /**
  * client 在执行过程中回调 master 的入口。
  * 与 {@link IMasterApi} 分开声明，避免把两个方向的调用混在同一个接口里。
+ *
+ * <p>跨 JVM 协议：调用方是 client，实现方是 master 的 TaskResultNotifyRest 等。</p>
  */
 public interface IMasterCallback {
 
     /**
      * 执行用例任务
      */
-    String runFeatureTask(DispatchTaskModel dispatchTaskModel);
+    FeatureDispatchResult runFeatureTask(DispatchTaskModel dispatchTaskModel);
 
     /**
      * 获取用例任务执行状态

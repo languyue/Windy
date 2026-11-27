@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>windy-contract</artifactId>
-  <description>跨进程契约的唯一来源：只依赖 Jackson 与插件 SDK，不依赖 windy-common 与 windy-domain</description>
+  <description>跨进程契约的唯一来源：报文 DTO、服务接口（port）、事件与 JSON 约定，只依赖 Jackson 与插件 SDK，不依赖 windy-common 与 windy-domain</description>
 
   <dependencies>
     <dependency>

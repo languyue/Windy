@@ -1,11 +1,16 @@
 package com.zj.remote.invoker;
 
-import com.zj.common.adapter.invoker.IMasterApi;
-import com.zj.common.adapter.invoker.IMasterCallback;
+import com.zj.contract.port.IMasterApi;
+import com.zj.contract.port.IMasterCallback;
+import com.zj.contract.dispatch.DispatchResult;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
+import com.zj.contract.dispatch.GenerateDispatchResult;
+import com.zj.contract.dispatch.PipelineDispatchResult;
 import com.zj.contract.dispatch.StopDispatch;
+import com.zj.contract.dispatch.StopDispatchResult;
 import com.zj.contract.rpc.MasterCollectDto;
-import com.zj.common.entity.dto.NodeRecordStatus;
+import com.zj.contract.rpc.NodeRecordStatus;
 import com.zj.contract.rpc.PluginInfo;
 import com.zj.contract.rpc.ResponseMeta;
 import com.zj.contract.rpc.ResponseStatusModel;
@@ -16,24 +21,34 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMasterApi,
         IMasterCallback {
-    private static final String DISPATCH_TASK = "http://WindyMaster/v1/devops/dispatch/task";
+    private static final String DISPATCH_FEATURE_TASK = "http://WindyMaster/v1/devops/dispatch/task/feature";
+    private static final String DISPATCH_PIPELINE_TASK = "http://WindyMaster/v1/devops/dispatch/task/pipeline";
+    private static final String DISPATCH_GENERATE_TASK = "http://WindyMaster/v1/devops/dispatch/task/generate";
     private static final String NOTIFY_TASK_RESULT = "http://WindyMaster/v1/devops/dispatch/notify";
     private static final String QUERY_NODE_RECORD = "http://WindyMaster/v1/devops/master/record/%s";
     private static final ParameterizedTypeReference<ResponseMeta<NodeRecordStatus>> META_NODE_RECORD_STATUS =
             new ParameterizedTypeReference<ResponseMeta<NodeRecordStatus>>() {};
-    private static final ParameterizedTypeReference<ResponseMeta<Object>> META_TASK_RESULT =
-            new ParameterizedTypeReference<ResponseMeta<Object>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<FeatureDispatchResult>> META_FEATURE_RESULT =
+            new ParameterizedTypeReference<ResponseMeta<FeatureDispatchResult>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<PipelineDispatchResult>> META_PIPELINE_RESULT =
+            new ParameterizedTypeReference<ResponseMeta<PipelineDispatchResult>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<GenerateDispatchResult>> META_GENERATE_RESULT =
+            new ParameterizedTypeReference<ResponseMeta<GenerateDispatchResult>>() {};
+    private static final ParameterizedTypeReference<ResponseMeta<StopDispatchResult>> META_STOP_RESULT =
+            new ParameterizedTypeReference<ResponseMeta<StopDispatchResult>>() {};
     private static final ParameterizedTypeReference<ResponseStatusModel> TASK_STATUS =
             new ParameterizedTypeReference<ResponseStatusModel>() {};
     private static final ParameterizedTypeReference<ResponseMeta<List<PluginInfo>>> META_PLUGIN_LIST =
@@ -52,24 +67,21 @@ public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMa
     }
 
     @Override
-    public String runFeatureTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseMeta<Object> responseMeta = post(DISPATCH_TASK, dispatchTaskModel, META_TASK_RESULT);
-        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
-                .map(String::valueOf).orElse(null);
+    public FeatureDispatchResult runFeatureTask(DispatchTaskModel dispatchTaskModel) {
+        return postDispatchResult(DISPATCH_FEATURE_TASK, dispatchTaskModel, META_FEATURE_RESULT,
+                FeatureDispatchResult::rejected);
     }
 
     @Override
-    public Boolean runGenerateTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseMeta<Object> responseMeta = post(DISPATCH_TASK, dispatchTaskModel, META_TASK_RESULT);
-        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
-                .map(data -> Boolean.parseBoolean(String.valueOf(data))).orElse(false);
+    public GenerateDispatchResult runGenerateTask(DispatchTaskModel dispatchTaskModel) {
+        return postDispatchResult(DISPATCH_GENERATE_TASK, dispatchTaskModel, META_GENERATE_RESULT,
+                GenerateDispatchResult::rejected);
     }
 
     @Override
-    public String startPipelineTask(DispatchTaskModel dispatchTaskModel) {
-        ResponseMeta<Object> responseMeta = post(DISPATCH_TASK, dispatchTaskModel, META_TASK_RESULT);
-        return Optional.ofNullable(responseMeta).map(ResponseMeta::getData)
-                .map(String::valueOf).orElse(null);
+    public PipelineDispatchResult startPipelineTask(DispatchTaskModel dispatchTaskModel) {
+        return postDispatchResult(DISPATCH_PIPELINE_TASK, dispatchTaskModel, META_PIPELINE_RESULT,
+                PipelineDispatchResult::rejected);
     }
 
     @Override
@@ -118,10 +130,27 @@ public class EurekaMasterInvokerAdapter extends BaseEurekaAdapter implements IMa
     }
 
     @Override
-    public boolean stopDispatch(StopDispatch stopDispatch) {
-        boolean stopSuccess = postForSuccess(STOP_DISPATCH_TASK, stopDispatch);
-        log.info("stop dispatch task result={}", stopSuccess);
-        return stopSuccess;
+    public StopDispatchResult stopDispatch(StopDispatch stopDispatch) {
+        StopDispatchResult result = postDispatchResult(STOP_DISPATCH_TASK, stopDispatch, META_STOP_RESULT,
+                StopDispatchResult::rejected);
+        log.info("stop dispatch task status={} message={}", result.getStatus(), result.getMessage());
+        return result;
+    }
+
+    /**
+     * 调度结果统一解析：master不可达或报文异常时返回拒绝结果，调用方总能拿到状态与描述
+     */
+    private <T extends DispatchResult> T postDispatchResult(String url, Object body,
+            ParameterizedTypeReference<ResponseMeta<T>> type, Function<String, T> rejectedFactory) {
+        ResponseMeta<T> responseMeta = post(url, body, type);
+        if (Objects.nonNull(responseMeta) && Objects.nonNull(responseMeta.getData())) {
+            return responseMeta.getData();
+        }
+
+        String message = Objects.isNull(responseMeta) || !StringUtils.hasText(responseMeta.getMessage())
+                ? "master节点不可达" : responseMeta.getMessage();
+        log.info("dispatch task request failed url={} message={}", url, message);
+        return rejectedFactory.apply(message);
     }
 
     @Override

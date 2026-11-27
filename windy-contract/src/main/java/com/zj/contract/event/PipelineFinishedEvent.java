@@ -1,4 +1,4 @@
-package com.zj.common.entity.event;
+package com.zj.contract.event;
 
 import lombok.Data;
 

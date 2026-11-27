@@ -2,7 +2,7 @@ package com.zj.remote.invoker;
 
 import com.zj.remote.discover.DiscoverService;
 import com.zj.common.adapter.discover.ServiceInstance;
-import com.zj.common.adapter.invoker.IClientInvoker;
+import com.zj.contract.port.IClientInvoker;
 import com.zj.contract.feature.exec.FeatureExecuteParam;
 import com.zj.contract.feature.exec.GenerateParam;
 import com.zj.contract.pipeline.node.TaskNode;

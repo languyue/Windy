@@ -9,7 +9,7 @@ import com.zj.contract.feature.ExecutorUnit;
 import com.zj.contract.feature.exec.ExecutePointVo;
 import com.zj.contract.feature.exec.FeatureExecuteParam;
 import com.zj.contract.json.ContractJson;
-import com.zj.common.adapter.invoker.IClientInvoker;
+import com.zj.contract.port.IClientInvoker;
 import com.zj.common.utils.IpUtils;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
@@ -251,11 +251,15 @@ public class FeatureExecuteProxy implements IStopEventListener {
     }
 
     @Override
+    public LogType supportType() {
+        return LogType.FEATURE_TASK;
+    }
+
+    @Override
     @Subscribe
     @AllowConcurrentEvents
     public void stopEvent(InternalEvent event) {
-        if (Objects.isNull(event.getLogType()) || !Objects.equals(event.getLogType().getType(),
-                LogType.FEATURE_TASK.getType())) {
+        if (!Objects.equals(supportType(), event.getLogType())) {
             return;
         }
 

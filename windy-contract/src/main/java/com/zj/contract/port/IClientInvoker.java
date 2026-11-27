@@ -1,20 +1,25 @@
-package com.zj.common.adapter.invoker;
+package com.zj.contract.port;
 
+import com.zj.contract.dispatch.StopDispatch;
 import com.zj.contract.feature.exec.FeatureExecuteParam;
 import com.zj.contract.feature.exec.GenerateParam;
 import com.zj.contract.pipeline.node.TaskNode;
 import com.zj.contract.rpc.ClientCollectDto;
-import com.zj.contract.dispatch.StopDispatch;
 import com.zj.contract.service.ToolLoadResult;
 import com.zj.contract.service.ToolVersionDto;
 
 import java.util.List;
 
+/**
+ * master 向 client 下发任务的入口。
+ *
+ * <p>跨 JVM 协议：调用方是 master，实现方是 client 的 TaskDispatchRest。</p>
+ */
 public interface IClientInvoker {
 
     /**
      * 触发执行API二方包执行
-     * @param generateInfo 生产信息
+     * @param generateParam 生产信息
      * @return 是否触发成功
      */
     boolean runGenerateTask(GenerateParam generateParam);
@@ -30,7 +35,7 @@ public interface IClientInvoker {
 
     /**
      * 执行用例任务
-     * @param featureTask 用例任务信息
+     * @param featureParam 用例任务信息
      * @return 用例是否触发成功
      */
     boolean runFeatureTask(FeatureExecuteParam featureParam);

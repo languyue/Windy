@@ -15,6 +15,10 @@
     <!--    内部模块应用开始-->
     <dependency>
       <groupId>com.zj</groupId>
+      <artifactId>windy-contract</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zj</groupId>
       <artifactId>windy-common</artifactId>
     </dependency>
     <dependency>
@@ -70,6 +74,14 @@
       <optional>true</optional>
     </dependency>
     <!--    外部依赖结束-->
+
+    <!--    测试依赖开始-->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!--    测试依赖结束-->
   </dependencies>
 
   <build>

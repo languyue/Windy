@@ -2,7 +2,7 @@ package com.zj.client.schedule;
 
 import com.zj.client.handler.feature.executor.invoker.invoke.MethodInvoke;
 import com.zj.client.handler.feature.executor.invoker.loader.PluginManager;
-import com.zj.common.adapter.invoker.IMasterCallback;
+import com.zj.contract.port.IMasterCallback;
 import com.zj.common.adapter.monitor.InstanceMonitor;
 import com.zj.contract.rpc.PluginInfo;
 import com.zj.common.utils.TraceUtils;

@@ -3,6 +3,7 @@ package com.zj.master.dispatch.feature;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import com.zj.domain.entity.bo.feature.TestCaseConfigBO;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -65,13 +67,17 @@ public class FeatureDispatch implements IDispatchExecutor {
     }
 
     @Override
-    public String dispatch(DispatchTaskModel task, String logId) {
+    public FeatureDispatchResult dispatch(DispatchTaskModel task, String logId) {
         List<String> featureIds = task.getSourceIds();
         if (CollectionUtils.isEmpty(featureIds)) {
             log.info("feature task has no source id, logId={}", logId);
-            return null;
+            return FeatureDispatchResult.rejected("测试集任务没有可执行的用例");
         }
         FeatureInfoBO feature = featureRepository.getFeatureById(featureIds.get(0));
+        if (Objects.isNull(feature)) {
+            log.info("can not find feature id={} logId={}", featureIds.get(0), logId);
+            return FeatureDispatchResult.rejected("找不到用例信息");
+        }
         List<TestCaseConfigBO> caseConfigs = testCaseConfigRepository.getCaseConfigs(
                 feature.getTestCaseId());
         ExecuteContext executeContext = buildTaskConfig(feature.getTestCaseId(), caseConfigs);
@@ -86,7 +92,7 @@ public class FeatureDispatch implements IDispatchExecutor {
         featureTask.setTaskRecordId(tempRecordId);
 
         featureExecuteProxy.execute(featureTask);
-        return tempRecordId;
+        return FeatureDispatchResult.accepted(tempRecordId);
     }
 
     @Override

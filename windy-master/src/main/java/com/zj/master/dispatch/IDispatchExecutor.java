@@ -1,5 +1,6 @@
 package com.zj.master.dispatch;
 
+import com.zj.contract.dispatch.DispatchResult;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.dispatch.DispatchTaskModel;
 import com.zj.domain.entity.bo.log.DispatchLogBO;
@@ -21,8 +22,9 @@ public interface IDispatchExecutor {
    * 分配任务给子节点
    * @param task 任务内容
    * @param logId 分发任务的记录Id
+   * @return 调度结果，拒绝时必须带上原因
    * */
-  Object dispatch(DispatchTaskModel task, String logId);
+  DispatchResult dispatch(DispatchTaskModel task, String logId);
 
   /**
    * 恢复执行任务

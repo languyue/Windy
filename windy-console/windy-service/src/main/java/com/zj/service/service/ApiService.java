@@ -1,13 +1,13 @@
 package com.zj.service.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.contract.port.IMasterApi;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.entity.WindyConstants;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.GenerateDispatchResult;
 import com.zj.common.entity.generate.GenerateRecordBO;
 import com.zj.contract.service.ApiParamModel;
-import com.zj.contract.enums.LogType;
 import com.zj.common.enums.Position;
 import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ApiException;
@@ -123,8 +123,12 @@ public class ApiService {
         dispatchTaskModel.setSourceIds(Collections.singletonList(generate.getServiceId()));
         dispatchTaskModel.setTriggerIds(generate.getApiIds());
         dispatchTaskModel.setSourceName("generate service=[] package");
-        dispatchTaskModel.setType(LogType.GENERATE.getType());
-        return masterInvoker.runGenerateTask(dispatchTaskModel);
+        GenerateDispatchResult dispatchResult = masterInvoker.runGenerateTask(dispatchTaskModel);
+        if (!dispatchResult.accepted()) {
+            log.info("generate api failed serviceId={} message={}", generate.getServiceId(),
+                    dispatchResult.getMessage());
+        }
+        return dispatchResult.accepted();
     }
 
     /**

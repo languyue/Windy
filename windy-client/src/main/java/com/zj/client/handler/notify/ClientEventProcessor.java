@@ -2,7 +2,7 @@ package com.zj.client.handler.notify;
 
 import com.zj.contract.event.ResultEvent;
 import com.zj.common.adapter.monitor.InstanceMonitor;
-import com.zj.common.adapter.invoker.IMasterCallback;
+import com.zj.contract.port.IMasterCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Scheduled;

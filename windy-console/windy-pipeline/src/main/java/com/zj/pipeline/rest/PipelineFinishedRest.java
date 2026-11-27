@@ -1,7 +1,7 @@
 package com.zj.pipeline.rest;
 
 import com.zj.contract.rpc.ResponseMeta;
-import com.zj.common.entity.event.PipelineFinishedEvent;
+import com.zj.contract.event.PipelineFinishedEvent;
 import com.zj.contract.exception.ErrorCode;
 import com.zj.pipeline.service.PipelineFinishService;
 import org.springframework.web.bind.annotation.PostMapping;

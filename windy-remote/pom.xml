@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>windy-remote</artifactId>
-  <description>跨进程远程调用适配器：Eureka 服务发现 + RestTemplate/OkHttp 通道 + 链路追踪过滤器，仅被 console/master/client 依赖</description>
+  <description>跨进程协议端口的适配实现：把 windy-contract.port 的接口落到 Eureka 服务发现 + RestTemplate/OkHttp 通道 + 链路追踪过滤器，仅被 console/master/client 依赖</description>
 
   <dependencies>
     <dependency>

@@ -10,8 +10,9 @@ import com.zj.common.enums.TemplateType;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;
 import com.zj.contract.dispatch.DispatchTaskModel;
+import com.zj.contract.dispatch.FeatureDispatchResult;
 import com.zj.contract.rpc.PageSize;
-import com.zj.common.adapter.invoker.IMasterApi;
+import com.zj.contract.port.IMasterApi;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.domain.entity.bo.feature.ExecutePointBO;
@@ -319,9 +320,9 @@ public class FeatureService {
         dispatchTaskModel.setType(LogType.FEATURE.getType());
         dispatchTaskModel.setSourceIds(Collections.singletonList(featureId));
         dispatchTaskModel.setSourceName(feature.getFeatureName());
-        String recordId = masterInvoker.runFeatureTask(dispatchTaskModel);
-        if (StringUtils.isBlank(recordId)) {
-            log.info("run feature failed featureId={}", featureId);
+        FeatureDispatchResult dispatchResult = masterInvoker.runFeatureTask(dispatchTaskModel);
+        if (!dispatchResult.accepted()) {
+            log.info("run feature failed featureId={} message={}", featureId, dispatchResult.getMessage());
             throw new ApiException(ErrorCode.FEATURE_RUN_FAILED);
         }
         return true;

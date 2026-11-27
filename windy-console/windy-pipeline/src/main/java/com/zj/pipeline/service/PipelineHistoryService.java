@@ -1,7 +1,7 @@
 package com.zj.pipeline.service;
 
-import com.zj.common.adapter.invoker.IMasterCommand;
-import com.zj.common.entity.command.PipelineHistoryCommand;
+import com.zj.contract.port.IMasterCommand;
+import com.zj.contract.rpc.command.PipelineHistoryCommand;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.NodeRecordBO;

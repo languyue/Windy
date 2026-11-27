@@ -1,8 +1,8 @@
 package com.zj.master.rest;
 
-import com.zj.common.entity.command.ApproveCommand;
-import com.zj.common.entity.command.PipelineHistoryCommand;
-import com.zj.common.entity.command.TaskRecordCommand;
+import com.zj.contract.rpc.command.ApproveCommand;
+import com.zj.contract.rpc.command.PipelineHistoryCommand;
+import com.zj.contract.rpc.command.TaskRecordCommand;
 import com.zj.contract.rpc.ResponseMeta;
 import com.zj.contract.exception.ErrorCode;
 import com.zj.master.service.MasterCommandService;

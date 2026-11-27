@@ -1,7 +1,7 @@
 package com.zj.feature.service;
 
 import com.zj.common.adapter.auth.IAuthService;
-import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.contract.port.IMasterCommand;
 import com.zj.contract.rpc.PageSize;
 import com.zj.common.enums.FeatureStatus;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
