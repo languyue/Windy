@@ -1,6 +1,7 @@
 package com.zj.pipeline.service;
 
 import com.zj.common.adapter.git.CommitMessage;
+import com.zj.common.entity.event.CodePushedEvent;
 import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.common.adapter.uuid.UniqueIdService;
@@ -9,9 +10,6 @@ import com.zj.contract.exception.ErrorCode;
 import com.zj.domain.entity.bo.pipeline.BindBranchBO;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.PipelineBO;
-import com.zj.domain.entity.enums.RelationType;
-import com.zj.domain.repository.demand.IBugCommandRepository;
-import com.zj.domain.repository.demand.IDemandCommandRepository;
 import com.zj.domain.repository.pipeline.IBindBranchCommandRepository;
 import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import com.zj.pipeline.entity.enums.GitEventType;
@@ -21,6 +19,7 @@ import com.zj.pipeline.git.hook.IGitWebhook;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,14 +47,13 @@ public class GitBindService {
     private final IBindBranchCommandRepository gitBindRepository;
     private final ICodeChangeQueryRepository codeChangeRepository;
     private final Map<String, IGitWebhook> webhookMap;
-    private final IDemandCommandRepository demandRepository;
-    private final IBugCommandRepository bugRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final Executor executorService;
 
     public GitBindService(PipelineService pipelineService, RepositoryFactory repositoryFactory,
                           UniqueIdService uniqueIdService, IBindBranchCommandRepository gitBindRepository,
                           ICodeChangeQueryRepository codeChangeRepository, List<IGitWebhook> webhooks,
-                          IDemandCommandRepository demandRepository, IBugCommandRepository bugRepository,
+                          ApplicationEventPublisher eventPublisher,
                           @Qualifier("webHookExecutorPool") Executor executorService) {
         this.pipelineService = pipelineService;
         this.repositoryFactory = repositoryFactory;
@@ -63,8 +61,7 @@ public class GitBindService {
         this.gitBindRepository = gitBindRepository;
         this.codeChangeRepository = codeChangeRepository;
         webhookMap = webhooks.stream().collect(Collectors.toMap(IGitWebhook::platform, webhook -> webhook));
-        this.demandRepository = demandRepository;
-        this.bugRepository = bugRepository;
+        this.eventPublisher = eventPublisher;
         this.executorService = executorService;
     }
 
@@ -156,16 +153,14 @@ public class GitBindService {
         try {
             if (Objects.nonNull(gitPushResultVo) && Objects.equals(gitPushResultVo.getEventType(), GitEventType.PUSH.getType())) {
                 List<CodeChangeBO> codeChanges = codeChangeRepository.getServiceChanges(gitPushResultVo.getRelatedServiceId());
-                List<String> demandCodeChanges = codeChanges.stream().filter(codeChange ->
-                                Objects.equals(RelationType.DEMAND.getType(), codeChange.getRelationType()))
-                        .map(CodeChangeBO::getRelationId).collect(Collectors.toList());
-                boolean demandProcessing = demandRepository.batchUpdateProcessing(demandCodeChanges);
-                log.info("update demand processing result={}", demandProcessing);
-                List<String> bugCodeChanges = codeChanges.stream().filter(codeChange ->
-                                Objects.equals(RelationType.BUG.getType(), codeChange.getRelationType()))
-                        .map(CodeChangeBO::getRelationId).collect(Collectors.toList());
-                boolean updateBugProcessing = bugRepository.batchUpdateProcessing(bugCodeChanges);
-                log.info("update bug processing result={}", updateBugProcessing);
+                //只宣告哪些关联资源随本次推送进入研发中，状态怎么变由业务域自己决定
+                Map<Integer, List<String>> relationMap = codeChanges.stream()
+                        .collect(Collectors.groupingBy(CodeChangeBO::getRelationType,
+                                Collectors.mapping(CodeChangeBO::getRelationId, Collectors.toList())));
+                CodePushedEvent pushedEvent = new CodePushedEvent();
+                pushedEvent.setServiceId(gitPushResultVo.getRelatedServiceId());
+                pushedEvent.setRelationMap(relationMap);
+                eventPublisher.publishEvent(pushedEvent);
             }
         }catch (Exception e){
             log.info("update status error, after code push", e);

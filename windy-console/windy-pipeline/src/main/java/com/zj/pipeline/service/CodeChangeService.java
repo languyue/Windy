@@ -8,18 +8,13 @@ import com.zj.contract.git.GitAccessInfo;
 import com.zj.common.adapter.git.IGitRepositoryHandler;
 import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.common.utils.OrikaUtil;
-import com.zj.domain.entity.bo.demand.BugBO;
-import com.zj.domain.entity.bo.demand.DemandBO;
-import com.zj.domain.entity.bo.demand.WorkTaskBO;
+import com.zj.common.port.relation.IRelationTargetReader;
+import com.zj.common.port.relation.RelationTargetView;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.RelationDemandBug;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
-import com.zj.domain.repository.demand.IBugQueryRepository;
-import com.zj.domain.repository.demand.IDemandQueryRepository;
-import com.zj.domain.repository.demand.IWorkTaskQueryRepository;
 import com.zj.domain.repository.pipeline.ICodeChangeCommandRepository;
 import com.zj.domain.repository.service.IMicroServiceQueryRepository;
-import com.zj.domain.entity.enums.RelationType;
 import com.zj.pipeline.entity.dto.CodeChangeDto;
 import com.zj.pipeline.git.RepositoryFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -42,21 +37,16 @@ public class CodeChangeService {
     private final IMicroServiceQueryRepository serviceRepository;
     private final UniqueIdService uniqueIdService;
     private final ICodeChangeCommandRepository codeChangeRepository;
-    private final IBugQueryRepository bugRepository;
-    private final IDemandQueryRepository demandRepository;
-    private final IWorkTaskQueryRepository workTaskRepository;
+    private final IRelationTargetReader relationTargetReader;
 
     public CodeChangeService(RepositoryFactory repositoryFactory, IMicroServiceQueryRepository serviceRepository,
                              UniqueIdService uniqueIdService, ICodeChangeCommandRepository codeChangeRepository,
-                             IBugQueryRepository bugRepository, IDemandQueryRepository demandRepository,
-                             IWorkTaskQueryRepository workTaskRepository) {
+                             IRelationTargetReader relationTargetReader) {
         this.repositoryFactory = repositoryFactory;
         this.serviceRepository = serviceRepository;
         this.uniqueIdService = uniqueIdService;
         this.codeChangeRepository = codeChangeRepository;
-        this.bugRepository = bugRepository;
-        this.demandRepository = demandRepository;
-        this.workTaskRepository = workTaskRepository;
+        this.relationTargetReader = relationTargetReader;
     }
 
     public CodeChangeBO getCodeChange(String serviceId, String codeChangeId) {
@@ -103,19 +93,10 @@ public class CodeChangeService {
     }
 
     public List<RelationDemandBug> queryRelationIds(String queryName) {
-        List<BugBO> bugs = bugRepository.getBugsFuzzyByName(queryName);
-        List<DemandBO> demands = demandRepository.getDemandsByFuzzName(queryName);
-        List<WorkTaskBO> works = workTaskRepository.getWorkTaskByName(queryName);
         try {
-            List<RelationDemandBug> relationList = bugs.stream().map(bug -> new RelationDemandBug(bug.getBugId(),
-                    RelationType.BUG.getType(), bug.getBugName())).collect(Collectors.toList());
-            List<RelationDemandBug> relationDemands = demands.stream().map(demand -> new RelationDemandBug(demand.getDemandId(),
-                            RelationType.DEMAND.getType(), demand.getDemandName())).collect(Collectors.toList());
-            List<RelationDemandBug> relationWorks = works.stream().map(work -> new RelationDemandBug(work.getTaskId(),
-                            RelationType.WORK.getType(), work.getTaskName())).collect(Collectors.toList());
-            relationList.addAll(relationDemands);
-            relationList.addAll(relationWorks);
-            return relationList;
+            List<RelationTargetView> targets = relationTargetReader.searchByName(queryName);
+            return targets.stream().map(target -> new RelationDemandBug(target.getRelationId(),
+                    target.getRelationType(), target.getRelationName())).collect(Collectors.toList());
         } catch (Exception e) {
             log.info("query related demand or bug or work error", e);
         }

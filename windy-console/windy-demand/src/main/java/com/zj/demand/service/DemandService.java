@@ -6,6 +6,8 @@ import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.rpc.PageSize;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;
+import com.zj.common.port.codechange.CodeChangeView;
+import com.zj.common.port.codechange.ICodeChangeReader;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.BusinessDictionaryDto;
 import com.zj.demand.entity.DemandDetailDto;
@@ -14,13 +16,11 @@ import com.zj.domain.entity.bo.auth.UserBO;
 import com.zj.domain.entity.bo.demand.BusinessStatusBO;
 import com.zj.domain.entity.bo.demand.DemandBO;
 import com.zj.domain.entity.bo.demand.DemandQueryBO;
-import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.enums.BusinessStatusType;
 import com.zj.domain.entity.enums.RelationType;
 import com.zj.domain.repository.auth.IUserQueryRepository;
 import com.zj.domain.repository.demand.IBusinessStatusQueryRepository;
 import com.zj.domain.repository.demand.IDemandCommandRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -38,19 +38,19 @@ public class DemandService {
     private final UniqueIdService uniqueIdService;
     private final IUserQueryRepository userRepository;
     private final IBusinessStatusQueryRepository businessStatusRepository;
-    private final ICodeChangeQueryRepository codeChangeRepository;
+    private final ICodeChangeReader codeChangeReader;
     private final IterationService iterationService;
 
     public DemandService(IAuthService authService, IDemandCommandRepository demandRepository,
                          UniqueIdService uniqueIdService, IUserQueryRepository userRepository,
-                         IBusinessStatusQueryRepository businessStatusRepository, ICodeChangeQueryRepository codeChangeRepository,
+                         IBusinessStatusQueryRepository businessStatusRepository, ICodeChangeReader codeChangeReader,
                          IterationService iterationService) {
         this.authService = authService;
         this.demandRepository = demandRepository;
         this.uniqueIdService = uniqueIdService;
         this.userRepository = userRepository;
         this.businessStatusRepository = businessStatusRepository;
-        this.codeChangeRepository = codeChangeRepository;
+        this.codeChangeReader = codeChangeReader;
         this.iterationService = iterationService;
     }
 
@@ -118,7 +118,7 @@ public class DemandService {
 
         boolean completeStatus = businessStatusRepository.isUnchangeableStatus(demand.getStatus(),
                 BusinessStatusType.DEMAND.name());
-        List<CodeChangeBO> codeChanges = codeChangeRepository.getCodeChangeByRelationId(demandId, RelationType.DEMAND.getType());
+        List<CodeChangeView> codeChanges = codeChangeReader.listByRelation(demandId, RelationType.DEMAND.getType());
         if (CollectionUtils.isNotEmpty(codeChanges) && !completeStatus) {
             log.info("demand has bind branch demandId={}", demandId);
             throw new ApiException(ErrorCode.DEMAND_HAS_BIND_BRANCH);

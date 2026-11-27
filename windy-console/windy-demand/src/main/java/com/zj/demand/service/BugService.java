@@ -6,6 +6,8 @@ import com.zj.common.adapter.uuid.UniqueIdService;
 import com.zj.contract.rpc.PageSize;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;
+import com.zj.common.port.codechange.CodeChangeView;
+import com.zj.common.port.codechange.ICodeChangeReader;
 import com.zj.common.utils.OrikaUtil;
 import com.zj.demand.entity.BugDetailDto;
 import com.zj.demand.entity.BugDto;
@@ -13,13 +15,11 @@ import com.zj.domain.entity.bo.auth.UserBO;
 import com.zj.domain.entity.bo.demand.BugBO;
 import com.zj.domain.entity.bo.demand.BugQueryBO;
 import com.zj.domain.entity.bo.demand.BusinessStatusBO;
-import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.enums.BusinessStatusType;
 import com.zj.domain.entity.enums.RelationType;
 import com.zj.domain.repository.auth.IUserQueryRepository;
 import com.zj.domain.repository.demand.IBugCommandRepository;
 import com.zj.domain.repository.demand.IBusinessStatusQueryRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -36,17 +36,17 @@ public class BugService {
     private final UniqueIdService uniqueIdService;
     private final IAuthService authService;
     private final IUserQueryRepository userRepository;
-    private final ICodeChangeQueryRepository codeChangeRepository;
+    private final ICodeChangeReader codeChangeReader;
     private final IBusinessStatusQueryRepository businessStatusRepository;
     private final IterationService iterationService;
 
     public BugService(IBugCommandRepository bugRepository, UniqueIdService uniqueIdService, IAuthService authService,
-                      IUserQueryRepository userRepository, ICodeChangeQueryRepository codeChangeRepository, IBusinessStatusQueryRepository businessStatusRepository, IterationService iterationService) {
+                      IUserQueryRepository userRepository, ICodeChangeReader codeChangeReader, IBusinessStatusQueryRepository businessStatusRepository, IterationService iterationService) {
         this.bugRepository = bugRepository;
         this.uniqueIdService = uniqueIdService;
         this.authService = authService;
         this.userRepository = userRepository;
-        this.codeChangeRepository = codeChangeRepository;
+        this.codeChangeReader = codeChangeReader;
         this.businessStatusRepository = businessStatusRepository;
         this.iterationService = iterationService;
     }
@@ -103,7 +103,7 @@ public class BugService {
         }
 
         boolean completeStatus = businessStatusRepository.isUnchangeableStatus(bug.getStatus(), BusinessStatusType.BUG.name());
-        List<CodeChangeBO> codeChanges = codeChangeRepository.getCodeChangeByRelationId(bugId,
+        List<CodeChangeView> codeChanges = codeChangeReader.listByRelation(bugId,
                 RelationType.BUG.getType());
         if (CollectionUtils.isNotEmpty(codeChanges) && !completeStatus) {
             log.info("bug has bind branch bugId={}", bugId);

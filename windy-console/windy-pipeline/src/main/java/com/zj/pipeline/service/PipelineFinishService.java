@@ -1,13 +1,14 @@
 package com.zj.pipeline.service;
 
+import com.zj.common.entity.event.CodeChangePublishedEvent;
 import com.zj.common.entity.event.PipelineFinishedEvent;
-import com.zj.demand.service.PublishEndService;
 import com.zj.domain.entity.bo.pipeline.CodeChangeBO;
 import com.zj.domain.entity.bo.pipeline.PublishBindBO;
 import com.zj.domain.repository.pipeline.ICodeChangeCommandRepository;
 import com.zj.domain.repository.pipeline.IPublishBindCommandRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,13 +30,14 @@ public class PipelineFinishService {
 
     private final IPublishBindCommandRepository publishBindRepository;
     private final ICodeChangeCommandRepository codeChangeRepository;
-    private final PublishEndService publishEndService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PipelineFinishService(IPublishBindCommandRepository publishBindRepository,
-        ICodeChangeCommandRepository codeChangeRepository, PublishEndService publishEndService) {
+        ICodeChangeCommandRepository codeChangeRepository,
+        ApplicationEventPublisher eventPublisher) {
         this.publishBindRepository = publishBindRepository;
         this.codeChangeRepository = codeChangeRepository;
-        this.publishEndService = publishEndService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -79,11 +81,14 @@ public class PipelineFinishService {
             return;
         }
 
-        //获取已发布的分支关联的变更，按关联类型分组交给业务域推进状态
+        //获取已发布的分支关联的变更，按关联类型分组后发事件，由业务域自己推进状态
         Map<Integer, List<String>> relationMap = serviceChangeList.stream()
                 .filter(codeChange -> publishBranches.contains(codeChange.getChangeBranch()))
                 .collect(Collectors.groupingBy(CodeChangeBO::getRelationType,
                         Collectors.mapping(CodeChangeBO::getRelationId, Collectors.toList())));
-        publishEndService.finishCodeRelatedResource(relationMap, publishBranches);
+        CodeChangePublishedEvent publishedEvent = new CodeChangePublishedEvent();
+        publishedEvent.setRelationMap(relationMap);
+        publishedEvent.setPublishBranches(publishBranches);
+        eventPublisher.publishEvent(publishedEvent);
     }
 }

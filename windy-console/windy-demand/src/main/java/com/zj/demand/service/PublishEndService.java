@@ -1,5 +1,8 @@
 package com.zj.demand.service;
 
+import com.zj.common.entity.event.CodeChangePublishedEvent;
+import com.zj.common.entity.event.CodePushedEvent;
+import com.zj.common.port.codechange.ICodeChangeReader;
 import com.zj.domain.entity.bo.demand.BugBO;
 import com.zj.domain.entity.bo.demand.DemandBO;
 import com.zj.domain.entity.bo.demand.WorkTaskBO;
@@ -10,9 +13,9 @@ import com.zj.domain.entity.enums.WorkTaskStatus;
 import com.zj.domain.repository.demand.IBugCommandRepository;
 import com.zj.domain.repository.demand.IDemandCommandRepository;
 import com.zj.domain.repository.demand.IWorkTaskCommandRepository;
-import com.zj.domain.repository.pipeline.ICodeChangeQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,14 +38,48 @@ public class PublishEndService {
     private final IDemandCommandRepository demandRepository;
     private final IBugCommandRepository bugRepository;
     private final IWorkTaskCommandRepository workTaskRepository;
-    private final ICodeChangeQueryRepository codeChangeRepository;
+    private final ICodeChangeReader codeChangeReader;
 
     public PublishEndService(IDemandCommandRepository demandRepository, IBugCommandRepository bugRepository,
-        IWorkTaskCommandRepository workTaskRepository, ICodeChangeQueryRepository codeChangeRepository) {
+        IWorkTaskCommandRepository workTaskRepository, ICodeChangeReader codeChangeReader) {
         this.demandRepository = demandRepository;
         this.bugRepository = bugRepository;
         this.workTaskRepository = workTaskRepository;
-        this.codeChangeRepository = codeChangeRepository;
+        this.codeChangeReader = codeChangeReader;
+    }
+
+    /**
+     * 监听流水线域发出的"代码已推送"事件，把关联的需求与缺陷推进到研发中。
+     *
+     * @param event 代码推送事件
+     */
+    @EventListener
+    public void onCodePushed(CodePushedEvent event) {
+        log.info("receive code pushed event serviceId={}", event.getServiceId());
+        if (Objects.isNull(event.getRelationMap()) || event.getRelationMap().isEmpty()) {
+            return;
+        }
+        List<String> demandIds = event.getRelationMap().get(RelationType.DEMAND.getType());
+        if (CollectionUtils.isNotEmpty(demandIds)) {
+            boolean demandProcessing = demandRepository.batchUpdateProcessing(demandIds);
+            log.info("update demand processing result={} id={}", demandProcessing, demandIds);
+        }
+        List<String> bugIds = event.getRelationMap().get(RelationType.BUG.getType());
+        if (CollectionUtils.isNotEmpty(bugIds)) {
+            boolean bugProcessing = bugRepository.batchUpdateProcessing(bugIds);
+            log.info("update bug processing result={} id={}", bugProcessing, bugIds);
+        }
+    }
+
+    /**
+     * 监听流水线域发出的"代码变更已发布"事件，推进本域资源状态。
+     *
+     * @param event 发布完成事件
+     */
+    @EventListener
+    public void onCodeChangePublished(CodeChangePublishedEvent event) {
+        log.info("receive code change published event serviceId={}", event.getServiceId());
+        finishCodeRelatedResource(event.getRelationMap(), event.getPublishBranches());
     }
 
     /**
@@ -115,7 +152,7 @@ public class PublishEndService {
     }
 
     private boolean isAllBranchPublish(String relationId, RelationType relationType, List<String> branches) {
-        return codeChangeRepository.getCodeChangeByRelationId(relationId, relationType.getType()).stream()
+        return codeChangeReader.listByRelation(relationId, relationType.getType()).stream()
                 .allMatch(codeChange -> branches.contains(codeChange.getChangeBranch()));
     }
 }

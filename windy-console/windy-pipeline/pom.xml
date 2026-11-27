@@ -17,10 +17,6 @@
       <groupId>com.zj</groupId>
       <artifactId>windy-domain</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.zj</groupId>
-      <artifactId>windy-demand</artifactId>
-    </dependency>
     <!--    内部依赖模块结束-->
 
     <!--    外部依赖开始-->
