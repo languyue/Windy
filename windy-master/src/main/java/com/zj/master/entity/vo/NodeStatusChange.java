@@ -33,7 +33,7 @@ public class NodeStatusChange {
   private ProcessStatus processStatus;
 
   /**
-   * 分发client任务的记录Id {@link com.zj.domain.entity.po.log.DispatchLog}
+   * 分发client任务的记录Id
    * */
   private String logId;
 }

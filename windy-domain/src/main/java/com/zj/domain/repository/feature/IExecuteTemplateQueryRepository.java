@@ -1,6 +1,6 @@
 package com.zj.domain.repository.feature;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
 import java.util.List;
 
@@ -25,7 +25,7 @@ public interface IExecuteTemplateQueryRepository {
   * @param name 模板名称
   * @return 模板列表
   */
-  IPage<ExecuteTemplateBO> getPage(String serviceId, Integer pageNo, Integer size, String name);
+  PageSize<ExecuteTemplateBO> getPage(String serviceId, Integer pageNo, Integer size, String name);
 
   /**
   * 获取服务下的模板

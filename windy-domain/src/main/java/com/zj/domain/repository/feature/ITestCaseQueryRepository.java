@@ -1,6 +1,6 @@
 package com.zj.domain.repository.feature;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.feature.TestCaseBO;
 import java.util.List;
 
@@ -31,13 +31,13 @@ public interface ITestCaseQueryRepository {
   * @param pageSize 每页数量
   * @return 测试集列表
   */
-  IPage<TestCaseBO> getCasePage(String serviceId, Integer page, Integer pageSize);
+  PageSize<TestCaseBO> getCasePage(String serviceId, Integer page, Integer pageSize);
 
   /**
   * 获取e2e测试集
   * @return 测试集列表
   */
-  IPage<TestCaseBO> getE2ECasesPage(Integer page, Integer pageSize);
+  PageSize<TestCaseBO> getE2ECasesPage(Integer page, Integer pageSize);
 
   /**
   * 获取所有e2e测试集

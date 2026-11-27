@@ -14,12 +14,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -41,7 +47,8 @@ public class ArchitectureGuardTest {
    * 参与校验的模块，路径相对仓库根目录
    */
   private static final List<String> ANALYZED_MODULES = Arrays.asList(
-      "windy-contract", "windy-common", "windy-domain", "windy-master", "windy-client",
+      "windy-contract", "windy-common", "windy-remote", "windy-domain",
+      "windy-master", "windy-client",
       "windy-console/windy-auth", "windy-console/windy-demand", "windy-console/windy-feature",
       "windy-console/windy-pipeline", "windy-console/windy-service",
       "windy-console/windy-metrics", "windy-console/windy-starter");
@@ -52,6 +59,16 @@ public class ArchitectureGuardTest {
   private static final List<String> REQUIRED_CLASSES = Arrays.asList(
       "com.zj.contract.json.ContractJson",
       "com.zj.contract.rpc.ResponseMeta",
+      "com.zj.common.entity.event.CodeChangePublishedEvent",
+      "com.zj.common.exception.ApiException",
+      "com.zj.remote.invoker.BaseEurekaAdapter",
+      "com.zj.common.port.codechange.ICodeChangeReader",
+      "com.zj.common.port.relation.IRelationTargetReader",
+      "com.zj.demand.adapter.RelationTargetReader",
+      "com.zj.pipeline.adapter.CodeChangeReader",
+      "com.zj.domain.repository.pipeline.IPipelineCommandRepository",
+      "com.zj.infrastructure.mapper.pipeline.PipelineMapper",
+      "com.zj.infrastructure.repository.pipeline.PipelineRepository",
       "com.zj.master.dispatch.pipeline.listener.PublishEndListener",
       "com.zj.client.handler.pipeline.executer.NodeExecutor",
       "com.zj.auth.service.RoleService",
@@ -61,6 +78,25 @@ public class ArchitectureGuardTest {
       "com.zj.service.service.MicroserviceService",
       "com.zj.metrics.calculate.strategy.BaseMetric",
       "com.zj.starter.WindyApplication");
+
+  /**
+   * 跨限界上下文依赖白名单：key 为业务域，value 为该域允许依赖的其他业务域（不含自身）。
+   *
+   * <p>矩阵来自存量代码的事实快照：auth 完全独立；metric 只读 demand；demand/pipeline
+   * 已解耦为仅经事件与 common 端口协作；其余域之间保留业务上真实的引用。新增跨域依赖
+   * 必须先解耦再登记到这张表，而不是随手 import。</p>
+   */
+  private static final Map<String, Set<String>> ALLOWED_CROSS_DOMAIN = new LinkedHashMap<>();
+
+  static {
+    ALLOWED_CROSS_DOMAIN.put("auth", Collections.emptySet());
+    ALLOWED_CROSS_DOMAIN.put("demand", new LinkedHashSet<>(Arrays.asList("auth", "service")));
+    ALLOWED_CROSS_DOMAIN.put("feature", new LinkedHashSet<>(Arrays.asList("demand", "service")));
+    ALLOWED_CROSS_DOMAIN.put("pipeline", new LinkedHashSet<>(Arrays.asList("service")));
+    ALLOWED_CROSS_DOMAIN.put("service",
+        new LinkedHashSet<>(Arrays.asList("auth", "demand", "feature", "pipeline")));
+    ALLOWED_CROSS_DOMAIN.put("metric", new LinkedHashSet<>(Arrays.asList("demand")));
+  }
 
   private static JavaClasses importedClasses;
 
@@ -147,6 +183,113 @@ public class ArchitectureGuardTest {
         .should().dependOnClassesThat()
         .resideInAnyPackage("com.alibaba.fastjson..", "com.alibaba.fastjson2..")
         .because("业务交互一律用具体对象，JSON 序列化只能经 ContractJson/WireJson，第三方报文解析收敛在 client");
+    rule.check(importedClasses);
+  }
+
+  /**
+   * 持久化技术细节只能出现在 com.zj.infrastructure 包（与领域同属 windy-domain）：应用进程与领域包一律不许直接摸 mapper、PO
+   */
+  @Test
+  void persistenceDetailMustStayInInfrastructure() {
+    ArchRule rule = noClasses().that()
+        .resideInAnyPackage("com.zj.auth..", "com.zj.demand..", "com.zj.feature..", "com.zj.pipeline..",
+            "com.zj.service..", "com.zj.metrics..", "com.zj.starter..", "com.zj.master..", "com.zj.client..")
+        .should().dependOnClassesThat()
+        .resideInAnyPackage("com.zj.infrastructure.mapper..", "com.zj.infrastructure.entity.po..")
+        .because("PO 与 Mapper 只允许出现在 com.zj.infrastructure 包，应用层只能依赖仓储接口");
+    rule.check(importedClasses);
+  }
+
+  /**
+   * 领域包不允许被持久化框架污染：BO 与仓储接口不得 import MyBatis，也不得反向依赖持久化实现
+   */
+  @Test
+  void domainMustNotDependOnPersistenceFramework() {
+    ArchRule rule = noClasses().that()
+        .resideInAnyPackage("com.zj.domain.entity.bo..", "com.zj.domain.repository..")
+        .should().dependOnClassesThat()
+        .resideInAnyPackage("com.baomidou..", "org.springframework.web..", "org.apache.ibatis..")
+        .because("领域层的 BO 与仓储接口必须与技术无关，持久化实现只能在 com.zj.infrastructure 包");
+    rule.check(importedClasses);
+  }
+
+  /**
+   * 模块合并后不得反向依赖：BO 与仓储接口在 windy-domain 内，持久化实现在 com.zj.infrastructure 包，
+   * 领域包一旦 import 实现包，依赖倒置就退化成同模块内的约定
+   */
+  @Test
+  void domainPackagesMustNotDependOnInfrastructure() {
+    ArchRule rule = noClasses().that()
+        .resideInAnyPackage("com.zj.domain.entity.bo..", "com.zj.domain.repository..")
+        .should().dependOnClassesThat()
+        .resideInAnyPackage("com.zj.infrastructure..")
+        .because("领域包只能定义 BO 与仓储接口，持久化实现不得被领域包反向引用");
+    rule.check(importedClasses);
+  }
+
+  /**
+   * console 的业务子模块与各层之间不得出现循环依赖
+   */
+  @Test
+  void moduleSlicesShouldBeFreeOfCycles() {
+    ArchRule rule = slices().matching("com.zj.(*)..")
+        .should().beFreeOfCycles()
+        .because("模块间循环依赖会让发布顺序与变更影响不可控");
+    rule.check(importedClasses);
+  }
+
+  /**
+   * 跨域依赖必须命中白名单：
+   *
+   * <p>demand 与 pipeline 只经 CodeChangePublishedEvent/CodePushedEvent 与 common 端口协作，
+   * 双向均无编译期依赖；其余域的跨域引用被固化为白名单，新增即失败。</p>
+   */
+  @Test
+  void crossDomainDependenciesMustFollowWhitelist() {
+    ALLOWED_CROSS_DOMAIN.forEach((domain, allowed) -> {
+      List<String> forbidden = ALLOWED_CROSS_DOMAIN.keySet().stream()
+          .filter(other -> !Objects.equals(other, domain) && !allowed.contains(other))
+          .collect(Collectors.toList());
+      if (forbidden.isEmpty()) {
+        return;
+      }
+      ArchRule rule = noClasses().that().resideInAnyPackage(bcPackages(domain))
+          .should().dependOnClassesThat().resideInAnyPackage(bcPackages(forbidden))
+          .because(domain + " 只允许依赖 " + allowed + "，新增跨域依赖必须先解耦再登记白名单");
+      rule.check(importedClasses);
+    });
+  }
+
+  /**
+   * 一个业务域在各层（应用/领域/持久化实现）的包名集合
+   */
+  private static String[] bcPackages(String domain) {
+    String consolePackage = "metric".equals(domain) ? "com.zj.metrics.." : "com.zj." + domain + "..";
+    return new String[] {
+        consolePackage,
+        "com.zj.domain.entity.bo." + domain + "..",
+        "com.zj.domain.repository." + domain + "..",
+        "com.zj.infrastructure.repository." + domain + "..",
+        "com.zj.infrastructure.entity.po." + domain + "..",
+        "com.zj.infrastructure.mapper." + domain + ".."
+    };
+  }
+
+  private static String[] bcPackages(List<String> domains) {
+    return domains.stream().flatMap(domain -> Arrays.stream(bcPackages(domain)))
+        .toArray(String[]::new);
+  }
+
+  /**
+   * common 是共享端口层：只允许接口、DTO 与轻量注解，不得引入 Web/Eureka/OkHttp/Servlet
+   */
+  @Test
+  void commonMustStayFrameworkFree() {
+    ArchRule rule = noClasses().that().resideInAPackage("com.zj.common..")
+        .should().dependOnClassesThat().resideInAnyPackage(
+            "org.springframework.web..", "org.springframework.boot..", "org.springframework.cloud..",
+            "com.netflix..", "okhttp3..", "javax.servlet..")
+        .because("HTTP 客户端、服务发现与 Servlet 能力都属于 windy-remote，common 只保留端口与 DTO");
     rule.check(importedClasses);
   }
 

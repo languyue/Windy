@@ -1,6 +1,5 @@
 package com.zj.domain.repository.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import java.util.List;
 import com.zj.domain.repository.marker.ConfigCommandRepository;

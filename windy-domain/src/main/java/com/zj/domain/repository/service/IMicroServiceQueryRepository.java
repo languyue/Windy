@@ -1,6 +1,6 @@
 package com.zj.domain.repository.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.service.MicroserviceBO;
 import java.util.List;
 
@@ -32,7 +32,7 @@ public interface IMicroServiceQueryRepository {
   * @param serviceIds 服务ID列表
   * @return 服务列表
   */
-  IPage<MicroserviceBO> getServices(Integer pageNo, Integer size, String name, List<String> serviceIds);
+  PageSize<MicroserviceBO> getServices(Integer pageNo, Integer size, String name, List<String> serviceIds);
 
   /**
   * 根据服务名获取服务

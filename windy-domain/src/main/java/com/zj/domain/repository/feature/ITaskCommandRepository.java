@@ -1,8 +1,6 @@
 package com.zj.domain.repository.feature;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
-import com.zj.domain.entity.po.feature.TaskInfo;
 import java.util.List;
 import com.zj.domain.repository.marker.ConfigCommandRepository;
 

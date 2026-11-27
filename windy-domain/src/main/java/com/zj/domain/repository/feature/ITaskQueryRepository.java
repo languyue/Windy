@@ -1,8 +1,7 @@
 package com.zj.domain.repository.feature;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
-import com.zj.domain.entity.po.feature.TaskInfo;
 import java.util.List;
 
 /**
@@ -21,7 +20,7 @@ public interface ITaskQueryRepository {
   * @param serviceId 服务ID
   * @return 任务列表
   */
-  IPage<TaskInfo> getFuzzTaskList(String name, Integer pageNum, Integer size, String userId, String serviceId);
+  PageSize<TaskInfoBO> getFuzzTaskList(String name, Integer pageNum, Integer size, String userId, String serviceId);
 
   /**
   * 获取任务详情

@@ -76,14 +76,14 @@ public class TemplateService {
     }
 
     public PageSize<ExecuteTemplateDto> getTemplatePage(String serviceId, Integer pageNo, Integer size, String name) {
-        IPage<ExecuteTemplateBO> templateIPage = templateRepository.getPage(serviceId, pageNo, size, name);
+        PageSize<ExecuteTemplateBO> templateIPage = templateRepository.getPage(serviceId, pageNo, size, name);
         PageSize<ExecuteTemplateDto> pageSize = new PageSize<>();
-        if (CollectionUtils.isEmpty(templateIPage.getRecords())) {
+        if (CollectionUtils.isEmpty(templateIPage.getData())) {
             pageSize.setTotal(0);
             return pageSize;
         }
 
-        List<ExecuteTemplateDto> templateDTOS = templateIPage.getRecords().stream()
+        List<ExecuteTemplateDto> templateDTOS = templateIPage.getData().stream()
                 .map(this::toExecuteTemplateDto).collect(Collectors.toList());
         pageSize.setData(templateDTOS);
         pageSize.setTotal(templateIPage.getTotal());

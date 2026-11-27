@@ -121,14 +121,14 @@ public class MicroserviceService {
 
         List<String> serviceIds =
                 resourceMembers.stream().map(ResourceMemberBO::getResourceId).collect(Collectors.toList());
-        IPage<MicroserviceBO> page = microServiceRepository.getServices(pageNo, size, name, serviceIds);
+        PageSize<MicroserviceBO> page = microServiceRepository.getServices(pageNo, size, name, serviceIds);
         PageSize<ServiceDto> pageSize = new PageSize<>();
-        if (CollectionUtils.isEmpty(page.getRecords())) {
+        if (CollectionUtils.isEmpty(page.getData())) {
             pageSize.setTotal(0);
             return pageSize;
         }
 
-        List<ServiceDto> microservices = page.getRecords().stream().map(microservice -> {
+        List<ServiceDto> microservices = page.getData().stream().map(microservice -> {
             ServiceDto serviceDto = OrikaUtil.convert(microservice, ServiceDto.class);
             serviceDto.setServiceConfig(microservice.getServiceConfig());
             return serviceDto;

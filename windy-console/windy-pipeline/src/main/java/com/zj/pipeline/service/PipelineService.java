@@ -20,7 +20,7 @@ import com.zj.domain.entity.bo.service.MicroserviceBO;
 import com.zj.domain.entity.enums.PipelineType;
 import com.zj.domain.repository.pipeline.IBindBranchCommandRepository;
 import com.zj.domain.repository.pipeline.IPipelineCommandRepository;
-import com.zj.domain.repository.service.impl.MicroServiceRepository;
+import com.zj.infrastructure.repository.service.MicroServiceRepository;
 import com.zj.pipeline.entity.dto.PipelineDto;
 import com.zj.pipeline.entity.dto.PipelineStatusDto;
 import com.zj.pipeline.entity.enums.PipelineStatus;

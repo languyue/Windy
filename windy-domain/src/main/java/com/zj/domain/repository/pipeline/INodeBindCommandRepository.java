@@ -1,6 +1,5 @@
 package com.zj.domain.repository.pipeline;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.domain.entity.bo.pipeline.NodeBindBO;
 import java.util.List;
 import com.zj.domain.repository.marker.ConfigCommandRepository;

@@ -1,6 +1,5 @@
 package com.zj.domain.repository.feature;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.domain.entity.bo.feature.ExecuteTemplateBO;
 import java.util.List;
 import com.zj.domain.repository.marker.ConfigCommandRepository;

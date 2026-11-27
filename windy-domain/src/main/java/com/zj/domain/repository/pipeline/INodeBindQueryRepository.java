@@ -1,6 +1,6 @@
 package com.zj.domain.repository.pipeline;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.pipeline.NodeBindBO;
 import java.util.List;
 
@@ -24,7 +24,7 @@ public interface INodeBindQueryRepository {
   * @param name 节点名称
   * @return 节点列表
   */
-  IPage<NodeBindBO> getPageNode(Integer page, Integer size, String name);
+  PageSize<NodeBindBO> getPageNode(Integer page, Integer size, String name);
 
   /**
   * 获取所有节点

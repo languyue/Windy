@@ -1,6 +1,5 @@
 package com.zj.feature.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
@@ -57,26 +56,11 @@ public class TestCaseService {
     }
 
     public PageSize<TestCaseBO> getE2ECases(Integer page, Integer pageSize) {
-        IPage<TestCaseBO> pageObj = testCaseRepository.getE2ECasesPage(page, pageSize);
-        return convertPageSize(pageObj);
-    }
-
-    public PageSize<TestCaseBO> convertPageSize(IPage<TestCaseBO> page) {
-        List<TestCaseBO> records = page.getRecords();
-        PageSize<TestCaseBO> dtoPageSize = new PageSize<>();
-        if (CollectionUtils.isEmpty(records)) {
-            dtoPageSize.setTotal(0);
-            return dtoPageSize;
-        }
-        long total = page.getTotal();
-        dtoPageSize.setTotal(total);
-        dtoPageSize.setData(records);
-        return dtoPageSize;
+        return testCaseRepository.getE2ECasesPage(page, pageSize);
     }
 
     public PageSize<TestCaseBO> getTestCaseList(String serviceId, Integer page, Integer pageSize) {
-        IPage<TestCaseBO> pageObj = testCaseRepository.getCasePage(serviceId, page, pageSize);
-        return convertPageSize(pageObj);
+        return testCaseRepository.getCasePage(serviceId, page, pageSize);
     }
 
     public String createTestCase(TestCaseBO testCaseBO) {

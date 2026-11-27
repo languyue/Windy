@@ -1,6 +1,6 @@
 package com.zj.domain.repository.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.service.DeployEnvironmentBO;
 import java.util.List;
 
@@ -17,7 +17,7 @@ public interface IEnvironmentQueryRepository {
   * @param name 环境名称
   * @return 环境列表
   */
-  IPage<DeployEnvironmentBO> getEnvPage(Integer page, Integer size, String name);
+  PageSize<DeployEnvironmentBO> getEnvPage(Integer page, Integer size, String name);
 
   /**
   * 获取环境

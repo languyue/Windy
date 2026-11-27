@@ -1,6 +1,6 @@
 package com.zj.domain.repository.feature;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.zj.contract.rpc.PageSize;
 import com.zj.domain.entity.bo.feature.FeatureInfoBO;
 import java.util.List;
 
@@ -45,7 +45,7 @@ public interface IFeatureQueryRepository {
   * @param size 每页数量
   * @return 用例信息列表
   */
-  IPage<FeatureInfoBO> queryFeaturePage(String testCaseId, int page, int size);
+  PageSize<FeatureInfoBO> queryFeaturePage(String testCaseId, int page, int size);
 
   /**
   * 获取用例的子用例列表

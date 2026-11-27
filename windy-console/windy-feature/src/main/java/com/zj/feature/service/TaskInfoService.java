@@ -1,6 +1,5 @@
 package com.zj.feature.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.common.adapter.auth.IAuthService;
 import com.zj.contract.enums.LogType;
 import com.zj.contract.enums.ProcessStatus;
@@ -12,16 +11,13 @@ import com.zj.contract.rpc.ResponseStatusModel;
 import com.zj.contract.rpc.ResponseStatusModel.PercentStatics;
 import com.zj.common.exception.ApiException;
 import com.zj.contract.exception.ErrorCode;
-import com.zj.common.utils.OrikaUtil;
 import com.zj.domain.entity.bo.feature.FeatureHistoryBO;
 import com.zj.domain.entity.bo.feature.TaskInfoBO;
 import com.zj.domain.entity.bo.feature.TaskRecordBO;
-import com.zj.domain.entity.po.feature.TaskInfo;
 import com.zj.domain.repository.feature.ITaskCommandRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -56,22 +52,16 @@ public class TaskInfoService {
 
   public PageSize<TaskInfoBO> getTaskList(String name, Integer pageNum, Integer size, String serviceId) {
     String currentUserId = authService.getCurrentUserId();
-    IPage<TaskInfo> taskInfoIPage = taskRepository.getFuzzTaskList(name, pageNum, size, currentUserId, serviceId);
-    PageSize<TaskInfoBO> pageSize = new PageSize<>();
-    pageSize.setTotal(taskInfoIPage.getTotal());
-    if (CollectionUtils.isEmpty(taskInfoIPage.getRecords())) {
-      pageSize.setData(Collections.emptyList());
-      return pageSize;
+    PageSize<TaskInfoBO> taskInfoPage = taskRepository.getFuzzTaskList(name, pageNum, size, currentUserId,
+        serviceId);
+    if (CollectionUtils.isEmpty(taskInfoPage.getData())) {
+      taskInfoPage.setData(Collections.emptyList());
+      return taskInfoPage;
     }
 
-    List<TaskInfoBO> dtoList = taskInfoIPage.getRecords().stream().map(task -> {
-      TaskInfoBO taskInfoBO = OrikaUtil.convert(task, TaskInfoBO.class);
-      boolean isRunning = isTaskRunning(taskInfoBO);
-      taskInfoBO.setIsRunning(isRunning);
-      return taskInfoBO;
-    }).collect(Collectors.toList());
-    pageSize.setData(dtoList);
-    return pageSize;
+    taskInfoPage.getData().forEach(taskInfoBO ->
+        taskInfoBO.setIsRunning(isTaskRunning(taskInfoBO)));
+    return taskInfoPage;
   }
 
   private boolean isTaskRunning(TaskInfoBO taskInfoBO) {

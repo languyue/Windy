@@ -56,15 +56,7 @@ public class EnvironmentService {
     }
 
     public PageSize<DeployEnvironmentBO> getEnvironments(Integer page, Integer size, String name) {
-        IPage<DeployEnvironmentBO> envPage = repository.getEnvPage(page, size, name);
-        if (CollectionUtils.isEmpty(envPage.getRecords())) {
-            return new PageSize<>();
-        }
-
-        PageSize<DeployEnvironmentBO> pageSize = new PageSize<>();
-        pageSize.setData(envPage.getRecords());
-        pageSize.setTotal(envPage.getTotal());
-        return pageSize;
+        return repository.getEnvPage(page, size, name);
     }
 
     public Boolean createEnvironment(DeployEnvironmentBO deployEnvironment) {

@@ -1,7 +1,6 @@
 package com.zj.feature.service;
 
 import com.zj.contract.json.ContractJson;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.zj.contract.feature.CompareDefine;
 import com.zj.common.enums.CompareType;
 import com.zj.common.enums.ExecuteType;
@@ -114,11 +113,7 @@ public class FeatureService {
     }
 
     public PageSize<FeatureInfoBO> queryFeaturePage(String testCaseId, int page, int size) {
-        IPage<FeatureInfoBO> featurePage = featureRepository.queryFeaturePage(testCaseId, page, size);
-        PageSize<FeatureInfoBO> detailPageSize = new PageSize<>();
-        detailPageSize.setTotal(featurePage.getTotal());
-        detailPageSize.setData(featurePage.getRecords());
-        return detailPageSize;
+        return featureRepository.queryFeaturePage(testCaseId, page, size);
     }
 
     public List<FeatureInfoBO> queryFeatureList(String testCaseId) {

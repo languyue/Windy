@@ -87,11 +87,7 @@ public class NodeBindService {
   }
 
   public PageSize<NodeBindBO> getNodes(Integer page, Integer size, String name) {
-    IPage<NodeBindBO> pageList = nodeBindRepository.getPageNode(page, size, name);
-    PageSize<NodeBindBO> pageSize = new PageSize<>();
-    pageSize.setTotal(pageList.getTotal());
-    pageSize.setData(pageList.getRecords());
-    return pageSize;
+    return nodeBindRepository.getPageNode(page, size, name);
   }
 
   public List<PipelineActionBO> getNodeExecutors(String nodeId) {
