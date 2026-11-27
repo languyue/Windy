@@ -18,6 +18,7 @@
   <modules>
     <module>windy-contract</module>
     <module>windy-common</module>
+    <module>windy-remote</module>
     <module>windy-client</module>
     <module>windy-master</module>
     <module>windy-domain</module>
@@ -61,6 +62,11 @@
       <dependency>
         <groupId>com.zj</groupId>
         <artifactId>windy-contract</artifactId>
+        <version>${revision}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.zj</groupId>
+        <artifactId>windy-remote</artifactId>
         <version>${revision}</version>
       </dependency>
       <dependency>

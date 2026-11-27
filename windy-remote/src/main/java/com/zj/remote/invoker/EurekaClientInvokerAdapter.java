@@ -1,6 +1,6 @@
-package com.zj.common.adapter.invoker.eureka;
+package com.zj.remote.invoker;
 
-import com.zj.common.adapter.discover.DiscoverService;
+import com.zj.remote.discover.DiscoverService;
 import com.zj.common.adapter.discover.ServiceInstance;
 import com.zj.common.adapter.invoker.IClientInvoker;
 import com.zj.contract.feature.exec.FeatureExecuteParam;

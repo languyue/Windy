@@ -35,12 +35,10 @@
     <dependency>
       <groupId>com.zj</groupId>
       <artifactId>windy-service</artifactId>
-      <exclusions>
-        <exclusion>
-          <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
-          <groupId>org.springframework.cloud</groupId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.zj</groupId>
+      <artifactId>windy-remote</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

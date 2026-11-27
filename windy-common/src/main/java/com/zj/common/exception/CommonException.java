@@ -3,7 +3,6 @@ import com.zj.contract.exception.ErrorCode;
 
 
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 /**
  * @author guyuelan
@@ -14,12 +13,12 @@ public class CommonException extends RuntimeException{
 
   private String code;
   private String msg;
-  private HttpStatus httpStatus;
+  private int httpStatus;
 
   public CommonException() {
   }
 
-  public CommonException(String code, String msg, HttpStatus httpStatus) {
+  public CommonException(String code, String msg, int httpStatus) {
     super(msg);
     this.code = code;
     this.msg = msg;
@@ -29,6 +28,6 @@ public class CommonException extends RuntimeException{
     super(String.format(errorCode.getMessage(), content));
     this.code = errorCode.getCode();
     this.msg = String.format(errorCode.getMessage(), content);
-    this.httpStatus = HttpStatus.valueOf(errorCode.getHttpStatus());
+    this.httpStatus = errorCode.getHttpStatus();
   }
 }

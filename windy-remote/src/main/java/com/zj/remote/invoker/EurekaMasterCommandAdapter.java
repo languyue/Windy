@@ -1,4 +1,4 @@
-package com.zj.common.adapter.invoker.eureka;
+package com.zj.remote.invoker;
 
 import com.zj.common.adapter.invoker.IMasterCommand;
 import com.zj.common.entity.command.ApproveCommand;

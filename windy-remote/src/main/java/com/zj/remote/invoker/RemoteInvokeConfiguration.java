@@ -1,10 +1,9 @@
-package com.zj.common.adapter.invoker;
+package com.zj.remote.invoker;
 
-import com.zj.common.adapter.invoker.eureka.EurekaClientInvokerAdapter;
-import com.zj.common.adapter.invoker.eureka.EurekaConsoleInvokerAdapter;
-import com.zj.common.adapter.invoker.eureka.EurekaMasterCommandAdapter;
-import com.zj.common.adapter.discover.DiscoverService;
-import com.zj.common.adapter.invoker.eureka.EurekaMasterInvokerAdapter;
+import com.zj.common.adapter.invoker.IClientInvoker;
+import com.zj.common.adapter.invoker.IConsoleInvoker;
+import com.zj.common.adapter.invoker.IMasterCommand;
+import com.zj.remote.discover.DiscoverService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;

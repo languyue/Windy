@@ -1,5 +1,6 @@
-package com.zj.common.exception;
+package com.zj.starter.handler;
 
+import com.zj.common.exception.CommonException;
 import com.zj.contract.exception.ErrorCode;
 import com.zj.contract.rpc.ResponseMeta;
 import java.util.List;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
+ * console 进程的全局异常处理，@ControllerAdvice 只属于 Web 进程，不放在公共模块。
+ *
  * @author guyuelan
  * @since 2021/9/28
  */
@@ -52,6 +55,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ResponseMeta> handleBusinessException(CommonException commonException) {
     log.warn("common error", commonException);
     return new ResponseEntity<>(new ResponseMeta(commonException.getCode(), commonException.getMessage()),
-        commonException.getHttpStatus());
+        HttpStatus.valueOf(commonException.getHttpStatus()));
   }
 }

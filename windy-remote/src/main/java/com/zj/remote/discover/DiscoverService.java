@@ -1,5 +1,6 @@
-package com.zj.common.adapter.discover;
+package com.zj.remote.discover;
 
+import com.zj.common.adapter.discover.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
 

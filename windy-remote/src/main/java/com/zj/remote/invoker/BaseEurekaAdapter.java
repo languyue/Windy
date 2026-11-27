@@ -1,8 +1,8 @@
-package com.zj.common.adapter.invoker.eureka;
+package com.zj.remote.invoker;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zj.common.adapter.trace.TidInterceptor;
+import com.zj.remote.trace.TidInterceptor;
 import com.zj.common.utils.TraceUtils;
 import com.zj.contract.json.ContractJson;
 import com.zj.contract.json.WireJson;

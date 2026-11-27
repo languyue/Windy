@@ -1,6 +1,6 @@
 package com.zj.arch;
 
-import com.zj.common.adapter.invoker.eureka.BaseEurekaAdapter;
+import com.zj.remote.invoker.BaseEurekaAdapter;
 import com.zj.contract.json.WireJson;
 import com.zj.contract.pipeline.node.HttpContext;
 import com.zj.contract.pipeline.node.RequestContext;

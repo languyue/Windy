@@ -1,6 +1,6 @@
 package com.zj.master.schedule;
 
-import com.zj.common.adapter.discover.DiscoverService;
+import com.zj.remote.discover.DiscoverService;
 import com.zj.common.adapter.monitor.InstanceMonitor;
 import com.zj.common.utils.IpUtils;
 import com.zj.common.utils.TraceUtils;

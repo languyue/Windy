@@ -1,4 +1,4 @@
-package com.zj.common.adapter.trace;
+package com.zj.remote.trace;
 
 import com.zj.common.utils.TraceUtils;
 import org.apache.commons.lang.StringUtils;

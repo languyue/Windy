@@ -1,4 +1,4 @@
-package com.zj.common.adapter.invoker.eureka;
+package com.zj.remote.invoker;
 
 import com.zj.common.adapter.invoker.IMasterApi;
 import com.zj.common.adapter.invoker.IMasterCallback;
@@ -10,7 +10,7 @@ import com.zj.contract.rpc.PluginInfo;
 import com.zj.contract.rpc.ResponseMeta;
 import com.zj.contract.rpc.ResponseStatusModel;
 import com.zj.contract.event.ResultEvent;
-import com.zj.common.adapter.discover.DiscoverService;
+import com.zj.remote.discover.DiscoverService;
 import com.zj.common.adapter.discover.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;

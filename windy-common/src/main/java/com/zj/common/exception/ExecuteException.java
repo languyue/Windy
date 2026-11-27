@@ -3,7 +3,6 @@ import com.zj.contract.exception.ErrorCode;
 
 
 import java.util.Objects;
-import org.springframework.http.HttpStatus;
 
 /**
  * @author guyuelan
@@ -14,7 +13,7 @@ public class ExecuteException extends CommonException {
   private String message;
 
   public ExecuteException(ErrorCode errorCode) {
-    super(errorCode.getCode(), errorCode.getMessage(), HttpStatus.valueOf(errorCode.getHttpStatus()));
+    super(errorCode.getCode(), errorCode.getMessage(), errorCode.getHttpStatus());
     this.message = errorCode.getMessage();
 
   }

@@ -47,6 +47,11 @@
     </dependency>
     <dependency>
       <groupId>com.zj</groupId>
+      <artifactId>windy-remote</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.zj</groupId>
       <artifactId>windy-domain</artifactId>
       <scope>test</scope>
     </dependency>
